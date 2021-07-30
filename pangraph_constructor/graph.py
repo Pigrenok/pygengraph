@@ -107,6 +107,7 @@ class GenomeGraph:
         # self.inPath = []
         # self.outPath = []
         self.nodePass = [0]*len(self.nodes)
+        self.nodeStrandPaths = [[0,0] for _ in range(len(self.nodes))]
         self.pathStarts = [0]*len(self.nodes)
         self.inPath = [0]*len(self.nodes)
         self.outPath = [0]*len(self.nodes)
@@ -116,8 +117,10 @@ class GenomeGraph:
 
             previousNode = None
             for nodeStrand in path:
-                pathNode = int(nodeStrand[:-1])-1
+                pathNode = self.nodeNameToID[nodeStrand[:-1]]-1
+                pathStrand = int(nodeStrand[-1]=='-') # 0 if "+", 1 if "-"
                 self.nodePass[pathNode] += 1
+                self.nodeStrandPaths[pathNode][pathStrand] += 1
                 self.outPath[pathNode] += 1
                 self.inPath[pathNode] += 1
                 if previousNode is not None:
@@ -128,6 +131,7 @@ class GenomeGraph:
                     self.inPath[pathNode] -= 1
                 previousNode = pathNode
             self.outPath[previousNode] -= 1
+
     def _revertLinks(self,forwardLinks):
         backLinks = {}
         for fromNome,links in forwardLinks.items():
@@ -149,7 +153,7 @@ class GenomeGraph:
         jsonFile = f'{dirPath}{os.path.sep}{baseName}.json'
 
         if os.path.exists(jsonFile):
-            nodeNames = json.load(jsonFile)
+            nodeNames = json.load(open(jsonFile,mode='r'))
         else:
             nodeNames = None
 
@@ -166,9 +170,9 @@ class GenomeGraph:
         linkList = [el for el in gfaList if el.lower().startswith('l')]
         pathStringsList = [el for el in gfaList if el.lower().startswith('p')]
 
-        nodeNameToID = {}
+        self.nodeNameToID = {}
 
-        for node in segmentList:
+        for nodeID,node in enumerate(segmentList):
             _,segID,segGFAData = node.rstrip().split(sep='\t')
             if isGFASeq:
                 segSeq = segGFAData
@@ -176,21 +180,21 @@ class GenomeGraph:
                 segSeq = ''
 
             if nodeNames is not None:
-                segName = nodeNames[segID]
+                segName = nodeNames[int(segID)-1]
             elif isGFASeq:
                 segName = str(segID)
             else:
                 segName = segGFAData
 
-            nodeNameToID[segID] = len(self.nodes)+1
+            self.nodeNameToID[segID] = len(self.nodes)+1
 
             self.nodes.append(segName)
             self.nodesData.append(segSeq)
 
         for link in linkList:
             _,fromNodeID,fromStrand,toNodeID,toStrand,_ = link.rstrip().split(sep='\t')
-            fromNode = nodeNameToID[fromNodeID]
-            toNode = nodeNameToID[toNodeID]
+            fromNode = self.nodeNameToID[fromNodeID]
+            toNode = self.nodeNameToID[toNodeID]
 
             curLink = self.forwardLinks.setdefault(fromNode,{})
             curStrand = curLink.setdefault(fromStrand,[])
@@ -200,7 +204,6 @@ class GenomeGraph:
             _,seqID,path,_ = pathString.rstrip().split(sep='\t')
             self.paths.append(path.split(','))
             self.accessions.append(seqID)
-
 
     def _graphFromNodesLinks(self,nodes,links):
         raise NotImplementedError('Generating graph from nodes and links is not yet implemented.')
@@ -345,12 +348,14 @@ class GenomeGraph:
 
     def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
 
+        print('Constructing Tremaux tree')
         self.generateTremauxTree(byPath)
-
+        print('Done!')
         queue = []
         processed = []
         self.order = []
 
+        print('Getting root nodes')
         rootNodes = self.tremauxTree.getRootNodes()[::-1]
 #         self.order.append(rootNode)
         startNode = rootNodes.pop()
@@ -359,6 +364,7 @@ class GenomeGraph:
         descendantsToAdd.sort(key=lambda edge: self.edgePaths.get(edge,0))
         queue.extend(descendantsToAdd)
 
+        print('Start Loop...')
         while len(queue)>0 or len(rootNodes)>0:
 #             pdb.set_trace()
             if len(queue)==0:
@@ -375,6 +381,8 @@ class GenomeGraph:
                     break
 
             startNode,endNode = queue.pop()
+
+            print(f'{len(queue)} - {len(processed)} - {len(self.order)} - {startNode} - {endNode}')
 
             if (startNode,endNode) in processed:
                 continue
@@ -461,7 +469,8 @@ class GenomeGraph:
 
 
             if len(bubblePriorityQueue)>0:
-                queue.append((startNode,endNode))
+                queue.append((startNode,endNode))#Why would I add the processed block again? Should I add descendant edges of the end node here?
+                # It should save a lot of wasted time and speed up the process.
                 bubblePriorityQueue.sort(key=lambda b: self.edgePaths[b[0],endNode])
                 while len(bubblePriorityQueue)>0:
                     bNode,bToAdd = bubblePriorityQueue.pop()
@@ -476,24 +485,25 @@ class GenomeGraph:
                 edgesToAdd.sort(key=lambda edge: self.edgePaths.get(edge,0))
                 queue.extend(edgesToAdd)
 
-
     def _generateIsInversionDict(self):
-        setLinks = self._linksDictToSet(self.forwardLinks)
-        uniqueNodeStrands = list(set(list(setLinks.keys())).union(*list(setLinks.values())))
+#         setLinks = self._linksDictToSet(self.forwardLinks)
+#         uniqueNodeStrands = list(set(list(setLinks.keys())).union(*list(setLinks.values())))
 
-        uniqueNodeStrands.sort(key=lambda val: int(val[:-1])) # Is it really necessary if we build a dict
+#         uniqueNodeStrands.sort(key=lambda val: int(val[:-1])) # Is it really necessary if we build a dict
 
-        nodeStrandArray = np.array([(v[:-1],v[-1]) for v in uniqueNodeStrands])
-        numStrandsPerNode = np.unique(nodeStrandArray[:,0],return_counts=True)
+#         nodeStrandArray = np.array([(v[:-1],v[-1]) for v in uniqueNodeStrands])
+#         numStrandsPerNode = np.unique(nodeStrandArray[:,0],return_counts=True)
 
-        isInversionDict = dict([(int(node),numStrands<=1) for node,numStrands in zip(*numStrandsPerNode)])
+#         isInversionDict = dict([(int(node),numStrands<=1) for node,numStrands in zip(*numStrandsPerNode)])
+
+        isInversionDict = dict([(int(node+1),(self.nodeStrandPaths[node][1]>self.nodeStrandPaths[node][0])) for node in range(len(self.nodes))])
 
         return isInversionDict
 
     def toGFA(self,gfaFile,doSeq=True):
         baseName = os.path.splitext(os.path.basename(gfaFile))[0]
         dirPath = os.path.dirname(gfaFile)
-        jsonFile = f'{dirPath}{os.path.sep}{baseName}.json'
+        jsonFile = f'{dirPath}{os.path.sep}nodeNames_{baseName}.json'
 
         gfaWriter = open(gfaFile,mode='w')
 
@@ -514,18 +524,19 @@ class GenomeGraph:
             translator[nodeID] = i+1
 
         isInversionDict = self._generateIsInversionDict()
+        strandInversionDict = {'+':'-','-':'+'}
 
         for fromNode,strandLinks in self.forwardLinks.items():
             for fromStrand,toLinkStrands in strandLinks.items():
                 for toNode,toStrand in toLinkStrands:
 
                     if isInversionDict.get(fromNode,False):
-                        _fromStrand = '+'
+                        _fromStrand = strandInversionDict[fromStrand]
                     else:
                         _fromStrand = fromStrand
 
                     if isInversionDict.get(toNode,False):
-                        _toStrand = '+'
+                        _toStrand = strandInversionDict[toStrand]
                     else:
                         _toStrand = toStrand
                     gfaWriter.write(f'L\t{translator[fromNode]}\t{_fromStrand}\t{translator[toNode]}\t{_toStrand}\t*\n')
@@ -533,9 +544,9 @@ class GenomeGraph:
         for path,accessionID in zip(self.paths,self.accessions):
             newPath = []
             for nodeStrand in path:
-                node = int(nodeStrand[:-1])
-                if isInversionDict.get(int(nodeStrand[:-1]),False):
-                    strand = '+'
+                node = self.nodeNameToID[nodeStrand[:-1]]
+                if isInversionDict.get(node,False):
+                    strand = strandInversionDict[nodeStrand[-1]]
                 else:
                     strand = nodeStrand[-1]
                 newPath.append(f'{translator[node]}{strand}')

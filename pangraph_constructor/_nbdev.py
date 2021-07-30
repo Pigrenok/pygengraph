@@ -24,7 +24,8 @@ modules = ["__init__.py",
            "graph.py",
            "tree.py",
            "synteny.py",
-           "utils.py"]
+           "utils.py",
+           "export.py"]
 
 doc_url = "//pangraph_constructor"
 

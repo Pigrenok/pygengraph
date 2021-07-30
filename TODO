@@ -1,0 +1,44 @@
+## Segmentation rules
+
+zoomLevel - maximum (ant target) number of positions in a single bin (can be smaller and still deserve a full bin)
+compMax - maximum length of component
+chunkMax - maximum length of chunk (in bins).
+
+nBins - number of bins added to a current component
+
+Rules for inside of node:
+- If nBins==compMax - break a component inside a node. Add direct links from this component to the next component (need to be added only to the current component)
+
+Rules for node start (before going to adding bins to matrix) (should not work for the first node):
+- Analyse nodes incoming connections. If they are coming from other than consecutive nodes, check for pass continuity, if failed, close current component and start new one (should not work for first node).
+- If this node is a start of any path, then old component should be broken and new one is created. 
+
+Rules for node end:
+- If nBins + next node length > compMax then break component at current node and start a new component.
+- If the current node is the end of any path, then component should break and new component created.
+- If outgoing link from current node goes not to consecutive node, or forward jump over nodes that are used in the path, then break the component and start a new one.
+
+If zoom level is bigger than a single node and the next node also fits inside the same bin, then do the checks, but do not break the component until reaching the end of the bin. Then apply all the end node rules together from all included nodes.
+
+During the process keep arrival and departure links as separate dictionary to node (not to component or bin) in each component. Intra node links should be added directly to the components.
+Keep the dictionary node id to component id
+Keep an array of component lengths
+
+
+## Features
+
+- ChunkIndex should include length of each path along with names of paths. This can be used for marking the end of the path.
+
+- Names of sequences and/or nodes should be part of the optional input into the segmentation and should be included into the data passed to front-endnext
+- Notion of order of links needs to be added here (e.g. from genomic position and to genomic position.
+- MAX_COMPONENT_SIZE should not be fixed, but should be a guidance (actually 100 is a bit too long anyway, something about 50 would be much better). It should never break graph node under any circumstances. It can break sequence (e.g. gene) if sequence consists of several nodes.
+- Component connector column should be filled even if there are arrows (far links) coming out of the node for a particular accession.
+- Component connector should appear between between components even if the second one is not present in the accession, but one of the subsequent one is and there is no non-linearity between two present blocks/nodes.
+
+## issues
+
+- Sometimes zoom levels are inconsistent between each other. For example, on zoom level "1" component for bins 451-468 (last in chunk001) has some parts in the left and some in the right (in some genomes one gene is present, in others another gene is present). In zoom level "9" the same component occupies bins 51-52, but in the file (chunk000) all occupied columns are on the left and none on the right. This inconsistency needs to be tackled!
+- Some components can have 3 repeats and only two links coming and going. E.g. component 50905-50913 (zoom level "1") for accession 4 (0-based) called "1741".
+- Some of the components can have links with zero participants (???). E.g. 50896-50904 (zoom level "1") has one departure without participants.
+
+- Need to deal with continuous links where there is no "meat" for particular accession (or at least test it for both directions).
