@@ -23,7 +23,7 @@ from dnasim.IO import writeFASTA
 from dnasim.simulation import inverseSequence
 
 from .synteny import processAccession,generatePathsLinks
-from .utils import bidict
+from .utils import bidict,NpEncoder,pathFileToPathDict
 from .tree import TremauxTree
 
 # Cell
@@ -63,8 +63,13 @@ class GenomeGraph:
     def __init__(self,gfaPath=None,
                  paths=None,
                  nodes=None,nodesData=None,links=None,
+                 pathsDict=None,
                  sequenceFiles=None,annotationFiles=None,
                  doBack=False,**kwargs):
+
+        '''
+        accessionsToRemove: list or None. If not None, a list of strings, if any of the string contains in pathname, the path will be ignored.
+        '''
         self.nodes = []
         self.nodesData = []
         self.forwardLinks = {}
@@ -76,7 +81,7 @@ class GenomeGraph:
         self.isBack = doBack
 
         if gfaPath is not None:
-            self._loadGFA(gfaPath,isGFASeq=kwargs.get('isGFASeq',True))
+            self._loadGFA(gfaPath,isGFASeq=kwargs.get('isGFASeq',True),accessionsToRemove=kwargs.get('accessionsToRemove',None))
         elif nodes is not None and links is not None and paths is not None:
             self.nodes = nodes
             if nodesData is not None:
@@ -85,9 +90,8 @@ class GenomeGraph:
                 self.nodesData = ['']*len(self.nodes)
             self.forwardLinks = links
             self.paths = paths
-        elif paths is not None and sequenceFiles is not None:
-            self.nodes,self.nodesData,self.forwardLinks = self.graphFromPaths(paths,sequenceFiles) # sequenceFiles can be None
-            self.paths = paths
+        elif pathsDict is not None:
+            self._graphFromPaths(pathsDict) # sequenceFiles can be None
         elif annotationFiles is not None:
             self._graphFromAnnotation(annotationFiles,sequenceFiles,**kwargs)
 
@@ -107,6 +111,7 @@ class GenomeGraph:
         # self.inPath = []
         # self.outPath = []
         self.nodePass = [0]*len(self.nodes)
+
         self.nodeStrandPaths = [[0,0] for _ in range(len(self.nodes))]
         self.pathStarts = [0]*len(self.nodes)
         self.inPath = [0]*len(self.nodes)
@@ -147,12 +152,15 @@ class GenomeGraph:
                     backLinks[item[0]][item[1]].append([fromNode,fromStrand])
         return backLinks
 
-    def _loadGFA(self,gfaFile,isGFASeq=True):
+    def _loadGFA(self,gfaFile,isGFASeq=True,accessionsToRemove=None):
         baseName = os.path.splitext(os.path.basename(gfaFile))[0]
         dirPath = os.path.dirname(gfaFile)
-        jsonFile = f'{dirPath}{os.path.sep}{baseName}.json'
+        jsonFile = f'{dirPath}{os.path.sep}nodeNames_{baseName}.json'
+
+        print(f'Loading graph from {gfaFile}')
 
         if os.path.exists(jsonFile):
+            print(f'Found nodeNames file {jsonFile}, loading names.')
             nodeNames = json.load(open(jsonFile,mode='r'))
         else:
             nodeNames = None
@@ -172,8 +180,13 @@ class GenomeGraph:
 
         self.nodeNameToID = {}
 
+        numSegments = len(segmentList)
+        numSegmentDigits = np.int(np.ceil(np.log10(numSegments)))
+
         for nodeID,node in enumerate(segmentList):
-            _,segID,segGFAData = node.rstrip().split(sep='\t')
+            print(f'\rLoading segment {nodeID+1:0{numSegmentDigits}}/{numSegments:0{numSegmentDigits}}',end='')
+            segmentArray = node.rstrip().split(sep='\t')
+            segID,segGFAData = segmentArray[1:3]
             if isGFASeq:
                 segSeq = segGFAData
             else:
@@ -191,25 +204,98 @@ class GenomeGraph:
             self.nodes.append(segName)
             self.nodesData.append(segSeq)
 
-        for link in linkList:
-            _,fromNodeID,fromStrand,toNodeID,toStrand,_ = link.rstrip().split(sep='\t')
+        print('\nLoading segments finished.')
+
+        numLinks = len(linkList)
+        numLinkDigits = np.int(np.ceil(np.log10(numLinks)))
+
+        for linkID,link in enumerate(linkList):
+            print(f'\rLoading link {linkID+1:0{numLinkDigits}}/{numLinks:0{numLinkDigits}}',end='')
+            linkArray = link.rstrip().split(sep='\t')
+            fromNodeID,fromStrand,toNodeID,toStrand = linkArray[1:5]
             fromNode = self.nodeNameToID[fromNodeID]
             toNode = self.nodeNameToID[toNodeID]
 
             curLink = self.forwardLinks.setdefault(fromNode,{})
             curStrand = curLink.setdefault(fromStrand,[])
             curStrand.append((toNode,toStrand))
+        print('\nLoading links finished')
 
-        for pathString in pathStringsList:
-            _,seqID,path,_ = pathString.rstrip().split(sep='\t')
-            self.paths.append(path.split(','))
-            self.accessions.append(seqID)
+        numPaths = len(pathStringsList)
+        numPathDigits = np.int(np.ceil(np.log10(numPaths)))
+        addedPaths = 0
+        ignoredPaths = 0
+        for pathID,pathString in enumerate(pathStringsList):
+            print(f'\rLoading link {pathID+1:0{numPathDigits}}/{numPaths:0{numPathDigits}}',end='')
+            pathArray = pathString.rstrip().split(sep='\t')
+            seqID,path = pathArray[1:3]
+            useAccession = True
+            if isinstance(accessionsToRemove,list):
+                for accessionTemplate in accessionsToRemove:
+                    if seqID.find(accessionTemplate)!=-1:
+                        ignoredPaths += 1
+                        useAccession = False
+                        break
+            if useAccession:
+                self.paths.append(path.split(','))
+                self.accessions.append(seqID)
+                addedPaths += 1
+        print(f'\nLoading paths finished. {addedPaths} paths added, {ignoredPaths} paths ignored.')
 
     def _graphFromNodesLinks(self,nodes,links):
         raise NotImplementedError('Generating graph from nodes and links is not yet implemented.')
 
+    def _getNodeID(self,node,maxNodeNameLength):
+        _node = node.zfill(maxNodeNameLength)
+        try:
+            nodeID = self.nodes.index(_node)+1
+        except ValueError:
+            self.nodes.append(_node)
+            nodeID = len(self.nodes)
+            self.nodeNameToID[str(nodeID)] = nodeID
+        return nodeID
+
     def _graphFromPaths(self,paths,sequenceFiles=None):
-        raise NotImplementedError('Generating graphs from paths is not implemented yet.')
+        if sequenceFiles is not None:
+            warnings.warn("sequenceFiles reading with path is not yet implemented.")
+
+        if not isinstance(paths,dict):
+            raise ValueError(f"paths should be dict but {type(paths)} was given.")
+
+#         if sequenceFiles is None:
+        maxNodeNameLength = len(max([max(path,key=lambda a: len(a)) for path in paths.values()],key=lambda a: len(a))) - 1
+
+        self.nodeNameToID = {}
+        self.nodes = []
+        self.paths = []
+        self.accessions = []
+        links = {}
+
+        self.nodeNameToID = {}
+
+        for pathID,path in paths.items():
+            self.accessions.append(pathID)
+            prevNode = path[0][:-1]
+            prevDirection = path[0][-1]
+            prevNodeID = self._getNodeID(prevNode,maxNodeNameLength)
+            newPath = [f'{prevNodeID}{prevDirection}']
+            for nodeDir in path[1:]:
+
+                node = nodeDir[:-1]
+                direction = nodeDir[-1]
+
+                nodeID = self._getNodeID(node,maxNodeNameLength)
+                newPath.append(f'{nodeID}{direction}')
+                links.setdefault(prevNodeID,{}).setdefault(prevDirection,set()).add((nodeID,direction))
+
+                prevNode = node
+                prevDirection = direction
+                prevNodeID = nodeID
+            self.paths.append(newPath)
+
+
+        self.forwardLinks = dict([(fromNode,dict([(fromStrand,list(toSet)) for fromStrand,toSet in strandDict.items()])) for fromNode,strandDict in links.items()])
+        self.nodesData = ['']*len(self.nodes)
 
     def _graphFromAnnotation(self,annotationFiles,sequenceFiles=None,**kwargs):
 

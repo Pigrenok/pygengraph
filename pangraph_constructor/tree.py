@@ -5,8 +5,11 @@ __all__ = ['AmbigouosTreeEdge', 'AmbigouosRootNode', 'TremauxTree']
 # Internal Cell
 import numpy as np
 
+import pdb
+
 import networkx as nx
 from networkx.algorithms.operators.binary import compose
+from networkx import NetworkXNoPath
 
 from .utils import bidict
 
@@ -73,6 +76,7 @@ class TremauxTree(nx.DiGraph):
             for startNode in self.startingNodes:
                 if startNode not in treeCombined:
                     treeCombined = compose(treeCombined,nx.dfs_tree(self.originalGraph,source=startNode))
+
             if byPath:
                 self._preprocessPathTree(treeCombined)
             else:
@@ -86,15 +90,42 @@ class TremauxTree(nx.DiGraph):
         return treeCombined
 
     def _preprocessPathTree(self,treeCombined):
+#         pdb.set_trace()
         for node in self.originalGraph.nodes:
+
+            # get all edges coming to given node in the full graph
             graphInEdgeList = list(self.originalGraph.in_edges(node))
+            # get all edges coming to a given node in the tremaux tree
             treeInEdgeList = list(treeCombined.in_edges(node))
-            if len(graphInEdgeList)>0 and len(treeInEdgeList)>0:
-                graphInEdgeList = [edge for edge in graphInEdgeList if not nx.has_path(treeCombined,edge[1],edge[0]) and edge[0]!=edge[1]]
+#             print(f'Node: {node}')
+#             print(f'Graph edges: {graphInEdgeList}')
+#             print(f'Tree edges: {treeInEdgeList}')
+            if len(graphInEdgeList)>0:# and len(treeInEdgeList)>0:
+                # Remove self-cycle paths larger cycles will be removed later.
+                graphInEdgeList = [edge for edge in graphInEdgeList if edge[0]!=edge[1]] # removed 'not nx.has_path(treeCombined,edge[1],edge[0]) and '
+#                 print(graphInEdgeList)
+                # Get number of paths passing each edge
                 edgePaths = [self.parentGraph.edgePaths.get(edge,0) for edge in graphInEdgeList]
-                edgeToKeep = np.argmax(edgePaths)
-                treeCombined.remove_edges_from(treeInEdgeList)
-                treeCombined.add_edge(*graphInEdgeList[edgeToKeep])
+                # Find the edge with maximum number of paths passing
+                edgeToKeep = graphInEdgeList[np.argmax(edgePaths)]
+#                 print(f'Edge to keep: {edgeToKeep}')
+                # If the best edge not in the tree already
+                if edgeToKeep not in treeInEdgeList:
+#                     print('Edge substituted!')
+                    # Remove current incoming edge in the tree
+                    treeCombined.remove_edges_from(treeInEdgeList)
+                    # and replace it with newly identified best edge
+                    treeCombined.add_edge(*edgeToKeep)
+                    try:
+                        # See if there was any cycle paths created
+                        for path in nx.all_shortest_paths(treeCombined,edgeToKeep[1],edgeToKeep[0]):
+#                             print(f'Path {path} severed!')
+                            # For each cycle, severe the link outgoing from current node.
+                            treeCombined.remove_edge(path[0],path[1])
+                    except NetworkXNoPath:
+                        # If no cycle path found, just carry on.
+                        pass
+#             print('#######')
 
     def _getMissingEdges(self):
         graphEdges = set(list(self.originalGraph.edges))
@@ -103,11 +134,27 @@ class TremauxTree(nx.DiGraph):
 
     def processSpecialEdges(self,missingLinks):
         combinedGraph = nx.DiGraph(self)
+        processedEdges = []
         for fromNode,toNode in missingLinks:
             edgeStatus = self.isBubbleLoop(fromNode,toNode,combinedGraph)
             if edgeStatus == -1:
+#                 try:
+#                     if self.parentGraph.edgePaths[(toNode,fromNode)]>self.parentGraph.edgePaths[(fromNode,toNode)]:
+#                         self.loopEdges.add(fromNode,toNode)
+#                     else:
+#                         self.loopEdges.add(toNode,fromNode)
+#                         if self.has_edge(toNode,fromNode):
+#                             self.remove_edge(toNode,fromNode)
+#                             self.add_edge(fromNode,toNode)
+#                         else:
+#                             self.bubbleEdges.add(fromNode,toNode)
+#                             combinedGraph.add_edge(fromNode,toNode)
+#                             processedEdges.append((toNode,fromNode))
+#                 except KeyError:
+#                     self.loopEdges.add(fromNode,toNode)
                 self.loopEdges.add(fromNode,toNode)
-            elif edgeStatus > 0:
+
+            elif edgeStatus > 0 and (fromNode,toNode) not in processedEdges:
                 self.bubbleEdges.add(fromNode,toNode)
                 combinedGraph.add_edge(fromNode,toNode)
 
