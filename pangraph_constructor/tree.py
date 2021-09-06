@@ -100,32 +100,130 @@ class TremauxTree(nx.DiGraph):
 #             print(f'Node: {node}')
 #             print(f'Graph edges: {graphInEdgeList}')
 #             print(f'Tree edges: {treeInEdgeList}')
+            # Remove self-cycle paths larger cycles will be removed later.
+            graphInEdgeList = [edge for edge in graphInEdgeList if edge[0]!=edge[1]] # removed '(not nx.has_path(treeCombined,edge[1],edge[0]) or edge[::-1] in treeCombined.edges) and '
+#
             if len(graphInEdgeList)>0:# and len(treeInEdgeList)>0:
-                # Remove self-cycle paths larger cycles will be removed later.
-                graphInEdgeList = [edge for edge in graphInEdgeList if edge[0]!=edge[1]] # removed 'not nx.has_path(treeCombined,edge[1],edge[0]) and '
-#                 print(graphInEdgeList)
                 # Get number of paths passing each edge
                 edgePaths = [self.parentGraph.edgePaths.get(edge,0) for edge in graphInEdgeList]
                 # Find the edge with maximum number of paths passing
-                edgeToKeep = graphInEdgeList[np.argmax(edgePaths)]
+                edgeToKeepInd = np.argmax(edgePaths)
+                edgeToKeep = graphInEdgeList[edgeToKeepInd]
+                edgeToKeepValue = edgePaths[edgeToKeepInd]
 #                 print(f'Edge to keep: {edgeToKeep}')
                 # If the best edge not in the tree already
                 if edgeToKeep not in treeInEdgeList:
-#                     print('Edge substituted!')
-                    # Remove current incoming edge in the tree
-                    treeCombined.remove_edges_from(treeInEdgeList)
-                    # and replace it with newly identified best edge
-                    treeCombined.add_edge(*edgeToKeep)
-                    try:
-                        # See if there was any cycle paths created
+                    if nx.has_path(treeCombined,edgeToKeep[1],edgeToKeep[0]):
+                        print(f'Node: {node}')
+                        print(f'Graph edges: {graphInEdgeList}')
+                        print(f'Tree edges: {treeInEdgeList}')
+                        print(f'Edge to keep: {edgeToKeep}')
+
+                        print('Cycle found!')
+                        # Get all posible cycle path:
+                        edgesToRemove = []
+                        edgesToAdd = []
+                        breakSubstitute = False
+
                         for path in nx.all_shortest_paths(treeCombined,edgeToKeep[1],edgeToKeep[0]):
-#                             print(f'Path {path} severed!')
-                            # For each cycle, severe the link outgoing from current node.
-                            treeCombined.remove_edge(path[0],path[1])
-                    except NetworkXNoPath:
-                        # If no cycle path found, just carry on.
-                        pass
-#             print('#######')
+                            print(f'Path to break: {path}')
+                            pathBreakpoint = self._severePathPoint(treeCombined,path,edgeToKeepValue)
+                            if pathBreakpoint is not None:
+                                edgesToRemove.append(pathBreakpoint[0])
+                                edgesToAdd.append(pathBreakpoint[1])
+                            else:
+                                print('Unbreakable path!')
+                                breakSubstitute = True
+                                break
+
+                        if not breakSubstitute:
+                            print('Edge substituted!')
+                            self._substituteEdges(treeCombined,[edgeToKeep],treeInEdgeList)
+                            for edgeToRemove,edgeToAdd in zip(edgesToRemove,edgesToAdd):
+                                print(f'Edge {edgeToAdd} substitute edge {edgeToRemove}')
+                                self._substituteEdges(treeCombined,[edgeToAdd],[edgeToRemove])
+                    else:
+                        self._substituteEdges(treeCombined,[edgeToKeep],treeInEdgeList)
+
+    def _severePathPoint(self,G,path,newEdgeValue):
+        '''
+            Heuristics for finding the best position in the path to severe (and substitute).
+            It will find the lowest value possible edge in the path and find the highest possible value of alternative.
+
+            If there is no alternative, it will return None
+        '''
+        # get number of paths passing (value) each edge in the path
+        pathValues = [self.parentGraph.edgePaths[(path[i-1],path[i])] for i in range(1,len(path))]
+        # sort the values of the path
+        pathValIndSort = np.argsort(pathValues)
+
+        res = None
+
+        # For each edge in path starting from the least valuable, we check the most valuable substitution and check that it is still does not
+        edgeToSubstitute = None
+        edgeToSubValue = None
+        for pathPos in pathValIndSort:
+            # Start and end of current edge in the path
+            curStart = path[pathPos]
+            curEnd = path[pathPos+1]
+
+            # Combine tuple of current edge
+            curEdge = (curStart,curEnd)
+            # Calculate value of current edge in the path
+            curEdgeValue = pathValues[pathPos]
+
+            # If it is higher than new substitution, then disregard it, severing it will make our consensus tree worse.
+#             if curEdgeValue>newEdgeValue:
+#                 continue
+
+            # Get all incoming edges to the end of the current edge (alternative edges)
+            allIncomingEdges = list(self.originalGraph.in_edges(curEnd))
+
+            # If there is only one incoming edge, do not substitute it.
+            if len(allIncomingEdges)<2:
+                continue
+
+            # Calc values of all incoming edges to the end of edge
+            incomingEdgesValue = [self.parentGraph.edgePaths[edge] for edge in allIncomingEdges]
+            # Get the sorting order (decreasing) of incoming edges
+            edgeSortInd = np.flip(np.argsort(incomingEdgesValue))
+
+
+            for edgeInd in edgeSortInd:
+                altEdge = allIncomingEdges[edgeInd]
+                altEdgeValue = incomingEdgesValue[edgeInd]
+                # We consider only substitutions
+                if altEdge == curEdge:
+#                     if curEdgeValue>newEdgeValue:
+#                         break
+#                     else:
+                    continue
+
+#                 if altEdge[0] == 6861:
+#                     pdb.set_trace()
+
+                G.remove_edge(*curEdge)
+            # Add alt edge temporarily!
+                # if the alternative still manifest loop, disregard this option
+                if (nx.has_path(G,path[0],altEdge[0]) and nx.has_path(G,altEdge[-1],path[-1])) or nx.has_path(G,*altEdge[::-1]):
+                    G.add_edge(*curEdge)
+                    continue
+
+                edgeToSubstitute = altEdge
+                edgeToSubValue = altEdgeValue
+                break
+
+            if edgeToSubstitute is not None:
+                res = [curEdge,edgeToSubstitute,edgeToSubValue]
+                break
+
+        return res
+
+    def _substituteEdges(self,G,edgesToAddList,edgesToRemoveList):
+        # Remove current incoming edge in the tree
+        G.remove_edges_from(edgesToRemoveList)
+        # and replace it with newly identified best edge
+        G.add_edges_from(edgesToAddList)
 
     def _getMissingEdges(self):
         graphEdges = set(list(self.originalGraph.edges))

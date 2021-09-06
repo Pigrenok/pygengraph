@@ -557,7 +557,7 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
             if debug:
                 print(f'Processing node {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}')
             else:
-                print(f'\rProcessing node {nodeIdx:0{numCompsDigits}}/{numComps:0{numCompsDigits}}',end='')
+                print(f'\rProcessing node {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}',end='')
 
             component = components[compNum]
 
