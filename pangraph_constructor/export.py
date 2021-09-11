@@ -555,9 +555,9 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
 
         for compNum in range(numComps):
             if debug:
-                print(f'Processing node {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}')
+                print(f'Processing component {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}')
             else:
-                print(f'\rProcessing node {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}',end='')
+                print(f'\rProcessing component {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}',end='')
 
             component = components[compNum]
 
@@ -576,7 +576,7 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
                 elif componentToNode[compNum-1][-1]!=mainNode:
                     doLeft = True
 
-                doRight = False
+                doRight = False # Check this conditions as they may be causing issue!
                 if compNum==(len(components)-1):
                     doRight = True
                 elif componentToNode[compNum+1][0]!=mainNode:
@@ -954,36 +954,57 @@ def finaliseChunk(rootStruct,zoomLevel,chunk,nucleotides,nBins,chunkNum,curCompC
 # Cell
 def addLinksToComp(nodeInComp,nodeToComponent,toLinks,fromLinks,component,components,doLeft=True,doRight=True):
     compLinks = fillLinks(nodeInComp,nodeToComponent,toLinks,fromLinks,component,components,doLeft,doRight)
-
+    if component['last_bin']==121:
+        pdb.set_trace()
     if "lArrivals" in compLinks:
-        for (upstream,downstream),participants in compLinks["lArrivals"].items():
+        for (upstream,downstream,otherSide),participants in compLinks["lArrivals"].items():
+            if otherSide=='fr':
+                fromRight = True
+            else:
+                fromRight = False
             component['larrivals'].append({
                     'upstream': upstream,
                     'downstream': downstream,
+                    'otherSideRight': fromRight,
                     'participants': participants
                 })
 
     if 'rArrivals' in compLinks:
-        for (upstream,downstream),participants in compLinks["rArrivals"].items():
+        for (upstream,downstream,otherSide),participants in compLinks["rArrivals"].items():
+            if otherSide == 'fr':
+                fromRight = True
+            else:
+                fromRight = False
             component['rarrivals'].append({
                     'upstream': upstream,
                     'downstream': downstream,
+                    'otherSideRight': fromRight,
                     'participants': participants
                 })
 
     if 'rDepartures' in compLinks:
-        for (upstream,downstream),participants in compLinks["rDepartures"].items():
+        for (upstream,downstream,otherSide),participants in compLinks["rDepartures"].items():
+            if otherSide == 'tl':
+                toRight = False
+            else:
+                toRight = True
             component['rdepartures'].append({
                 'upstream': upstream,
                 'downstream': downstream,
+                'otherSideRight': toRight,
                 'participants': participants
             })
 
     if 'lDepartures' in compLinks:
-        for (upstream,downstream),participants in compLinks["lDepartures"].items():
+        for (upstream,downstream,otherSide),participants in compLinks["lDepartures"].items():
+            if otherSide == 'tl':
+                toRight = False
+            else:
+                toRight = True
             component['ldepartures'].append({
                 'upstream': upstream,
                 'downstream': downstream,
+                'otherSideRight': toRight,
                 'participants': participants
             })
 
@@ -1016,6 +1037,8 @@ def splitforwardInversedNodeComp(pathList,component,isInverse):
 def fillLinks(nodeInComp,nodeToComponent,toLinks,fromLinks,component,components,doLeft=True,doRight=True):
     compLinks = {}
 
+
+
 #     if component['first_bin']==2 and len(nodeInComp)==2:
 #         pdb.set_trace()
 
@@ -1038,10 +1061,10 @@ def fillLinks(nodeInComp,nodeToComponent,toLinks,fromLinks,component,components,
                 complArrivals = compLinks.setdefault('lArrivals',{})
                 # from right departure
                 if len(frd)>0 and (fromNode not in nodeInComp) and (fromLastComp['last_bin']+1!=component['first_bin']):
-                    complArrivals.setdefault((fromLastComp['last_bin'],component['first_bin']),set()).update(frd)
+                    complArrivals.setdefault((fromLastComp['last_bin'],component['first_bin'],'fr'),set()).update(frd)
                 #from left departure
                 if len(fld)>0 and (fromNode not in nodeInComp):
-                    complArrivals.setdefault((fromFirstComp['first_bin'],component['first_bin']),set()).update(fld)
+                    complArrivals.setdefault((fromFirstComp['first_bin'],component['first_bin'],'fl'),set()).update(fld)
 
             #right arrivals
             if len(ra)>0 and doRight:
@@ -1050,12 +1073,13 @@ def fillLinks(nodeInComp,nodeToComponent,toLinks,fromLinks,component,components,
                 comprArrivals = compLinks.setdefault('rArrivals',{})
                 #from right departures
                 if len(frd)>0 and (fromNode not in nodeInComp):
-                    comprArrivals.setdefault((fromLastComp['last_bin'],component['last_bin']),set()).update(frd)
+                    comprArrivals.setdefault((fromLastComp['last_bin'],component['last_bin'],'fr'),set()).update(frd)
                 #from left departures
                 if len(fld)>0 and (fromNode not in nodeInComp):
-                    comprArrivals.setdefault((fromFirstComp['first_bin'],component['last_bin']),set()).update(fld)
+                    comprArrivals.setdefault((fromFirstComp['first_bin'],component['last_bin'],'fl'),set()).update(fld)
 
-
+        if component['last_bin'] == 121 and node == 121:
+            pdb.set_trace()
         # Processing all external departure links
         nodeFromLink = fromLinks.get(node,{})
         for toNode in nodeFromLink.keys():
@@ -1067,14 +1091,14 @@ def fillLinks(nodeInComp,nodeToComponent,toLinks,fromLinks,component,components,
             toLastComp = components[nodeToComponent[toNode-1][-1]]
 
             #right departures
-            if len(rd)>0 and doRight:
+            if len(rd)>0 and doRight: # Check if doRight is set incorrectly for our case (121->122 at level 4)
                 tla,tra = splitforwardInversedNodeComp(rd,toFirstComp,intermediateCondition)
 
                 comprDepartures = compLinks.setdefault('rDepartures',{})
                 #to left arrivals
                 if len(tla)>0:
                     if toNode not in nodeInComp:
-                         comprDepartures.setdefault((component['last_bin'],toFirstComp['first_bin']),set()).update(tla)
+                         comprDepartures.setdefault((component['last_bin'],toFirstComp['first_bin'],'tl'),set()).update(tla)
                     elif node==nodeInComp[-1] and toNode==nodeInComp[0]:
                         # Check that repeated element is actually contiguous inside otherwise it is not a loop and should not be visible.
                         tla_update = list(set(tla).intersection(*[set(fromLinks.get(nodeInComp[i],{}).get(nodeInComp[i+1],[])) for i in range(len(nodeInComp)-1)]))
@@ -1083,13 +1107,13 @@ def fillLinks(nodeInComp,nodeToComponent,toLinks,fromLinks,component,components,
                             #Loop link, can only happen when with left arrival and right departure (or vice versa).
                             complArrivals = compLinks.setdefault('lArrivals',{})
 
-                            complArrivals.setdefault((component['last_bin'],component['first_bin']),set()).update(tla)
-                            comprDepartures.setdefault((component['last_bin'],component['first_bin']),set()).update(tla)
+                            complArrivals.setdefault((component['last_bin'],component['first_bin'],'fr'),set()).update(tla)
+                            comprDepartures.setdefault((component['last_bin'],component['first_bin'],'tl'),set()).update(tla)
 
                 #to right arrivals
-                if len(tra)>0:
+                if len(tra)>0: # Most probably the problem is here! Check it!
                     if toNode not in nodeInComp:
-                        comprDepartures.setdefault((component['last_bin'],toLastComp['last_bin']),set()).update(tra)
+                        comprDepartures.setdefault((component['last_bin'],toLastComp['last_bin'],'tr'),set()).update(tra)
 
             #left departures
             if len(ld)>0 and doLeft:
@@ -1099,12 +1123,12 @@ def fillLinks(nodeInComp,nodeToComponent,toLinks,fromLinks,component,components,
                 #to left arrivals
                 if len(tla)>0:
                     if toNode not in nodeInComp:
-                        complDepartures.setdefault((component['first_bin'],toFirstComp['first_bin']),set()).update(tla)
+                        complDepartures.setdefault((component['first_bin'],toFirstComp['first_bin'],'tl'),set()).update(tla)
 
                 if len(tra)>0:
                     if toNode not in nodeInComp:
                         if component['first_bin']-1!=toFirstComp['last_bin']:
-                            complDepartures.setdefault((component['first_bin'],toLastComp['last_bin']),set()).update(tra)
+                            complDepartures.setdefault((component['first_bin'],toLastComp['last_bin'],'tr'),set()).update(tra)
                     elif node==nodeInComp[0] and toNode==nodeInComp[-1]:
                         # Check that repeated element is actually contiguous inside otherwise it is not a loop and should not be visible.
                         tla_update = list(set(tra).intersection(*[set(fromLinks.get(nodeInComp[i],{}).get(nodeInComp[i-1],[])) for i in range(len(nodeInComp)-1,0,-1)]))
@@ -1113,7 +1137,7 @@ def fillLinks(nodeInComp,nodeToComponent,toLinks,fromLinks,component,components,
                             #Loop link, can only happen when with right arrival and left departure (or vice versa).
                             comprArrivals = compLinks.setdefault('rArrivals',{})
 
-                            comprArrivals.setdefault((component['first_bin'],component['last_bin']),set()).update(tra)
-                            complDepartures.setdefault((component['first_bin'],component['last_bin']),set()).update(tra)
+                            comprArrivals.setdefault((component['first_bin'],component['last_bin'],'fl'),set()).update(tra)
+                            complDepartures.setdefault((component['first_bin'],component['last_bin'],'tr'),set()).update(tra)
 
     return compLinks

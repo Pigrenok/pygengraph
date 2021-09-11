@@ -226,7 +226,7 @@ class GenomeGraph:
         addedPaths = 0
         ignoredPaths = 0
         for pathID,pathString in enumerate(pathStringsList):
-            print(f'\rLoading link {pathID+1:0{numPathDigits}}/{numPaths:0{numPathDigits}}',end='')
+            print(f'\rLoading path {pathID+1:0{numPathDigits}}/{numPaths:0{numPathDigits}}',end='')
             pathArray = pathString.rstrip().split(sep='\t')
             seqID,path = pathArray[1:3]
             useAccession = True

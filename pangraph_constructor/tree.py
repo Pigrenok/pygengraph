@@ -79,6 +79,7 @@ class TremauxTree(nx.DiGraph):
 
             if byPath:
                 self._preprocessPathTree(treeCombined)
+                self._preprocessPathTree(treeCombined)
             else:
                 for toNode,numDeg in treeCombined.in_degree:
                     if numDeg>1:
@@ -92,7 +93,8 @@ class TremauxTree(nx.DiGraph):
     def _preprocessPathTree(self,treeCombined):
 #         pdb.set_trace()
         for node in self.originalGraph.nodes:
-
+#             if node==29:
+#                 pdb.set_trace()
             # get all edges coming to given node in the full graph
             graphInEdgeList = list(self.originalGraph.in_edges(node))
             # get all edges coming to a given node in the tremaux tree
@@ -152,6 +154,10 @@ class TremauxTree(nx.DiGraph):
 
             If there is no alternative, it will return None
         '''
+
+#         if path[0]==29 and path[-1]==124:
+#             pdb.set_trace()
+
         # get number of paths passing (value) each edge in the path
         pathValues = [self.parentGraph.edgePaths[(path[i-1],path[i])] for i in range(1,len(path))]
         # sort the values of the path
