@@ -158,6 +158,7 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
         forceBreak = False
 
         for nodeIdx in range(1,numNodes+1):
+
             if debug:
                 print(f'Processing node {nodeIdx:0{numNodesDigits}}/{numNodes:0{numNodesDigits}}')
             else:
@@ -172,8 +173,9 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
             pathStart = False
             pathEnd = False
             breakCompBeforeBin = False
+            nodeOccupants = set()
             for j,pathID in enumerate(uniqueNodePathsIDx):
-                occupants.add(pathID)
+                nodeOccupants.add(pathID)
 
                 pOcc = occupancy.setdefault(pathID,0)
                 pOcc += pathNodeCount[j]*nodeLengths[nodeIdx-1]
@@ -242,6 +244,8 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
                 breakComponent = False
                 forceBreak = False
                 breakCompBeforeBin = False
+
+            occupants |= nodeOccupants
 
             nodeToComponent.append([len(components)])
             nodesInComp.add(nodeIdx)
@@ -495,7 +499,7 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
 
                                 nodeFromLink.setdefault(nextNode,[]).append(pathID)
                                 toLinks.setdefault(nextNode,{}).setdefault(nodeIdx,[]).append(pathID)
-                                if (nBins>0 or binOpen) and (nodeInversionInPath<=0.5):
+                                if (nBins>0 or binOpen) and (nodeInversionInPath<=invertionThreshold):
 
                                     if debug:
                                         print(f'Node {nodeIdx}: Component will be broken after node {nodeIdx} due to backward link to node {nextNode}.')
@@ -508,7 +512,7 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
 
                                     nodeFromLink.setdefault(nextNode,[]).append(pathID)
                                     toLinks.setdefault(nextNode,{}).setdefault(nodeIdx,[]).append(pathID)
-                                    if (nBins>0 or binOpen) and (nodeInversionInPath<=0.5):
+                                    if (nBins>0 or binOpen) and (nodeInversionInPath<=invertionThreshold):
 
                                         if debug:
                                             print(f'Node {nodeIdx}: Component will be broken after node {nodeIdx} due forward jumping link to node {nextNode}.')
@@ -697,7 +701,7 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
         json.dump(rootStruct,f,cls=NpEncoder)
 
     if returnDebugData:
-        return zoomComponentLengths,zoomNodeToComponent,zoomComponentToNodes,zoomComponents,zoomCompNucleotides
+        return zoomComponentLengths,zoomNodeToComponent,zoomComponentToNodes,zoomComponents,zoomCompNucleotides,toLinks,fromLinks,graph
 
 # Cell
 def checkLinks(leftComp,rightComp):
@@ -1100,7 +1104,6 @@ def fillLinks(nodeInComp,nodeToComponent,toLinks,fromLinks,component,components,
 #         pdb.set_trace()
 
     for node in nodeInComp:
-
         # Processing all external arrival links
         nodeToLink = toLinks.get(node,{})
         for fromNode in nodeToLink.keys():
