@@ -1,5 +1,9 @@
 ## Segmentation rules
 
+Pangenome - db number
+<zoom level>.<accessionID>Pos
+<zoom level>.<accessionID>Gene
+
 zoomLevel - maximum (ant target) number of positions in a single bin (can be smaller and still deserve a full bin)
 compMax - maximum length of component
 chunkMax - maximum length of chunk (in bins).
