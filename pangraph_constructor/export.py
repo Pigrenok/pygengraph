@@ -312,10 +312,10 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
 #                         print(f'[Export] identified annotations for path {graph.accessions[pathID]} is {[k for k,v in graph.nodesAnnotation[nodeIdx-1][graph.accessions[pathID]].items() \
 #                                     for interval in v \
 #                                     if (interval[1]-i)*(i+zoomLevel-1-interval[0])>=0]}')
-                        annotationNames.setdefault(graph.accessions[pathID],SortedSet()).\
-                            update([k for k,v in graph.nodesAnnotation[nodeIdx-1][graph.accessions[pathID]].items() \
+                        annotationNames.setdefault(graph.accessions[pathID],{}).\
+                            update({k:None for k,v in graph.nodesAnnotation[nodeIdx-1][graph.accessions[pathID]].items() \
                                     for interval in v \
-                                    if (interval[1]-i)*(i+zoomLevel-1-interval[0])>=0])
+                                    if (interval[1]-i)*(i+zoomLevel-1-interval[0])>=0})
                         posPath = pos.setdefault(pathID,[])
                         for nodeNumInPath in nodeSeqInPath[np.where(nodePathsIdx==pathID)[0]]:
                             offset = np.min([i+zoomLevel,nodeLen])
@@ -422,11 +422,11 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
 #                     breakCompBeforeBin = False
 #                     breakComponent = False
 #                     forceBreak = False
-                if zoomLevel==32:
-                    pdb.set_trace()
+#                 if zoomLevel==32:
+#                     pdb.set_trace()
                 for j,pathID in enumerate(uniqueNodePathsIDx):
-                    annotationNames.setdefault(graph.accessions[pathID],SortedSet()).\
-                        update(list(graph.nodesAnnotation[nodeIdx-1][graph.accessions[pathID]].keys()))
+                    annotationNames.setdefault(graph.accessions[pathID],{}).\
+                        update(graph.nodesAnnotation[nodeIdx-1][graph.accessions[pathID]])
 
                     posPath = pos.setdefault(pathID,[])
                     for nodeNumInPath in nodeSeqInPath[np.where(nodePathsIdx==pathID)[0]]:
@@ -821,6 +821,9 @@ def joinComponents(leftComp,rightComp, maxLengthComponent, invertionThreshold=0.
     newComp['ldepartures'] = leftComp['ldepartures']
     newComp['rarrivals'] = rightComp['rarrivals']
     newComp['rdepartures'] = rightComp['rdepartures']
+    ends = list(set(leftComp.get('ends',[])).union(rightComp.get('ends',[])))
+    if len(ends)>0:
+        newComp['ends'] = ends
 
     return newComp
 
@@ -857,7 +860,7 @@ def finaliseBin(matrix,pos,binLength,occInvAdj,occupancy,inversion,nBins,nCols,p
 
         inversionRate = inversion[pathID]/occInvAdj
 #         pdb.set_trace()
-        matrixPathRecord = [0,0,[],list(annotationNames[accessions[pathID]])[::-1]]
+        matrixPathRecord = [0,0,[],list(annotationNames[accessions[pathID]].keys())]
         matrixPath[0].append(nBins)
         matrixPathRecord[0] = occupancy[pathID]/occInvAdj # Occupancy
         matrixPathRecord[1] = inversionRate # Inversion rate
