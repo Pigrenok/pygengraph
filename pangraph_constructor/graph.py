@@ -227,7 +227,7 @@ class GenomeGraph:
             print(f'Found node annotation file {annotationFile}, loading associations.')
             self.nodesAnnotation = joblib.load(annotationFile)
             emptyAnnotation = False
-        elif annotationFiles is not None and isSeq:
+        else:
             emptyAnnotation = True
 
         prevPathSegment = None
@@ -271,6 +271,7 @@ class GenomeGraph:
 
             self.nodes.append(segName)
             self.nodesData.append(segSeq)
+
         if emptyAnnotation:
             self.nodesAnnotation = [{}]*len(self.nodes)
 

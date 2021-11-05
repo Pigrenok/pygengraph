@@ -122,8 +122,6 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
         zoom_level_struct = {}
         zoom_level_struct["files"] = []
 
-        overallNBins = 0
-
         if returnDebugData:
             nodeToComponent = zoomNodeToComponent.setdefault(zoomLevel,[])
             componentToNode = zoomComponentToNodes.setdefault(zoomLevel,[])
@@ -242,7 +240,8 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
                     else:
                         print(f'Node {nodeIdx}: Component broken before node {nodeIdx} due to start or end of a path.')
                 component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = \
-                    finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides)
+                    finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides,
+                                      zoomLevel=zoomLevel,accessions=graph.accessions,redisConn=redisConn)
                 componentToNode.append(list(nodesInComp))
                 nodesInComp = set([nodeIdx])
                 breakComponent = False
@@ -322,12 +321,12 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
                             nodeStart = pathNodeLengthsCum[pathID,nodeNumInPath]-nodeLen+1
                             posPath.append([nodeStart+i,nodeStart+offset-1])
 
-                    matrix,pos,binLength,_,_,nBins,annotationNames,nCols,overallNBins,binOpen = \
+                    matrix,pos,binLength,_,_,nBins,annotationNames,nCols,binOpen = \
                         finaliseBin(matrix,pos,binLength,
                                     nodeLengths[nodeIdx-1],
                                     occupancy,inversion,
                                     nBins,nCols,posInd,
-                                    redisConn,zoomLevel,overallNBins,annotationNames,
+                                    annotationNames,
                                     graph.accessions)
 
                     if nBins+1>maxLengthComponent and (i+zoomLevel<nodeLen) and len(matrix)>0:
@@ -364,7 +363,9 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
                         if debug:
                             print(f'Node {nodeIdx}: Component broken inside node {nodeIdx} due to max component length.')
 
-                        component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides)
+                        component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = \
+                            finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides,
+                                              zoomLevel=zoomLevel,accessions=graph.accessions,redisConn=redisConn)
 
                         nodeToComponent[-1].append(len(components))
                         componentToNode.append(list(nodesInComp))
@@ -435,20 +436,20 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
 
                 if nodeIdx<len(graph.nodes):
                     if binLength+nodeLengths[nodeIdx]>zoomLevel:
-                        matrix,pos,binLength,occupancy,inversion,nBins,annotationNames,nCols,overallNBins,binOpen = \
+                        matrix,pos,binLength,occupancy,inversion,nBins,annotationNames,nCols,binOpen = \
                         finaliseBin(matrix,pos,binLength,
                                     binLength,
                                     occupancy,inversion,
                                     nBins,nCols,0,
-                                    redisConn,zoomLevel,overallNBins,annotationNames,
+                                    annotationNames,
                                     graph.accessions)
                 else:
-                    matrix,pos,binLength,occupancy,inversion,nBins,annotationNames,nCols,overallNBins,binOpen = \
+                    matrix,pos,binLength,occupancy,inversion,nBins,annotationNames,nCols,binOpen = \
                     finaliseBin(matrix,pos,binLength,
                                 binLength,
                                 occupancy,inversion,
                                 nBins,nCols,0,
-                                redisConn,zoomLevel,overallNBins,annotationNames,
+                                annotationNames,
                                 graph.accessions)
 
             # marking path ends and breaking component if any exist
@@ -475,7 +476,9 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
                 elif nBins>0:
                     if debug:
                         print(f'Node {nodeIdx}: Component broken after node {nodeIdx} due to start or end of a path.')
-                    component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides)
+                    component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = \
+                        finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides,
+                                          zoomLevel=zoomLevel,accessions=graph.accessions,redisConn=redisConn)
                     componentToNode.append(list(nodesInComp))
 
                     nodesInComp = set()
@@ -487,7 +490,9 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
 
                     if debug:
                         print(f'Node {nodeIdx}: Component broken after node {nodeIdx} because next component will not fit in this component.')
-                    component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides)
+                    component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = \
+                        finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides,
+                                          zoomLevel=zoomLevel,accessions=graph.accessions,redisConn=redisConn)
                     componentToNode.append(list(nodesInComp))
 
                     nodesInComp = set()
@@ -497,7 +502,9 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
 
                 if debug:
                     print(f'Node {nodeIdx}: Last node in the last component.')
-                component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides)
+                component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = \
+                    finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides,
+                                      zoomLevel=zoomLevel,accessions=graph.accessions,redisConn=redisConn)
                 componentToNode.append(list(nodesInComp))
 
                 nodesInComp = set()
@@ -610,7 +617,9 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
                         print(f'Node {nodeIdx}: Component broken after node {nodeIdx} because of previously set flag.')
                         print(f'Nodes in component: {nodesInComp}')
                         print(f'Nodes linked from component: {nodeLinks}')
-                    component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides)
+                    component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = \
+                        finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides,
+                                          zoomLevel=zoomLevel,accessions=graph.accessions,redisConn=redisConn)
                     componentToNode.append(list(nodesInComp))
                     nodesInComp = set()
                     breakComponent = False
@@ -828,7 +837,7 @@ def joinComponents(leftComp,rightComp, maxLengthComponent, invertionThreshold=0.
     return newComp
 
 # Cell
-def finaliseBin(matrix,pos,binLength,occInvAdj,occupancy,inversion,nBins,nCols,posInd,redisConn,zoomLevel,overallNBins,annotationNames,accessions):
+def finaliseBin(matrix,pos,binLength,occInvAdj,occupancy,inversion,nBins,nCols,posInd,annotationNames,accessions):
     for pathID in pos.keys():
         matrixPath = matrix.setdefault(pathID,[[],[]])
         posPath = pos.get(pathID)
@@ -850,27 +859,30 @@ def finaliseBin(matrix,pos,binLength,occInvAdj,occupancy,inversion,nBins,nCols,p
 
         newPos[-1].append(np.max(candidates))# !!!!
 
-        posMapping = {int(overallNBins+1):(int(posStart),int(posEnd)) for posStart,posEnd in newPos}
-        iset_add(redisConn, f'{zoomLevel}.{accessions[pathID]}.Pos',posMapping)
+#         posMapping = {int(overallNBins+1):(int(posStart),int(posEnd)) for posStart,posEnd in newPos}
+#         iset_add(redisConn, f'{zoomLevel}.{accessions[pathID]}.Pos',posMapping)
 
-        geneList = annotationNames[accessions[pathID]]
-        if len(geneList)>0:
-            geneMapping = {gene:int(overallNBins+1) for gene in geneList}
-            redisConn.hmset( f'{zoomLevel}.{accessions[pathID]}.Gene',geneMapping)
+#         geneList = annotationNames[accessions[pathID]]
+#         if len(geneList)>0:
+#             geneMapping = {gene:int(overallNBins+1) for gene in geneList}
+#             redisConn.hmset( f'{zoomLevel}.{accessions[pathID]}.Gene',geneMapping)
 
         inversionRate = inversion[pathID]/occInvAdj
 #         pdb.set_trace()
-        matrixPathRecord = [0,0,[],list(annotationNames[accessions[pathID]].keys())]
+        matrixPathRecord = [occupancy[pathID]/occInvAdj, # occupancy
+                            inversionRate, # inversion
+                            newPos, # genomic positions
+                            list(annotationNames[accessions[pathID]].keys())] # annotation
         matrixPath[0].append(nBins)
-        matrixPathRecord[0] = occupancy[pathID]/occInvAdj # Occupancy
-        matrixPathRecord[1] = inversionRate # Inversion rate
-        matrixPathRecord[2] = newPos
+#         matrixPathRecord[0] = occupancy[pathID]/occInvAdj # Occupancy
+#         matrixPathRecord[1] = inversionRate # Inversion rate
+#         matrixPathRecord[2] = newPos
         if inversionRate>0.5:
             matrixPath[1].insert(posInd,matrixPathRecord)
         else:
             matrixPath[1].append(matrixPathRecord)
 
-    return matrix,{},0,{},{},nBins+1,{},nCols+binLength,overallNBins+1,False #matrix,pos,binLength,occupancy,inversion,nBins,annotationNames,nCols,overallNBins,binOpen
+    return matrix,{},0,{},{},nBins+1,{},nCols+binLength,False #matrix,pos,binLength,occupancy,inversion,nBins,annotationNames,nCols,overallNBins,binOpen
 
 # Cell
 def adjustMatrixPathArray(matrixPathArray,isInverted,nBins):
@@ -881,16 +893,34 @@ def adjustMatrixPathArray(matrixPathArray,isInverted,nBins):
     return matrixPathArray
 
 # Cell
-def finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides,invertionThreshold=0.5):
+def finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides,zoomLevel,accessions,invertionThreshold=0.5,redisConn=None):
     componentLengths.append(nBins)
     component["matrix"].extend([[pathID,
                                  int(matrixPathArray[1][0][1]>invertionThreshold),
                                  adjustMatrixPathArray(matrixPathArray,int(matrixPathArray[1][0][1]>invertionThreshold),nBins)] \
                                 for pathID,matrixPathArray in matrix.items()])
+
+
     component["occupants"] = sorted(list(occupants))
     component['last_bin'] = component['first_bin'] + nBins - 1
     component['lastCol'] = component['firstCol'] + nCols - 1
     componentNucleotides.append(nucleotides)
+    if redisConn is not None:
+        for pathID,matrixPathArray in matrix.items():
+            for binNum,binMatrix in zip(*matrixPathArray):
+                if binMatrix[1]>invertionThreshold:
+                    overallBin = component['last_bin']-binNum
+                else:
+                    overallBin = component['first_bin']+binNum
+
+                posMapping = {int(overallBin):(int(posStart),int(posEnd)) for posStart,posEnd in binMatrix[2]}
+                iset_add(redisConn, f'{zoomLevel}.{accessions[pathID]}.Pos',posMapping)
+
+                geneList = binMatrix[3]
+                for gene in geneList:
+                    if not redisConn.hexists(f'{zoomLevel}.{accessions[pathID]}.Gene',gene):
+                        redisConn.hset( f'{zoomLevel}.{accessions[pathID]}.Gene',gene,overallBin)
+
     firstBin = component['last_bin'] + 1
     firstCol = component['lastCol'] + 1
     components.append(component)

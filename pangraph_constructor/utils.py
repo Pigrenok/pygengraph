@@ -5,7 +5,7 @@ __all__ = ['getDBID', 'pathConvert', 'checkZoomLevels', 'adjustZoomLevels', 'NpE
 
 # Cell
 from collections.abc import Iterable
-from copy import deepcopy
+# from copy import deepcopy
 import json
 import numpy as np
 import os
@@ -26,23 +26,23 @@ def getDBID(pathToDictFile,caseName):
     if dbid is None:
         dbidArray = sorted(list(caseToDBID.values()))
         if dbidArray[0]>0:
-            caseToDBID[caseName] = 0
             dbid = 0
         else:
             prevID = 0
-            for curID in dbidArray:
-                if prevID + 1 < curID:
-                    caseToDBID[caseName] = prevID + 1
-                    dbid = prevID + 1
-                    break
+            if len(dbidArray)>1:
+                for curID in dbidArray[1:]:
+                    if prevID + 1 < curID:
+                        break
+                    prevID = curID
+            dbid = prevID + 1
+        caseToDBID[caseName] = dbid
 
     joblib.dump(caseToDBID,pathToDictFile)
 
     return dbid
 
-
 # Cell
-def pathConvert(inputPath,suffix=''):
+def pathConvert(inputPath, suffix=''):
     outputPath = os.path.dirname(inputPath)
     outputName = '.'.join(os.path.splitext(os.path.basename(inputPath))[:-1])+suffix
     return outputPath,outputName
@@ -62,8 +62,9 @@ def adjustZoomLevels(zoomLevels):
     If there is no zoom level 1, adds it to the list.
     '''
     if not checkZoomLevels(zoomLevels):
-        raise ValueError('Zoom level list is incorrect. Each next level should have previous one as factor.')
-    if min(zoomLevels)>1:
+        raise ValueError('Zoom level list is incorrect. Each next level \
+                          should have previous one as factor.')
+    if min(zoomLevels) > 1:
         zoomLevels = [1] + zoomLevels
     return zoomLevels
 
@@ -87,69 +88,73 @@ class NpEncoder(json.JSONEncoder):
 # Cell
 class bidict(dict):
     '''
-    Here is a class for a bidirectional dict, inspired by Finding key from value in Python
-    dictionary and modified to allow the following 2) and 3).
+    Here is a class for a bidirectional dict, inspired by Finding key from
+    value in Python dictionary and modified to allow the following 2) and 3).
 
     Note that :
 
-    1) The inverse directory bd.inverse auto-updates itself when the standard dict bd is modified.
-    2) The inverse directory bd.inverse[value] is always a list of key such that bd[key] == value.
-    3) Unlike the bidict module from https://pypi.python.org/pypi/bidict, here we can have 2 keys
-    having same value, this is very important.
-    4) After modification, values in the "forward" (not inversed) dict can be lists (or any
-    iterables theoretically, but only list was tested).
+    1) The inverse directory bd.inverse auto-updates itself when the standard
+        dict bd is modified.
+    2) The inverse directory bd.inverse[value] is always a list of key such
+        that bd[key] == value.
+    3) Unlike the bidict module from https://pypi.python.org/pypi/bidict,
+        here we can have 2 keys having same value, this is very important.
+    4) After modification, values in the "forward" (not inversed) dict
+        can be lists (or any iterables theoretically,
+        but only list was tested).
 
-    For implementing 4), new method `add` was introduced. If d[key].append(value) attempted, the link
-    between main and inversed dict will be broken. Method `add` can accept both
+    For implementing 4), new method `add` was introduced.
+    If d[key].append(value) attempted, the link between main and inversed dict
+    will be broken. Method `add` can accept both
 
     Credit:
     Implemented as an answer to
     https://stackoverflow.com/questions/3318625/how-to-implement-an-efficient-bidirectional-hash-table
     by Basj (https://stackoverflow.com/users/1422096/basj).
     '''
+
     def __init__(self, *args, **kwargs):
         super(bidict, self).__init__(*args, **kwargs)
         self.inverse = {}
         for key, value in self.items():
-            if isinstance(value,Iterable):
+            if isinstance(value, Iterable):
                 for v in value:
-                    self.inverse.setdefault(v,[]).append(key)
+                    self.inverse.setdefault(v, []).append(key)
             else:
-                self.inverse.setdefault(value,[]).append(key)
+                self.inverse.setdefault(value, []).append(key)
 
     def __setitem__(self, key, value):
-
         if key in self:
             keyV = self[key]
-            if isinstance(keyV,Iterable):
+            if isinstance(keyV, Iterable):
                 for v in keyV:
                     self.inverse[v].remove(key)
             else:
                 self.inverse[keyV].remove(key)
         super(bidict, self).__setitem__(key, value)
-        if isinstance(value,Iterable):
+        if isinstance(value, Iterable):
             for v in value:
-                self.inverse.setdefault(v,[]).append(key)
+                self.inverse.setdefault(v, []).append(key)
         else:
-            self.inverse.setdefault(value,[]).append(key)
+            self.inverse.setdefault(value, []).append(key)
 
     def __delitem__(self, key):
         value = self[key]
-        if isinstance(value,Iterable):
+        if isinstance(value, Iterable):
             for v in value:
-                self.inverse.setdefault(v,[]).remove(key)
+                self.inverse.setdefault(v, []).remove(key)
                 if v in self.inverse and not self.inverse[v]:
                     del self.inverse[v]
         else:
-            self.inverse.setdefault(value,[]).remove(key)
+            self.inverse.setdefault(value, []).remove(key)
             if value in self.inverse and not self.inverse[value]:
                 del self.inverse[value]
         super(bidict, self).__delitem__(key)
 
-    def add(self,key,value):
-        valKey = set(self.setdefault(key,[]))
+    def add(self, key, value):
+        valKey = set(self.setdefault(key, []))
 
-        if isinstance(value,Iterable):
+        if isinstance(value, Iterable):
             valKey = valKey.union(value)
         else:
             valKey.add(value)
