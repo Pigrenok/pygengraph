@@ -95,8 +95,8 @@ class bidict(dict):
 
     1) The inverse directory bd.inverse auto-updates itself when the standard
         dict bd is modified.
-    2) The inverse directory bd.inverse[value] is always a list of key such
-        that bd[key] == value.
+    2) The inverse directory bd.inverse[value] is always a list of keys such
+        that value in bd[key] for each key.
     3) Unlike the bidict module from https://pypi.python.org/pypi/bidict,
         here we can have 2 keys having same value, this is very important.
     4) After modification, values in the "forward" (not inversed) dict
@@ -114,7 +114,7 @@ class bidict(dict):
     '''
 
     def __init__(self, *args, **kwargs):
-        super(bidict, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.inverse = {}
         for key, value in self.items():
             if isinstance(value, Iterable):

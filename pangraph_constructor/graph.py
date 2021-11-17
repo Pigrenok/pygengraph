@@ -115,11 +115,35 @@ class GenomeGraph:
                  doBack=False,**kwargs):
 
         '''
-        accessionsToRemove: list or None. If not None, a list of strings, if any of the string contains in pathname, the path will be ignored.
+        Priority 1: If you pass gfaPath as actual path to gfa file, then it will be loaded ignoring other options
+        accessionsToRemove: list or None (default). If not None, a list of strings, if any of the string contains
+        in pathname, the path will be ignored.
+        In this case, the following options are available:
+            `isGFASeq`: boolean (default: True). Whether the graph should be considered as sequence graph (True)
+                        or as gene/block graph (False).
+
+        Priority 4: If annotationFiles is not None, but is a list of paths to annotation (gff3) files,
+        then the following extra options are available:
+            `fileOrder`: list or None (default) Order in which each accession should be loaded into the
+                         graph (and order in which paths will be represented)
+            `doUS`: boolean (default: False) Add unrelated sequence blocks between annotated genes/blocks.
+            `refAnnotationFile`: str. If given, it has to be a path to gff3 file with reference annotation
+                                 with AT notation for gene names. For this, `transMap` has to be provided.
+            `refSequenceFile`: str or None (default). If provided with path, then it will be used to obtain
+                               sequences of each block/gene.
+            `transMap`: a bidict object (`util` module) or None (default). A dictionary ontaining bidirectional
+                        relation between OG notation of genes and AT notation of genes.
+                        It is required if refAnnotationFile is provided.
+            `seqSuffix`: str or None (default). Which sequence suffix within each annotation to use.
+                         If None, it will run all sequences in each annotation in lexicographic order
+                         and join them together (e.g. end of chr1 will be joined to start of chr2).
+            `refAccession`: str or None (default). Optional accession ID for reference annotation (if not the same as the file name).
+
         '''
         self.nodes = []
         self.nodesData = []
         self.nodesAnnotation = []
+        self.nodesChr = []
         self.forwardLinks = {}
         self.overlaps = {}
         self.paths = []

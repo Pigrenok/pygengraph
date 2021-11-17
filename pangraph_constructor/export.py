@@ -60,26 +60,25 @@ rootStructTemplate = {
 
 
 # Cell
-def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath=None,outputName=None,outputSuffix=None,isSeq=True,
+def exportToPantograph(graph=None, inputPath=None, GenomeGraphParams={}, outputPath=None, outputName=None, outputSuffix=None, isSeq=True,
                        redisConn=None,
-                       listOfExports=['schematise','genomeToPangenome','annotationToGenome'],
-                       zoomLevels=[1],maxLengthComponent=100,maxLengthChunk=20,invertionThreshold=0.5,
-                       debug=False,returnDebugData=False):
+                       listOfExports=['schematise', 'genomeToPangenome', 'annotationToGenome'],
+                       zoomLevels=[1], maxLengthComponent=100, maxLengthChunk=20, invertionThreshold=0.5,
+                       debug=False, returnDebugData=False):
 
     if graph is None:
         if inputPath is not None:
             print('Loading Genome')
-            graph = GenomeGraph(gfaPath=inputPath,isGFASeq=isSeq,**GenomeGraphParams)
+            graph = GenomeGraph(gfaPath=inputPath, isGFASeq=isSeq, **GenomeGraphParams)
         else:
             raise ValueError("Either graph or inputpath to GFA file should be provided")
 
     if outputPath is None and outputName is None:
         if inputPath is not None:
             if outputSuffix is not None:
-                outputPath,outputName = pathConvert(inputPath,suffix=outputSuffix)
+                outputPath, outputName = pathConvert(inputPath, suffix = outputSuffix)
             else:
-                outputPath,outputName = pathConvert(inputPath)
-
+                outputPath, outputName = pathConvert(inputPath)
 
         else:
             raise ValueError("If inputPath is not given, then outputPath and outputName should be provided.")
@@ -87,6 +86,9 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
         if outputSuffix is not None:
             outputName = outputName + outputSuffix
     print(f'Recording Pantograph data to {outputPath}{os.path.sep}{outputName}')
+
+    if redisConn is not None:
+        redisConn.flushdb()
 
     numNodes = len(graph.nodes)
     numNodesDigits = np.int(np.ceil(np.log10(numNodes)))
@@ -103,7 +105,7 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
         zoomNodeToComponent = {}
 
         zoomComponentToNodes = {}
-        zoomComponents = {} #temporary structure for testing, later each zoomlevel should be just saved as soon as it is processed.
+        zoomComponents = {}  # temporary structure for testing, later each zoomlevel should be just saved as soon as it is processed.
         zoomCompNucleotides = {}
 
     nodeLengths = calcNodeLengths(graph)
@@ -154,86 +156,144 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
         nodesInComp = set()
         annotationNames = {}
         breakComponentWhenBinEnds = False
-        breakCompBeforeBin = False
+#         breakCompBeforeBin = False
         binOpen = False
         breakComponent = False
         forceBreak = False
 
         for nodeIdx in range(1,numNodes+1):
-
             if debug:
                 print(f'Processing node {nodeIdx:0{numNodesDigits}}/{numNodes:0{numNodesDigits}}')
             else:
                 print(f'\rProcessing node {nodeIdx:0{numNodesDigits}}/{numNodes:0{numNodesDigits}}',end='')
 
-            nodePathsIdx,nodeSeqInPath = np.where(pathNodeArray==nodeIdx)
+            # Find positions of the node in each path
+            nodePathsIdx, nodeSeqInPath = np.where(pathNodeArray == nodeIdx)
+            # Find node length
             nodeLen = nodeLengths[nodeIdx-1]
 
+            # Find unique path IDs (numerical) and cound of given node in each path.
             uniqueNodePathsIDx,pathNodeCount = np.unique(nodePathsIdx,return_counts=True)
 
+            ####################################
+            # Block to check whether the component
+            # should be broken before this component.
+            ####################################
+            # TO CHECK: Should it happen only if binOpen is False???
+
+            # Boolean indicator of far incoming link
+            # TO CHECK: Is it only incoming as incoming to the left
+            # or incoming to the left and outgoing from the left?
             incomingFarLink = False
+
+            # Boolean if at least one path starts from this node
             pathStart = False
+            # Boolean if at least one path ends on this node.
             pathEnd = False
-            breakCompBeforeBin = False
-            nodeOccupants = set()
-            for j,pathID in enumerate(uniqueNodePathsIDx):
-                nodeOccupants.add(pathID)
+            # TO CHECK: Does it take into account inverted nodes in
+            #           some accessions?
 
-                pOcc = occupancy.setdefault(pathID,0)
-                pOcc += pathNodeCount[j]*nodeLengths[nodeIdx-1]
-                occupancy[pathID] = pOcc # Occupancy
+            # Indicator whether inversion is changed from one side of
+            # `inversionThreshold` to the other.
+            isChangeInversion = False
 
+            # Check whether component should be broken before current node.
+            for j, pathID in enumerate(uniqueNodePathsIDx):
+
+                # calculating occupancy for current node
+                # Do we need it?
+                pOcc = occupancy.setdefault(pathID, 0)
+                pOcc += pathNodeCount[j]*nodeLen
+                occupancy[pathID] = pOcc  # Occupancy
+
+                # Calculate inversion of current node
                 localInv = 0
                 for nodeNumInPath in nodeSeqInPath[np.where(nodePathsIdx==pathID)[0]]:
                     localInv += int(pathDirArray[pathID,nodeNumInPath])
 
                 pInv = inversion.get(pathID,0)
-                pInv += localInv*nodeLengths[nodeIdx-1]/pathNodeCount[j]
+                # Do we need to multiply it by node length?
+                # Most probably it is needed for larger components
+                # Bigger question is why we add it to the pInv, not just assign?
+                pInv += localInv*nodeLen/pathNodeCount[j]
                 inversion[pathID] = pInv
-                if (pInv-invertionThreshold)*(previousInv.setdefault(pathID,pInv)-invertionThreshold)<0:
-                    breakCompBeforeBin = True
-                previousInv[pathID] = pInv
 
+                # Check whether inversion is switched from one side of `inversionThreshold` to the other side.
+                # Should not pInv be divided by node length to get actual inversion fraction?
+                # Does it ever work and whether it is repeated after previous node?
+                if (pInv/nodeLen-invertionThreshold)*(previousInv.setdefault(pathID, pInv)/nodeLen-invertionThreshold)<0:
+                    isChangeInversion = True
+                # Record current inversion for current pathID as previous (already been analysed).
+#                 previousInv[pathID] = pInv
+
+                # Get indexes of positions of the node in the path
                 nodePositions = np.where(nodePathsIdx==pathID)[0]
-                nodeInversionInPath = np.sum([pathDirArray[pathID,nodeSeqInPath[nodePos]] for nodePos in nodePositions])/len(nodePositions)
+                # Get node inversion
+                # Is it necessary to divide by node length???
+                nodeInversionInPath = inversion[pathID]/nodeLengths[nodeIdx-1]
+                #np.sum([pathDirArray[pathID, nodeSeqInPath[nodePos]] for nodePos in nodePositions])/len(nodePositions)
+                # loop over node position sin path
                 for nodePos in nodePositions:
+                    # Get actual position in path of the node
                     nodePositionInPath = nodeSeqInPath[nodePos]
                     if debug:
                         print(f'Node {nodeIdx}, Path {pathID} inversion {nodeInversionInPath}')
                     if nodeInversionInPath<=invertionThreshold:
-
+                        # Not inverted node
+                        # For the node find the links goint to the left of the node
                         if nodePositionInPath>0 and nodePositionInPath<pathLengths[pathID]-1:
+                            # node is not the first or last
                             if debug:
                                 print(f"IncomingLinks: {pathNodeArray[pathID,nodePositionInPath-1]} -> {pathNodeArray[pathID,nodePositionInPath]}")
                                 print(f'Existing known links: {fromLinks.get(pathNodeArray[pathID,nodePositionInPath-1],{})}')
 
-                            previousNode = pathNodeArray[pathID,nodePositionInPath-1]
-                            nextNode = pathNodeArray[pathID,nodePositionInPath]
+                            # Get previous and current nodes (IDs, 1 based) in the path
+                            previousNode = pathNodeArray[pathID,nodePositionInPath-1] # previous node
+                            nextNode = pathNodeArray[pathID,nodePositionInPath] # current node
                             if previousNode+1!=nextNode:
-                                if (previousNode<nextNode and nextNode in fromLinks.get(previousNode,{})) or (previousNode>nextNode):
+                                # Link in the path does not go between consecutive nodes (from previous to current)
+                                # This means that there is a links coming to the left of the node
+                                if (previousNode<nextNode and nextNode in fromLinks.get(previousNode,{})) or (previousNode>=nextNode):
+                                    # If we are not picking up passing through empty blocks as far link
+                                    # !!! Not sure why this condition is needed and what it excludes.
+                                    # Why tandems are excluded from here?
+                                    # They should be included as they also cause an arrow to the start of the node.
                                     incomingFarLink = True
                                     break
                         elif nodePositionInPath==0:
                             pathStart = True
                     else:
-
+                        #Inverted node
+                        # For the node find the links goint from the left of the node
                         if nodePositionInPath>0 and nodePositionInPath<pathLengths[pathID]-1:
+                            # node is not the first or last
                             if debug:
                                 print(f"IncomingLinks: {pathNodeArray[pathID,nodePositionInPath]} -> {pathNodeArray[pathID,nodePositionInPath+1]}")
                                 print(f'Existing known links: {toLinks.get(pathNodeArray[pathID,nodePositionInPath+1],{})}')
 
+                            # Get previous and current nodes (IDs, 1 based) in the path
                             previousNode = pathNodeArray[pathID,nodePositionInPath]
                             nextNode = pathNodeArray[pathID,nodePositionInPath+1]
+
                             if previousNode-1!=nextNode:
-                                if (previousNode>nextNode and nextNode in toLinks.get(nextNode,{})) or (previousNode<nextNode):
+                                # Link does not go between consecutive blocks (from this to previous one)
+                                if (previousNode>nextNode and previousNode in toLinks.get(nextNode,{})) or (previousNode<=nextNode):
+                                    # If we are not picking up passing through empty blocks as far link
+                                    # !!! Not sure why this condition is needed and what it excludes.
+                                    # Why tandems are excluded from here?
+                                    # They should be included as they also cause an arrow to the start of the node.
                                     incomingFarLink = True
                                     break
                         elif nodePositionInPath==pathLengths[pathID]-1:
+                            # if last node, mark it as path end.
                             pathEnd = True
 #                 if incomingFarLink or pathStart or pathEnd:
 #                     break
 
-            if nodeIdx>1 and (pathStart or pathEnd or incomingFarLink or breakCompBeforeBin) and len(matrix)>0:
+            #Assign current node inversion to previousInv
+            previousInv = inversion
+
+            if nodeIdx>1 and (pathStart or pathEnd or incomingFarLink or isChangeInversion) and len(matrix)>0:
                 if debug:
                     if incomingFarLink:
                         print(f'Node {nodeIdx}: Component broken before node {nodeIdx} due to incoming far link.')
@@ -246,9 +306,9 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
                 nodesInComp = set([nodeIdx])
                 breakComponent = False
                 forceBreak = False
-                breakCompBeforeBin = False
+                isChangeInversion = False
 
-            occupants |= nodeOccupants
+            occupants |= set(uniqueNodePathsIDx)
 
             nodeToComponent.append([len(components)])
             nodesInComp.add(nodeIdx)
@@ -256,49 +316,10 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
             if zoomLevel<nodeLen:
                 for posInd,i in enumerate(range(0,nodeLen,zoomLevel)):
 
-#                     breakCompBeforeBin = False
-#                     for j,pathID in enumerate(uniqueNodePathsIDx):
-#                         occupants.add(pathID)
-
-#                         pOcc = occupancy.setdefault(pathID,0)
-#                         pOcc += pathNodeCount[j]*binLength
-#                         occupancy[pathID] = pOcc # Occupancy
-
-#                         posPath = pos.setdefault(pathID,[])
-#                         localInv = 0
-#                         for nodeNumInPath in nodeSeqInPath[np.where(nodePathsIdx==pathID)[0]]:
-#                             localInv += int(pathDirArray[pathID,nodeNumInPath])
-#                             offset = np.min([i+zoomLevel,nodeLen])
-#                             nodeStart = pathNodeLengthsCum[pathID,nodeNumInPath]-nodeLen+1
-#                             posPath.append([nodeStart+i,nodeStart+offset-1])
-
-
-#                         pInv = inversion.get(pathID,0)
-#                         pInv += localInv*binLength/pathNodeCount[j]
-#                         inversion[pathID] = pInv
-#                         if (pInv-invertionThreshold)*(previousInv.setdefault(pathID,pInv)-invertionThreshold)<0:
-#                             breakCompBeforeBin = True
-#                         previousInv[pathID] = pInv
-
-#                     if breakCompBeforeBin and len(matrix)>0:
-#                         nodeToComponent[-1].remove(len(components))
-#                         nodesInComp.remove(nodeIdx)
-
-#                         component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = \
-#                         finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides)
-
-#                         nodeToComponent[-1].append(len(components))
-#                         componentToNode.append(list(nodesInComp))
-#                         nodesInComp = set([nodeIdx])
-#                         breakCompBeforeBin = False
-#                         breakComponent = False
-#                         forceBreak = False
-
-                    if zoomLevel==1:
-                        if isSeq:
-                            nucleotides += graph.nodesData[nodeIdx-1][i:i+zoomLevel]
-                        else:
-                            nucleotides += graph.nodes[nodeIdx-1][i:i+zoomLevel]
+                    if isSeq:
+                        nucleotides += graph.nodesData[nodeIdx-1][i:i+zoomLevel]
+                    else:
+                        nucleotides += graph.nodes[nodeIdx-1][i:i+zoomLevel]
 
                     if (i+zoomLevel>nodeLen):
                         binLength = nodeLen-i
@@ -306,11 +327,6 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
                         binLength = zoomLevel
 
                     for j,pathID in enumerate(uniqueNodePathsIDx):
-#                         if i==3:
-#                             pdb.set_trace()
-#                         print(f'[Export] identified annotations for path {graph.accessions[pathID]} is {[k for k,v in graph.nodesAnnotation[nodeIdx-1][graph.accessions[pathID]].items() \
-#                                     for interval in v \
-#                                     if (interval[1]-i)*(i+zoomLevel-1-interval[0])>=0]}')
                         annotationNames.setdefault(graph.accessions[pathID],{}).\
                             update({k:None for k,v in graph.nodesAnnotation[nodeIdx-1][graph.accessions[pathID]].items() \
                                     for interval in v \
@@ -383,48 +399,6 @@ def exportToPantograph(graph=None,inputPath=None,GenomeGraphParams={},outputPath
                 binOpen = True
                 binLength += nodeLen
 
-#                 if isSeq:
-#                     nucleotides += graph.nodesData[nodeIdx-1]
-#                 else:
-#                     nucleotides += graph.nodes[nodeIdx-1]
-
-#                 breakCompBeforeBin = False
-#                 for j,pathID in enumerate(uniqueNodePathsIDx):
-
-#                     occupants.add(pathID)
-
-#                     pOcc = occupancy.setdefault(pathID,0)
-#                     pOcc += pathNodeCount[j]*nodeLen
-#                     occupancy[pathID] = pOcc
-
-#                     localInv = 0
-#                     posPath = pos.setdefault(pathID,[])
-#                     for nodeNumInPath in nodeSeqInPath[np.where(nodePathsIdx==pathID)[0]]:
-#                         localInv += int(pathDirArray[pathID,nodeNumInPath])
-#                         nodeStart = pathNodeLengthsCum[pathID,nodeNumInPath]-nodeLen+1
-#                         posPath.append([nodeStart,nodeStart+nodeLen-1])
-#                     pInv = inversion.get(pathID,0)
-#                     pInv += localInv*nodeLen/pathNodeCount[j]
-#                     inversion[pathID] = pInv
-#                     if (pInv-invertionThreshold)*(previousInv.setdefault(pathID,0)-invertionThreshold)<0:
-#                         breakCompBeforeBin = True
-#                     previousInv[pathID] = pInv
-
-#                 if breakCompBeforeBin and len(matrix)>0:
-#                     nodeToComponent[-1].remove(len(components))
-#                     nodesInComp.remove(nodeIdx)
-
-#                     component,components,componentNucleotides,matrix,occupants,nBins,nCols,nucleotides = \
-#                     finaliseComponent(component,components,componentNucleotides,matrix,occupants,nBins,nCols,componentLengths,nucleotides)
-
-#                     nodeToComponent[-1].append(len(components))
-#                     componentToNode.append(list(nodesInComp))
-#                     nodesInComp = set([nodeIdx])
-#                     breakCompBeforeBin = False
-#                     breakComponent = False
-#                     forceBreak = False
-#                 if zoomLevel==32:
-#                     pdb.set_trace()
                 for j,pathID in enumerate(uniqueNodePathsIDx):
                     annotationNames.setdefault(graph.accessions[pathID],{}).\
                         update(graph.nodesAnnotation[nodeIdx-1][graph.accessions[pathID]])
