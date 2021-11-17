@@ -520,6 +520,7 @@ def exportToPantograph(graph=None, inputPath=None, GenomeGraphParams={}, outputP
                                         print(f'Node {nodeIdx}: Component will be broken after node {nodeIdx} due to backward link to node {nextNode}.')
                                     nodeLinks.append(nextNode)
                                     breakComponent = True
+                                    forceBreak = True
                             else:
                                 if np.any([node in pathNodeArray[pathID,:] for node in range(nodeIdx+1*step,nextNode,step)]):
                                     if debug:
