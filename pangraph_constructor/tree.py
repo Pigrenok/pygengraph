@@ -46,12 +46,8 @@ class TremauxTree(nx.DiGraph):
     def _getNodeStartFit(self):
         nodeStartTest = []
         for node in range(1,len(self.parentGraph.nodes)+1):
-            nodeEdgePaths = [0]
-            for edge,pathN in self.parentGraph.edgePaths.items():
-                if edge[1]==node:
-                    nodeEdgePaths.append(pathN)
-
-            nodeStartTest.append(self.parentGraph.pathStarts[node-1]-max(nodeEdgePaths))
+            nodeStartTest.append(self.parentGraph.pathStarts[node-1] - \
+                                 max([pathN for edge,pathN in self.parentGraph.edgePaths.items() if edge[1]==node],default=0))
         return nodeStartTest
 
     def _generateTree(self,byPath=True):
@@ -69,6 +65,9 @@ class TremauxTree(nx.DiGraph):
         self.startingNodes = startingNodes[np.where(selectedOutPaths==np.max(selectedOutPaths))]
         selectedInPaths = np.array(inEdge)[startingNodes-1]
         self.startingNodes = startingNodes[np.where(selectedInPaths==np.min(selectedInPaths))].tolist()
+        self.startingNodes = set(self.startingNodes)
+        self.startingNodes.update((np.where(np.array(inEdge)==0)[0]+1).tolist())
+        self.startingNodes = list(self.startingNodes)
 #         self.startingNodes.sort(key=[self.parentGraph.pathStarts[node] for node in self.startingNodes])
 
         if len(self.startingNodes)>0:
@@ -98,7 +97,10 @@ class TremauxTree(nx.DiGraph):
             # get all edges coming to given node in the full graph
             graphInEdgeList = list(self.originalGraph.in_edges(node))
             # get all edges coming to a given node in the tremaux tree
-            treeInEdgeList = list(treeCombined.in_edges(node))
+            try:
+                treeInEdgeList = list(treeCombined.in_edges(node))
+            except nx.NetworkXError:
+                treeInEdgeList = []
 #             print(f'Node: {node}')
 #             print(f'Graph edges: {graphInEdgeList}')
 #             print(f'Tree edges: {treeInEdgeList}')
