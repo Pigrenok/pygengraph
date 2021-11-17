@@ -781,6 +781,7 @@ def joinComponents(leftComp,rightComp, maxLengthComponent, invertionThreshold=0.
             if len([el for el in rightPathElement[2][1] if el[2][0][0]==1 or el[2][-1][0]==1])>0:
                 # Start of a path
                 return [leftComp,rightComp]
+            rightPathElement[2][0] = [el+leftCompNumBins for el in rightPathElement[2][0]]
             newComp.setdefault("matrix",[]).append(rightPathElement)
             continue
 
