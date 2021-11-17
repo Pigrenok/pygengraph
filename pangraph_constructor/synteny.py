@@ -17,22 +17,30 @@ from skbio.sequence import DNA
 
 from dnasim.IO import writeFASTA
 from dnasim.simulation import inverseSequence
+from .utils import bidict
 
 # Cell
-def readTransMap(transMapFile):
+def readTransMap(transMapFile,ATaccessionName='araport'):
     # reading and preparing transmap in pandas format
     transMap = pd.read_csv(transMapFile,delimiter='\t')
+    transMap.fillna('',inplace=True)
     transMap.rename(columns={'Orthogroup:':'orthogroup'},inplace=True)
     transMap['orthogroup'] = transMap.orthogroup.str.rstrip(':')
     transMap.set_index('orthogroup',inplace=True)
-    return transMap
+#     transMap.fillna('',inplace=True)
+    if ATaccessionName is not None:
+        ATTransMap = transMap[ATaccessionName]
+        return bidict({og:ATTransMap[og].split(', ') for og in ATTransMap.index})
+    else:
+        return transMap
 
 # Cell
-def generateOrder(files,priorityAccession='TIAR10'):
-    ind = [idx for idx,file in enumerate(files) if priorityAccession in file][0]
+def generateOrder(files, priorityAccession='TIAR10'):
     idxList = list(range(len(files)))
-    del idxList[ind]
-    idxList = [ind] + idxList
+    if priorityAccession is not None:
+        ind = [idx for idx, file in enumerate(files) if priorityAccession in file][0]
+        del idxList[ind]
+        idxList = [ind] + idxList
     return idxList
 
 # Cell
@@ -44,8 +52,12 @@ def getIDs(iterator):
     return idList
 
 # Cell
-def processAccession(annotationFile,sequenceFile=None):
-    accessionID = os.path.splitext(os.path.basename(annotationFile))[0]
+def processAccession(annotationFile, sequenceFile=None,
+                     ATmap=None, isRef=False, accID=None):
+    if accID is None:
+        accessionID = os.path.splitext(os.path.basename(annotationFile))[0]
+    else:
+        accessionID = accID
     annotationGen = skbio_read(annotationFile, format='gff3')
 
     sequenceDict = None
@@ -61,9 +73,19 @@ def processAccession(annotationFile,sequenceFile=None):
         geneInts = annotation.query(metadata={'type':'gene'})
 
         for gene in geneInts:
-            geneID = gene.metadata['ID'][7:]
-            orthogroup = gene.metadata['OG']
-            atNamesStr = gene.metadata.get('AT','')
+            geneID = gene.metadata['ID'].split('.')[-1]
+            if isRef and ATmap is not None:
+                orthogroup = ATmap.inverse.get(geneID,[geneID])[0]
+            elif isRef:
+                raise ValueError("If reference is provided, then the TransMap (bidict) with bidirectional relation between reference and annotation IDs should be provided.")
+                #orthogroup = gene.metadata['ID']
+            else:
+                orthogroup = gene.metadata['OG']
+
+            if ATmap is not None:
+                atNamesStr = ATmap.get(orthogroup,[''])
+            else:
+                atNameStr = ['']
             forward = gene.metadata['strand']=='+'
             start,end = gene.bounds[0]
 
@@ -71,8 +93,10 @@ def processAccession(annotationFile,sequenceFile=None):
                 geneSeq = sequenceDict[seqID][start:end+1]
             else:
                 geneSeq = ''
+            if isRef:
+                pass
             overlaps = getIDs(annotation.query(bounds=[(start,end)],metadata={'type':'gene'}))
-            genes.append([geneID,orthogroup,seqID,accessionID,forward,start,end,atNameStr,geneSeq,overlaps])
+            genes.append([geneID,orthogroup,seqID,accessionID,forward,start,end,atNamesStr,geneSeq,overlaps])
 
     genes = pd.DataFrame(genes,columns=['geneID','orthogroup','sequenceID','accessionID','forward','start','end','AT_str','geneSeq','overlapGenes'])
     genes.sort_values(by=['sequenceID','start'],inplace=True)
@@ -97,11 +121,18 @@ def recordSegment(name,segmentIDs,segmentIDToNumDict,sequence=None,gfaFile=None,
     return segID
 
 # Cell
-def recordAnnotation(nodeID,accessionID,og,atList,nodesAnnotation):
+def recordAnnotation(nodeID,accessionID,sequenceID,og,atList,nodesAnnotation,nodesChr):
+    if len(nodesAnnotation)==nodeID-1:
+        nodesAnnotation.append({})
+
     nodesAnnotation[nodeID-1].setdefault(accessionID,{})[og] = [(0,len(og)-1)]
     for at in atList:
         nodesAnnotation[nodeID-1].setdefault(accessionID,{})[at] = [(0,len(at)-1)]
 
+    if len(nodesChr)==nodeID-1:
+        nodesChr.append({})
+
+    nodesChr[nodeID-1].setdefault(accessionID,[]).append(sequenceID)
 
 # Cell
 def addLink(links,prevPathSegment,name,forward):
@@ -115,8 +146,11 @@ def addLink(links,prevPathSegment,name,forward):
 
 
 # Cell
-def generatePathsLinks(genes,sequenceID,accessionID,sequences,OGList,segmentIDs,nodeAnnotation,segmentIDToNumDict,links,usCounter,doUS=True,
-                       segmentData=None,gfaFile=None):
+def generatePathsLinks(genes,sequenceID,accessionID,
+                       sequences,OGList,segmentIDs,
+                       nodeAnnotation,nodesChr,
+                       segmentIDToNumDict,links,usCounter,
+                       doUS=True,segmentData=None,gfaFile=None):
     '''
     `gfaFile`: file handle to write segments to GFA file
     `OGList`: mutable
@@ -136,11 +170,11 @@ def generatePathsLinks(genes,sequenceID,accessionID,sequences,OGList,segmentIDs,
         if curSeqID != geneSeqID:
             curSeqID = geneSeqID
 
-        atStr = gene[1].at_STR
-        if len(atStr)>0:
-            atList = atStr.split(',')
+        atStr = gene[1].AT_str
+        if len(atStr[0])>0:
+            atList = atStr
         else:
-            atStr = []
+            atList = []
 
         geneStart = gene[1].start
         geneEnd = gene[1].end
@@ -170,7 +204,7 @@ def generatePathsLinks(genes,sequenceID,accessionID,sequences,OGList,segmentIDs,
 
             if isUS:
                 usID = recordSegment(us,segmentIDs,segmentIDToNumDict,usSeq,gfaFile=gfaFile,segmentData=segmentData)
-                recordAnnotation(usID,accessionID,us,[],nodeAnnotation)
+                recordAnnotation(usID,accessionID,geneSeqID,us,[],nodeAnnotation,nodesChr)
 
         if og not in OGList:
             ogID = recordSegment(og,segmentIDs,segmentIDToNumDict,geneSeq,gfaFile=gfaFile,segmentData=segmentData)
@@ -178,7 +212,7 @@ def generatePathsLinks(genes,sequenceID,accessionID,sequences,OGList,segmentIDs,
         else:
             ogID = segmentIDs.index(og)+1
 
-        recordAnnotation(ogID,accessionID,og,atList,nodeAnnotation)
+        recordAnnotation(ogID,accessionID,geneSeqID,og,atList,nodeAnnotation,nodesChr)
 
         pathAdd = [f'{ogID}{"+" if geneForward else "-"}']
         if doUS and isUS:
@@ -212,7 +246,7 @@ def generatePathsLinks(genes,sequenceID,accessionID,sequences,OGList,segmentIDs,
         if len(usSeq)>0:
             us = f'US{usCounter:07d}'
             usID = recordSegment(us,segmentIDs,segmentIDToNumDict,usSeq,gfaFile=gfaFile,segmentData=segmentData)
-            recordAnnotation(usID,accessionID,us,[],nodeAnnotation)
+            recordAnnotation(usID,accessionID,geneSeqID,us,[],nodeAnnotation,nodesChr)
             usCounter += 1
             path.append(f'{usID}+')
             cigar.append('0M')

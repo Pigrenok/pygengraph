@@ -440,40 +440,66 @@ class GenomeGraph:
         self.forwardLinks = dict([(fromNode,dict([(fromStrand,list(toSet)) for fromStrand,toSet in strandDict.items()])) for fromNode,strandDict in links.items()])
         self.nodesData = ['']*len(self.nodes)
 
-    def _graphFromAnnotation(self,annotationFiles,sequenceFiles=None,**kwargs):
+    def _processAnnotation(self, annotationFile, links, ATmap=None, seqFile=None, seqSuffix=None, doUS=False, isRef=False, accID=None):
+        accessionID, genes, sequences = \
+            processAccession(annotationFile,
+                             seqFile,
+                             ATmap=ATmap,
+                             isRef=isRef,
+                             accID=accID)
+        if seqSuffix is None:
+            seqList = genes.sequenceID.unique().tolist()
+            seqList.sort()
+        else:
+            seqList = [f'{accessionID}{seqSuffix}']
 
+        path = []
+        for seqID in seqList:
+
+            p, cigar, usCounter = generatePathsLinks(genes.loc[genes.sequenceID == seqID], seqID, accessionID, sequences, self.OGList,
+                                                     self.nodes, self.nodesAnnotation, self.nodesChr, self.nodeNameToID, links,
+                                                     self.usCounter, doUS=doUS, segmentData=self.nodesData)
+            path = path + p
+        if isRef:
+            self.paths.insert(0,path)
+            self.accessions.insert(0,accessionID)
+        else:
+            self.paths.append(path)
+            self.accessions.append(accessionID)
+
+        return links
+
+    def _graphFromAnnotation(self,annotationFiles,sequenceFiles=None,**kwargs):
         self.nodeNameToID = {}
 
-        try:
-            fileOrder = kwargs['fileOrder']
-        except KeyError:
-            fileOrder = list(range(len(annotationFiles)))
+        fileOrder = kwargs.get('fileOrder',list(range(len(annotationFiles))))
 
-        doUS = kwargs['doUS']
+        doUS = kwargs.get('doUS',False)
         self.usCounter = 0
         self.OGList = []
         links = self._linksDictToSet(self.forwardLinks)
+
+        if 'refAnnotationFile' in kwargs:
+            links = self._processAnnotation(kwargs['refAnnotationFile'], links,
+                                            ATmap=kwargs.get('transMap', None),
+                                            seqFile=kwargs.get('refSequenceFile',None),
+                                            seqSuffix=kwargs.get('seqSuffix', None),
+                                            doUS=doUS,
+                                            isRef=True,
+                                            accID=kwargs.get('refAccession',None))
 
         for fileNum in fileOrder:
             if sequenceFiles is not None:
                 seqFile = sequenceFiles[fileNum]
             else:
                 seqFile = None
-            accessionID,genes,sequences = processAccession(annotationFiles[fileNum],seqFile)
-            try:
-                seqList = [f'{accessionID}{kwargs["seqSuffix"]}']
-            except KeyError:
-                seqList = genes.sequenceID.unique().tolist()
-                seqList.sort()
-            path = []
-            for seqID in seqList:
-
-                p,cigar,usCounter = generatePathsLinks(genes.loc[genes.sequenceID==seqID],seqID,accessionID,sequences,self.OGList,
-                                                       self.nodes,self.nodesAnnotation,self.nodeNameToID,links,
-                                                       self.usCounter,doUS=doUS,segmentData=self.nodesData)
-                path = path + p
-            self.paths.append(path)
-            self.accessions.append(accessionID)
+             # annotationFile
+             # transMap
+            links = self._processAnnotation(annotationFiles[fileNum], links,
+                                            ATmap=kwargs.get('transMap', None),
+                                            seqFile=seqFile,
+                                            seqSuffix=kwargs.get('seqSuffix', None),
+                                            doUS=doUS)
 
 
         self.forwardLinks = self._linksSetToDict(links)
