@@ -164,7 +164,7 @@ class GenomeGraph:
             self.forwardLinks = links
             self.paths = paths
         elif pathsDict is not None:
-            self._graphFromPaths(pathsDict) # sequenceFiles can be None
+            self._graphFromPaths(pathsDict,**kwargs) # sequenceFiles can be None
         elif annotationFiles is not None:
             self._graphFromAnnotation(annotationFiles,sequenceFiles,**kwargs)
 
@@ -382,6 +382,32 @@ class GenomeGraph:
                         for atName in atNameList:
                             nodeDict.setdefault(atName,[]).append((leftNodeBound,rightNodeBound))
 
+    def updateAnnotationFromNodes(self,isSeq=True):
+        '''
+        This function is used only for primitive block graphs (e.g. gene and chain graphs)
+        if there is no proper annotation available (e.g. graph was created from paths and
+        some extra information about nodes is needed).
+
+        It takes "name" of each node either from `graph.nodes` (if `isSeq` is False) or
+        from `graph.nodesData` (if `isSeq` is True).
+
+        Parameters
+        ##########
+
+        `isSeq`: Whether it contains names as names or as seq.
+        '''
+        offset = 0
+        for annID in range(len(self.nodesAnnotation)):
+            if isSeq:
+                nodeSeq = self.nodesData[annID]
+            else:
+                nodeSeq = self.nodes[annID]
+            annEl = self.nodesAnnotation[annID]
+            updatedAnnEl = {}
+            for pathName in annEl:
+                updatedAnnEl[pathName] = {nodeSeq:[(0,len(nodeSeq)-1)]}
+            self.nodesAnnotation[annID] = updatedAnnEl
+
     def _graphFromNodesLinks(self,nodes,links):
         raise NotImplementedError('Generating graph from nodes and links is not yet implemented.')
 
@@ -398,7 +424,7 @@ class GenomeGraph:
 
         return nodeID
 
-    def _graphFromPaths(self,paths,sequenceFiles=None):
+    def _graphFromPaths(self,paths,sequenceFiles=None,nodeNameLength=None):
         if sequenceFiles is not None:
             warnings.warn("sequenceFiles reading with path is not yet implemented.")
 
@@ -406,7 +432,10 @@ class GenomeGraph:
             raise ValueError(f"paths should be dict but {type(paths)} was given.")
 
 #         if sequenceFiles is None:
-        maxNodeNameLength = len(max([max(path,key=lambda a: len(a)) for path in paths.values()],key=lambda a: len(a))) - 1
+        if nodeNameLength is None:
+            maxNodeNameLength = len(max([max(path,key=lambda a: len(a)) for path in paths.values()],key=lambda a: len(a))) - 1
+        else:
+            maxNodeNameLength = nodeNameLength
 
         self.nodeNameToID = {}
         self.nodes = []

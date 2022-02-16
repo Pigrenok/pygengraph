@@ -75,12 +75,15 @@ def processAccession(annotationFile, sequenceFile=None,
         for gene in geneInts:
             geneID = gene.metadata['ID'].split('.')[-1]
             if isRef and ATmap is not None:
-                orthogroup = ATmap.inverse.get(geneID,[geneID])[0]
+                orthogroup = ATmap.inverse.get(geneID,[None])[0]
             elif isRef:
                 raise ValueError("If reference is provided, then the TransMap (bidict) with bidirectional relation between reference and annotation IDs should be provided.")
                 #orthogroup = gene.metadata['ID']
             else:
                 orthogroup = gene.metadata['OG']
+
+            if orthogroup is None:
+                continue
 
             if ATmap is not None:
                 atNamesStr = ATmap.get(orthogroup,[''])
