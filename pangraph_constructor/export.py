@@ -1424,14 +1424,14 @@ def exportLayer(zoomLevel,components,componentNucleotides,
 #         print(f'Joining component {compNum}')
 #         joinStartTime = time.time()
         nBins += component["last_bin"]-component["first_bin"]+1
-        if len(chunk['components'])>0:
-            if checkLinks(chunk["components"][-1],component):
-                newComp = joinComponents(chunk["components"].pop(),component,maxLengthComponent,inversionThreshold)
-                if isinstance(newComp,list):
-                    chunk["components"].append(newComp[0])
-                    component = newComp[1]
-                else:
-                    component = newComp
+#         if len(chunk['components'])>0:
+#             if checkLinks(chunk["components"][-1],component):
+#                 newComp = joinComponents(chunk["components"].pop(),component,maxLengthComponent,inversionThreshold)
+#                 if isinstance(newComp,list):
+#                     chunk["components"].append(newComp[0])
+#                     component = newComp[1]
+#                 else:
+#                     component = newComp
         if zoomLevel==1:
             nucleotides += componentNucleotides[compNum]
         chunk["components"].append(component)
