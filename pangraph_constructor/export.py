@@ -1653,19 +1653,19 @@ def finaliseBinZoom(compNum,
         # Add direct link
         if invChanged:
             for pathID in forwardPaths|invertedPaths:
-                if preservedPrevInv.get(pathID,0)>0.5:
+                if preservedPrevInv.get(pathID,0)>inversionThreshold:
                     fromStrand = '-'
                 else:
                     fromStrand = '+'
 
-                if inv.get(pathID,0)>0.5:
+                if inv.get(pathID,0)>inversionThreshold:
                     toStrand = '-'
                 else:
                     toStrand = '+'
 
                 if fromStrand=='-' and toStrand=='-':
                     addLink(len(newComponents)+2,toStrand,len(newComponents)+1,fromStrand,[pathID],newFromComponentLinks,newToComponentLinks)
-                else:
+                elif fromStrand=='+' and toStrand=='+':
                     addLink(len(newComponents)+1,fromStrand,len(newComponents)+2,toStrand,[pathID],newFromComponentLinks,newToComponentLinks)
 
                 if fromStrand!=toStrand:
