@@ -1595,7 +1595,11 @@ def getOccInvChange(binColLengths,binBlockLength,binOcc,binInv,prevOcc,prevInv,i
 
         # Averaging invertion
         inv[pathID] = sum([bl*bi for bl,bi in zip(binColLengths[pathID],binInv[pathID])])/binBlockLength
-        if (inv[pathID]-inversionThreshold)*(prevInv.get(pathID,inv[pathID])-inversionThreshold)<0:
+        if (inv[pathID]-inversionThreshold)*(prevInv.get(pathID,inv[pathID])-inversionThreshold)<0 or \
+        (inv[pathID]-inversionThreshold)*(prevInv.get(pathID,inv[pathID])-inversionThreshold)==0 and \
+        inv[pathID]*prevInv.get(pathID,inv[pathID])>inversionThreshold*inversionThreshold:
+            # The second comdition after or is taking the case where one is equal to inversionThreshold
+            # and another is more than inversionThreshold.
             invChanged = True
         prevInv[pathID] = inv[pathID]
 
