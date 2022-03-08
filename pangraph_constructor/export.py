@@ -1716,6 +1716,35 @@ def checkForBreaksZoom(compNum,components,fromComponentLinks,toComponentLinks):
     return [breakByLinks]
 
 # Cell
+def isStartEnd(compNum,components):
+    isBreak = False
+    leftComp = components[compNum]
+    if compNum<len(components)-1:
+        rightComp = components[compNum+1]
+    else:
+        rightComp = None
+
+
+    for path,compInvBin,pathMatrix in leftComp['matrix']:
+        if compInvBin==1:
+            if path in leftComp.get('starts',[]):
+                isBreak = True
+        else:
+            if path in leftComp.get('ends',[]):
+                isBreak = True
+
+    if rightComp is not None:
+        for path,compInvBin,pathMatrix in rightComp['matrix']:
+            if compInvBin==1:
+                if path in rightComp.get('ends',[]):
+                    isBreak = True
+            else:
+                if path in rightComp.get('starts',[]):
+                    isBreak = True
+
+    return isBreak
+
+# Cell
 def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
                   fromComponentLinks,toComponentLinks,graph,
                   collapsibleBlocks,accStarts,accEnds,
@@ -1883,6 +1912,29 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
                                               starts,ends,forwardPaths,invertedPaths,inversionThreshold=inversionThreshold)
 #                     nucleotides = keepNucl
                     occupants = set(component['occupants'])
+#         pdb.set_trace()
+
+        isEndBreak = isStartEnd(compNum,components)
+
+        if isEndBreak and binBlockLength>0:
+            [binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
+                    newComponent,newComponents,newComponentLengths,
+                    newFromComponentLinks,newToComponentLinks,
+                    occupants,collapsibleBlocksUpdate,
+                    starts,ends,newToOldInd,oldToNewInd] = \
+                finaliseBinZoom(compNum,binOcc,binInv,binPosArray,binAnn,
+                    nBins,nCols,
+                    binBlockLength,binColLengths,binBlockLengths,
+                    matrix,
+                    prevOcc,prevInv,
+                    newComponent,newComponents,newComponentLengths,
+                    newFromComponentLinks,newToComponentLinks,
+                    occupants,collapsibleBlocksUpdate,
+                    starts,ends,
+                    forwardPaths,invertedPaths,
+                    newToOldInd,oldToNewInd,
+                    inversionThreshold=inversionThreshold)
+
 
         if compNum==len(components)-1:
             # Close the bin
