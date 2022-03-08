@@ -2128,14 +2128,13 @@ def updateLinks(newToOldInd,oldToNewInd,
                         accList = intersectAccLists(list(set(newCompPosAcc).intersection(toCompPosAcc)),
                                                     toOldCompDirDict)
                         if len(accList)>0:
-                            if toNewCompId+1==newCompId and \
-                                (fromComp!=newToOldInd[toNewCompId][-1] or toOldComp!=newToOldInd[toNewCompId][0]):
+                            if not(toNewCompId+1==newCompId and \
+                                (fromComp-1!=newToOldInd[toNewCompId][-1] or toOldComp-1!=newToOldInd[toNewCompId][0])):
                                 # If the link is self loop (which happens sometimes), then it has to come out from right component
                                 # and go to the left component, otherwise it should not be carried forward.
-                                continue
-                            addLink(newCompId,'+',toNewCompId+1,'+',
-                                    accList,
-                                    newFromComponentLinks,newToComponentLinks)
+                                addLink(newCompId,'+',toNewCompId+1,'+',
+                                        accList,
+                                        newFromComponentLinks,newToComponentLinks)
 
                     # To negative strand
                     # Getting to comp (new) id
@@ -2179,14 +2178,13 @@ def updateLinks(newToOldInd,oldToNewInd,
                         accList = intersectAccLists(list(set(newCompNegAcc).intersection(toCompNegAcc)),
                                                     toOldCompDirDict)
                         if len(accList)>0:
-                            if toNewCompId+1==newCompId and \
-                                (fromComp!=newToOldInd[toNewCompId][0] or toOldComp!=newToOldInd[toNewCompId][-1]):
+                            if not (toNewCompId+1==newCompId and \
+                                (fromComp-1!=newToOldInd[toNewCompId][0] or toOldComp-1!=newToOldInd[toNewCompId][-1])):
                                 # If the link is self loop (which happens sometimes), then it has to come out from left component
                                 # and go to the right component, otherwise it should not be carried forward.
-                                continue
-                            addLink(newCompId,'-',toNewCompId+1,'-',
-                                    accList,
-                                    newFromComponentLinks,newToComponentLinks)
+                                addLink(newCompId,'-',toNewCompId+1,'-',
+                                        accList,
+                                        newFromComponentLinks,newToComponentLinks)
 
         # Arrival on the left (to positive block)
         if doLeft:
@@ -2203,14 +2201,13 @@ def updateLinks(newToOldInd,oldToNewInd,
                         accList = intersectAccLists(list(set(newCompPosAcc).intersection(fromCompPosAcc)),
                                                     fromOldCompDirDict)
                         if len(accList)>0:
-                            if fromNewCompId+1==newCompId and \
-                                (fromOldComp!=newToOldInd[fromNewCompId][-1] or toComp!=newToOldInd[fromNewCompId][0]):
+                            if not (fromNewCompId+1==newCompId and \
+                                (fromOldComp-1!=newToOldInd[fromNewCompId][-1] or toComp-1!=newToOldInd[fromNewCompId][0])):
                                 # If the link is self loop (which happens sometimes), then it has to come out from right component
                                 # and go to the left component, otherwise it should not be carried forward.
-                                continue
-                            addLink(fromNewCompId+1,'+',newCompId,'+',
-                                    accList,
-                                    newFromComponentLinks,newToComponentLinks)
+                                addLink(fromNewCompId+1,'+',newCompId,'+',
+                                        accList,
+                                        newFromComponentLinks,newToComponentLinks)
 
                     # From negative strand
                     # Getting to comp (new) id
@@ -2253,173 +2250,147 @@ def updateLinks(newToOldInd,oldToNewInd,
                         accList = intersectAccLists(list(set(newCompNegAcc).intersection(fromCompNegAcc)),
                                                     fromOldCompDirDict)
                         if len(accList)>0:
-                            if fromNewCompId+1==newCompId and \
-                                (fromOldComp!=newToOldInd[fromNewCompId][0] or toComp!=newToOldInd[fromNewCompId][-1]):
+                            if not (fromNewCompId+1==newCompId and \
+                                (fromOldComp-1!=newToOldInd[fromNewCompId][0] or toComp-1!=newToOldInd[fromNewCompId][-1])):
                                 # If the link is self loop (which happens sometimes), then it has to come out from left component
                                 # and go to the right component, otherwise it should not be carried forward.
-                                continue
-
-                            addLink(fromNewCompId+1,'-',newCompId,'-',
-                                    accList,
-                                    newFromComponentLinks,newToComponentLinks)
+                                addLink(fromNewCompId+1,'-',newCompId,'-',
+                                        accList,
+                                        newFromComponentLinks,newToComponentLinks)
 
     for acc in accStarts.keys():
         accStarts[acc] = oldToNewInd[accStarts[acc]-1][0]+1
         accEnds[acc] = oldToNewInd[accEnds[acc]-1][0]+1
 
     for blockID,[accessionID,blockLength,associatedLinks,associatedComponents] in enumerate(collapsibleBlocks):
+#         if zoomLevel==144 and accessionID==13 and blockLength==378:
+#             pdb.set_trace()
         collapsibleBlocks[blockID] = (accessionID,blockLength,
-                                      [(oldToNewInd[link[0]-1][0]+1,oldToNewInd[link[1]-1][0]+1) for link in associatedLinks],
-                                      [oldToNewInd[comp-1][0]+1 for comp in associatedComponents])
+                  [(oldToNewInd[link[0]-1][0 if compAccDir[link[0]-1].get(accessionID,'+')=='-' else -1]+1,\
+                    oldToNewInd[link[1]-1][0 if compAccDir[link[1]-1].get(accessionID,'+')=='+' else -1]+1) \
+                   for link in associatedLinks],
+                  [compID+1 for comp in associatedComponents for compID in oldToNewInd[comp-1]])
 
     return newFromComponentLinks,newToComponentLinks,accStarts,accEnds,collapsibleBlocks
 
 # Cell
-def getBackwardPositiveLinks(toComponentLinks,toComponentLinksAcc,accStarts,accEnds):
-    '''
-    Function gets toCOmponentLinks dict structure (output from `baseLayerZoom` (partially) and
-    `nodeToComponentLinks` (finalised) on base layer and by `nextLayerZoom` on every other zoom layer).
+def calcLengthBlock(startComp,endComp,components):
+    blockLength = 0
+    for comp in range(startComp,endComp+1):
+        blockLength += compLength(comp,components)
 
-    Parameters
-    ==========
-
-    toComponentLinks: dict{int:dict{str:dict{int:dict{str:list[int]}}}}. This input is an hierarchical structure of dicts
-                    which holds all links between components on the current zoom layer. This structure is internal and
-                    produced by `baseLayerZoom` (partially) and `nodeToComponentLinks` (finalised) on base layer and
-                    by `nextLayerZoom` on every other zoom layer.
-
-    Return
-    ======
-
-    compAccessionBackLinks: list[tuple(int)]. A list of tuples of component ids (1-based) (outgoing and incoming) and accessions
-                            where reversed (backward) links are coming.
-
-    '''
-    allBlockStarts = []
-#     backLinksThroughStart = []
-#     forwardLinksThroughEnd = []
-
-    for toComp,toCompDict in toComponentLinks.items():
-
-        # We are interested only in backward links coming to forward components (per accession, not overall)
-        for fromComp,fromCompDict in toCompDict.get('+',{}).items():
-            if fromComp>=toComp:
-                for accList in fromCompDict.values():
-                    for acc in accList:
-                        leftEnd = min(accStarts[acc],accEnds[acc])
-                        rightEnd = max(accStarts[acc],accEnds[acc])
-                        if fromComp>rightEnd and toComp<=rightEnd and not (fromComp>=leftEnd and toComp<leftEnd):
-                            if np.all(np.array(list(toComponentLinksAcc[acc][toComp]))>=toComp):
-                                continue
-
-
-#                         if fromComp-1 in toComponentLinksAcc[acc].get(toComp-1,set()):
-#                             continue
-
-                        if fromComp>=leftEnd and toComp<leftEnd:
-                            allBlockStarts.append((fromComp,toComp,acc))
-                        else:
-                            allBlockStarts.append((fromComp,toComp,acc))
-            else:
-                # Identify forward links through end
-                for accList in fromCompDict.values():
-                    for acc in accList:
-                        rightEnd = max(accStarts[acc],accEnds[acc])
-                        if fromComp<rightEnd and toComp>rightEnd:
-                            allBlockStarts.append((fromComp,toComp,acc))
-
-
-    return allBlockStarts
+    return blockLength
 
 # Cell
-def getForwardNegativeLinks(toComponentLinks,toComponentLinksAcc,accStarts,accEnds,invertedStarts):
-    '''
-    Function gets toCOmponentLinks dict structure (output from `baseLayerZoom` (partially) and
-    `nodeToComponentLinks` (finalised) on base layer and by `nextLayerZoom` on every other zoom layer).
+def processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components):
+    blockSet = set()
 
-    Parameters
-    ==========
+    accessionFromLinks = fromComponentLinksAcc[accID]
+    compDir = accCompDir[accID]
+    endComp = accEnds[accID]
 
-    toComponentLinks: dict{int:dict{str:dict{int:dict{str:list[int]}}}}. This input is an hierarchical structure of dicts
-                    which holds all links between components on the current zoom layer. This structure is internal and
-                    produced by `baseLayerZoom` (partially) and `nodeToComponentLinks` (finalised) on base layer and
-                    by `nextLayerZoom` on every other zoom layer.
+    block = [toComp]
+    blockLength = compLength(toComp,components)
+    associatedLinks = set()
+    if fromComp is not None:
+        associatedLinks.add((fromComp,toComp))
 
-    Return
-    ======
+    curComp = toComp
 
-    compAccessionBackLinks: list[tuple(int)]. A list of tuples of component ids (1-based) (outgoing and incoming) and accessions
-                            where reversed (backward) links are coming.
+    while True:
+        nextCompList = np.array(list(accessionFromLinks.get(curComp,set())))
+        distToNextComp = nextCompList-curComp # Do I need it?
 
-    '''
-    allBlockStarts = []
-#     backwardNegLinks = []
-#     backLinksThroughStart = []
-#     forwardLinksThroughEnd = []
+        nextCompFollow = None
+        linksToAssociate = set()
 
-    for toComp,toCompDict in toComponentLinks.items():
+        if compDir[curComp]=='+':
+            for nextComp in nextCompList:
+                if compDir[nextComp]=='+' and nextComp==curComp+1:
+                    nextCompFollow = nextComp
+                else:
+                    linksToAssociate.add((curComp,nextComp))
+        elif compDir[curComp]=='-':
+            for nextComp in nextCompList:
 
-        # We are interested only in backward links coming to forward components (per accession, not overall)
-        for fromComp,fromCompDict in toCompDict.get('-',{}).items():
-            if fromComp<=toComp:
-                for accList in fromCompDict.values():
-                    for acc in accList:
-                        leftEnd = min(accStarts[acc],accEnds[acc])
-                        rightEnd = max(accStarts[acc],accEnds[acc])
+                if compDir[nextComp]=='-' and nextComp==curComp-1:
+                    nextCompFollow = nextComp
+                else:
+                    linksToAssociate.add((curComp,nextComp))
 
-                        if fromComp<leftEnd and toComp>=leftEnd and not (fromComp<rightEnd and toComp>=rightEnd):
-                            if np.all(np.array(list(toComponentLinksAcc[acc][toComp]))<=toComp):
-                                continue
+        if nextCompFollow:
+#             if len(linksToAssociate)==0:
+#                 pdb.set_trace()
+            if len(linksToAssociate)>0:
+                blockSet.add((accID,blockLength,tuple(linksToAssociate),tuple(deepcopy(block))))
+        else:
+            associatedLinks.update(linksToAssociate)
+            break
 
-                        if fromComp<=rightEnd and toComp>rightEnd:
-                            allBlockStarts.append((fromComp,toComp,acc))
-                        else:
-                            allBlockStarts.append((fromComp,toComp,acc))
-            else:
+        blockLength += compLength(nextCompFollow,components)
+        block.append(nextCompFollow)
+        curComp = nextCompFollow
 
-                # Identify backward links through start
-                outsideLinkAdded = False
-                for fromStrand,accList in fromCompDict.items():
-                    for acc in accList:
-                        leftEnd = min(accStarts[acc],accEnds[acc])
-                        adjustment = int(fromStrand=='-')
-                        if fromComp-adjustment>=leftEnd and toComp<leftEnd:
-                            outsideLinkAdded = True
-                            allBlockStarts.append((fromComp,toComp,acc))
+#     if len(associatedLinks)==0:
+#         pdb.set_trace()
+    blockSet.add((accID,blockLength,tuple(associatedLinks),tuple(block)))
 
-                if not outsideLinkAdded:
-                    for acc in fromCompDict.get('+',[]):
-                        if all([fComp>=toComp for fComp in toCompDict.get('-',{}).keys()]) \
-                            and not (fromComp+1 in toComponentLinksAcc[acc].get(toComp+1,set())):
-                            allBlockStarts.append((fromComp,toComp,acc)) #backwardNegativeLinks were appended here originally
+    if fromComp is not None:
+        if np.abs(toComp-fromComp)>1:
+            if fromComp<toComp:
+                blockSet.add((accID,calcLengthBlock(fromComp+1,toComp-1,components),tuple([(fromComp,toComp)]),tuple(list(range(fromComp+1,toComp)))))
+            elif fromComp>toComp:
+                blockSet.add((accID,calcLengthBlock(toComp+1,fromComp-1,components),tuple([(fromComp,toComp)]),tuple(list(range(toComp+1,fromComp)))))
 
-    # Adding inverted starts as the start of the inverted blocks as they cannot be picked up by any links.
-    for accInvStart in invertedStarts:
-        allBlockStarts.append((None,accStarts[accInvStart],accInvStart))
-
-    return allBlockStarts#,backwardNegLinks
+    return blockSet
 
 # Cell
-def checkOvercoming(block,accessionFromLinks,accessionToLinks):
-    '''
-    Probably, it is not a correct way of doing this, although, we can still leave this,
-    but also follow the following rule (this should be implemented in `processNegativeLink`):
+def updateCollapsibleBlockDict(collapsibleBlocks,listOfUpdates):
+    for accessionID,blockLength,associatedLinks,associatedBlocks in listOfUpdates:
+        lengthAccessionComb = collapsibleBlocks.setdefault(blockLength,{}).setdefault(accessionID,(set(),set()))
+        lengthAccessionComb[0].update(associatedLinks)
+        lengthAccessionComb[1].update(associatedBlocks)
 
-    If inverted block start have at least one backward link incoming to it,
-    we need to look for arrow straight "before" the "end" (left end) of this block,
-    which goes forward beyond the start (right start) of this block and add this arrow to associated links.
-    '''
-    minComp = min(block)
-    maxComp = max(block)
+# Cell
+def identifyCollapsibleBlocks(toComponentLinks,fromComponentLinksAcc,components,accStarts,accEnds,accCompDir):
+    print('Identifying collapsible blocks!')
 
-    associatedLinks = []
+    collapsibleBlocks = {}
+#     collapsibleBlocks = set()
+#     blockStarts = set()
+    for toComp,toStrandDict in toComponentLinks.items():
+        for toStrand,fromCompDict in toStrandDict.items():
+            for fromComp,fromStrandDict in fromCompDict.items():
+                for fromStrand,accessionSet in fromStrandDict.items():
+                    if toStrand!=fromStrand:
+                        for accID in accessionSet:
+                            # collapsibleBlocks.update(processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
+                            updateCollapsibleBlockDict(collapsibleBlocks,
+                                                       processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
 
-    if maxComp+1 in accessionFromLinks.get(minComp-1, set()):
-        associatedLinks.append((minComp-1,maxComp+1))
-    if maxComp+1 in accessionToLinks.get(minComp-1, set()):
-        associatedLinks.append((maxComp+1,minComp-1))
+                    elif toStrand=='+' and fromComp+1!=toComp:
+                        for accID in accessionSet:
+                            # collapsibleBlocks.update(processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
+                            updateCollapsibleBlockDict(collapsibleBlocks,
+                                                       processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
+                    elif toStrand=='-' and fromComp-1!=toComp:
+                        for accID in accessionSet:
+                            # collapsibleBlocks.update(processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
+                            updateCollapsibleBlockDict(collapsibleBlocks,
+                                                       processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
 
-    return associatedLinks
+    for accID,toComp in accStarts.items():
+        # collapsibleBlocks.update(processBlock(None,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
+        updateCollapsibleBlockDict(collapsibleBlocks,
+                                   processBlock(None,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
+
+    _collapsibleBlocks = []
+    for blockLength,accessionDict in collapsibleBlocks.items():
+        for accessionID,[associatedLinksSet,associatedCompSet] in accessionDict.items():
+            _collapsibleBlocks.append((accessionID,blockLength,list(associatedLinksSet),list(associatedCompSet)))
+
+    print(f'Identified {len(_collapsibleBlocks)} collapsible block lengths')
+    return _collapsibleBlocks
 
 # Cell
 def compLinksToAccCompLinks(compLinks,doCompDir=False):
