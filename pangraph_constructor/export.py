@@ -1794,13 +1794,18 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
 
     prevOcc = {}
     prevInv = {}
+
+    compAccDir = {}
+
     for compNum,component in enumerate(components):
+
+#         if zoomLevel==16:
+#             pdb.set_trace()
 
         if debug or debugTime:
             print(f'Processing component {compNum+1:0{numComponentsDigits}}/{numComponents:0{numComponentsDigits}}')
         else:
             print(f'\rProcessing component {compNum+1:0{numComponentsDigits}}/{numComponents:0{numComponentsDigits}}',end='')
-
 
         forwardPaths = set(range(len(graph.accessions)))
         invertedPaths = set()
@@ -1819,6 +1824,9 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
                 if compInvBin==1:
                     invertedPaths.add(pathID)
                     forwardPaths -= set([pathID])
+                    compAccDir.setdefault(compNum,{})[pathID]='-'
+                else:
+                    compAccDir.setdefault(compNum,{})[pathID]='+'
                 occupiedBins = pathMatrix[0]
                 binsMatrix = pathMatrix[1]
                 try:
@@ -2010,11 +2018,9 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
 #         if compNum in [186,187,188]:
 #             pdb.set_trace()
 
-#     pdb.set_trace()
-
     newFromComponentLinks,newToComponentLinks,accStarts,accEnds,collapsibleBlocks = \
         updateLinks(newToOldInd,oldToNewInd,fromComponentLinks,toComponentLinks,collapsibleBlocks,accStarts,accEnds,
-                    newComponents,newFromComponentLinks,newToComponentLinks)
+                    newComponents,compAccDir,newFromComponentLinks,newToComponentLinks)
 
 #     if zoomLevel==3:
 #         pdb.set_trace()
