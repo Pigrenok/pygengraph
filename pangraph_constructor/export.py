@@ -6,12 +6,12 @@ __all__ = ['componentTemplate', 'chunkTemplate', 'rootStructTemplate', 'outLeftR
            'nodeToComponentLinks', 'fillLinksBase', 'addLink', 'finaliseChunk', 'addLinksToComp', 'checkLinks',
            'getMatrixPathElement', 'joinComponents', 'searchIndicesPosRecord', 'searchIndicesGeneRecord', 'exportLayer',
            'combineIntervals', 'checkLinksZoom', 'finaliseComponentZoom', 'getOccInvChange', 'recordBinZoom',
-           'finaliseBinZoom', 'checkForBreaksZoom', 'nextLayerZoom', 'splitPositiveNegative', 'intersectAccLists',
-           'updateLinks', 'getBackwardPositiveLinks', 'getForwardNegativeLinks', 'checkOvercoming',
-           'compLinksToAccCompLinks', 'compLength', 'processBackwardLink', 'processForwardLink', 'processNegativeLink',
-           'removeLink', 'identifyCollapsibleBlocks', 'processCollapsibleBlocks', 'testStartEnd', 'findEmptyEdges',
-           'checkExternalLinks', 'createNewBoundaries', 'identifyIsolatedBlocks', 'updateLinksRemoveComp',
-           'removeIsolatedBlocks', 'clearInvisible', 'exportToPantograph']
+           'finaliseBinZoom', 'checkForBreaksZoom', 'isStartEnd', 'nextLayerZoom', 'splitPositiveNegative',
+           'intersectAccLists', 'updateLinks', 'calcLengthBlock', 'processBlock', 'updateCollapsibleBlockDict',
+           'identifyCollapsibleBlocks', 'compLinksToAccCompLinks', 'compLength', 'removeLink',
+           'processCollapsibleBlocks', 'testStartEnd', 'findEmptyEdges', 'checkExternalLinks', 'createNewBoundaries',
+           'identifyIsolatedBlocks', 'updateLinksRemoveComp', 'removeIsolatedBlocks', 'clearInvisible',
+           'exportToPantograph']
 
 # Internal Cell
 
@@ -1632,7 +1632,7 @@ def finaliseBinZoom(compNum,
                     binBlockLength,binColLengths,binBlockLengths,
                     matrix,
                     prevOcc,prevInv,
-                    newComponent,newComponents,newComponentLengths,#newComponentNucleotides,
+                    newComponent,newComponents,newComponentLengths,#compAccDir,#newComponentNucleotides,
                     newFromComponentLinks,newToComponentLinks,
                     occupants,collapsibleBlocks,#nucleotides,
                     starts,ends,
@@ -1680,7 +1680,6 @@ def finaliseBinZoom(compNum,
                 addLink(len(newComponents)+1,'+',len(newComponents)+2,'+',forwardPaths,newFromComponentLinks,newToComponentLinks)
             if len(invertedPaths)>0:
                 addLink(len(newComponents)+2,'-',len(newComponents)+1,'-',invertedPaths,newFromComponentLinks,newToComponentLinks)
-
 
         # Add new element to newToOldInd
         newToOldInd.append([compNum])
@@ -1875,24 +1874,24 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
                 # Break component due to length
 #                 pdb.set_trace()
                 # Finalise bin
-                if binBlockLength>0:
-                    [binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
-                        newComponent,newComponents,newComponentLengths,
-                        newFromComponentLinks,newToComponentLinks,
-                        occupants,collapsibleBlocksUpdate,
-                        starts,ends,newToOldInd,oldToNewInd] = \
-                    finaliseBinZoom(compNum,binOcc,binInv,binPosArray,binAnn,
-                        nBins,nCols,
-                        binBlockLength,binColLengths,binBlockLengths,
-                        matrix,
-                        prevOcc,prevInv,
-                        newComponent,newComponents,newComponentLengths,
-                        newFromComponentLinks,newToComponentLinks,
-                        occupants,collapsibleBlocksUpdate,
-                        starts,ends,
-                        forwardPaths,invertedPaths,
-                        newToOldInd,oldToNewInd,
-                        inversionThreshold=inversionThreshold)
+#                 if binBlockLength>0:
+#                     [binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
+#                         newComponent,newComponents,newComponentLengths,
+#                         newFromComponentLinks,newToComponentLinks,
+#                         occupants,collapsibleBlocksUpdate,
+#                         starts,ends,newToOldInd,oldToNewInd] = \
+#                     finaliseBinZoom(compNum,binOcc,binInv,binPosArray,binAnn,
+#                         nBins,nCols,
+#                         binBlockLength,binColLengths,binBlockLengths,
+#                         matrix,
+#                         prevOcc,prevInv,
+#                         newComponent,newComponents,newComponentLengths,
+#                         newFromComponentLinks,newToComponentLinks,
+#                         occupants,collapsibleBlocksUpdate,
+#                         starts,ends,
+#                         forwardPaths,invertedPaths,
+#                         newToOldInd,oldToNewInd,
+#                         inversionThreshold=inversionThreshold)
 
                 if nBins>0:
 
@@ -2072,7 +2071,7 @@ def intersectAccLists(accList,dirDict):
 # Cell
 def updateLinks(newToOldInd,oldToNewInd,
                 fromComponentLinks,toComponentLinks,
-                collapsibleBlocks,accStarts,accEnds,components,
+                collapsibleBlocks,accStarts,accEnds,components,compAccDir,
                 newFromComponentLinks={},newToComponentLinks={}):
     '''
     newToOldInd and oldToNewInd: both index and values are 0-based numbers of components
@@ -2081,8 +2080,6 @@ def updateLinks(newToOldInd,oldToNewInd,
 
     '''
     for newComp,oldCompList in enumerate(newToOldInd):
-#         if newComp == 48 and oldCompList[-1] == 146:
-#             pdb.set_trace()
 
         leftOldCompId = oldCompList[0] + 1
         rightOldCompId = oldCompList[-1] + 1
@@ -2108,9 +2105,6 @@ def updateLinks(newToOldInd,oldToNewInd,
                 doRight = True
         else:
             doRight = True
-
-        fromLinks = {}
-        toLinks = {}
 
         # Departure on the right (from positive block)
         if doRight:
@@ -2149,6 +2143,7 @@ def updateLinks(newToOldInd,oldToNewInd,
                             addLink(newCompId,'+',toNewCompId+1,'-',
                                     accList,
                                     newFromComponentLinks,newToComponentLinks)
+
         # Departure on the left (from negative block)
         if doLeft:
 #             for fromComp in [leftOldCompId,rightOldCompId]:
@@ -2420,321 +2415,6 @@ def compLength(compID,components):
     return components[compID-1]['lastCol']-components[compID-1]['firstCol'] + 1
 
 # Cell
-def processBackwardLink(fromComp,toComp,accessionID,accStarts,accEnds,fromComponentLinksAcc,toComponentLinksAcc,accCompDir,components):
-    accessionLinks = fromComponentLinksAcc[accessionID]
-    accessionToLinks = toComponentLinksAcc[accessionID]
-
-    compDir = accCompDir[accessionID]
-
-    leftEnd = min(accStarts[accessionID],accEnds[accessionID])
-    rightEnd = max(accStarts[accessionID],accEnds[accessionID])
-    isOverEnd = (fromComp<rightEnd and toComp>rightEnd)
-    isOverStart = (fromComp>=leftEnd and toComp<leftEnd)
-#     if fromComp==4 and toComp==2:
-#         pdb.set_trace()
-
-    # This list will include tuples in the following structure:
-    # (accessionID, blockLength, associatedLinks, includedComponents)
-    blockList = []
-    block = [toComp]
-    blockLength = compLength(toComp,components)
-    associatedLinks = [(fromComp,toComp)]
-    curComp = toComp
-
-    isBackward = False
-    doBreak = False
-
-#     if accessionID==3 and fromComp==3 and toComp==2:
-#         pdb.set_trace()
-
-    while True:
-        nextCompList = np.array(list(accessionLinks.get(curComp,set())))
-        distToNextComp = nextCompList-curComp
-        if len(nextCompList)==0:
-            break
-        if np.all(distToNextComp<=0):
-            isBackward = True
-            # add all backwards link jumping over the end to associated links
-            # This link is just a return from the block that started and ended beyond
-            # the right end of the genome and everything there is in reverse.
-            # That is why these links are listed and associated with this block
-            # beyond the right end.
-            for nextCompID in np.where(distToNextComp<=0)[0]:
-                nextComp = nextCompList[nextCompID]
-                if nextComp<=rightEnd and curComp>rightEnd or \
-                compDir[nextComp] == '-':# and \
-                   #np.all(np.array(list(accessionToLinks[nextComp]))>=nextComp):
-                    # Not sure why I put this condition in the first place. If some error is encountered,
-                    # get back to this condition.
-                    associatedLinks.append((curComp,nextComp))
-            else:
-                break
-        elif np.all(nextCompList>fromComp):
-            associatedLinks.extend([(curComp,nextComp) for nextComp in nextCompList if nextComp>curComp+1])
-            break
-        elif np.any(distToNextComp<=0) or np.any(nextCompList>fromComp):
-            if np.any(distToNextComp<=0):
-                isBackward = True
-
-            if np.any(np.logical_and(nextCompList>toComp,nextCompList<=fromComp)):
-                linksToAssociate = []
-                for nextComp in nextCompList:
-                    if (nextComp>=fromComp or nextComp<toComp) and \
-                    not ((curComp==nextComp-1 and compDir[curComp]=='+' and compDir[nextComp]=='+') or \
-                         (curComp==nextComp+1 and compDir[curComp]=='-' and compDir[nextComp]=='-')) and \
-                    ((curComp,nextComp) not in associatedLinks):
-                        linksToAssociate.append((curComp,nextComp))
-                # These auxiliary blocks should be associated only with the links that create this break
-                # (recorded in `linksToAssociate`), but not with the links which creates the main block
-                # (which recorded in `associatedLinks`).
-                blockList.append((accessionID,blockLength,linksToAssociate,deepcopy(block)))
-            else:
-                break
-        else:
-            for nextCompInd in np.where(distToNextComp>1)[0]:
-                nextComp = nextCompList[nextCompInd]
-                if nextComp>rightEnd and curComp<rightEnd:
-                    isBackward = True
-                    doBreak = True
-                    break
-
-                if nextComp<=fromComp:
-                    smallBlock = []
-                    smallAssociatedLinks = [(curComp,nextComp)]
-                    smallBlockSize = 0
-                    for compInd in range(curComp+1,nextComp):
-                        if accessionID in components[compInd-1]['occupants']:
-                            smallBlock.append(compInd)
-                            smallBlockSize += compLength(compInd,components)
-                    blockList.append((accessionID,smallBlockSize,smallAssociatedLinks,smallBlock))
-#                 else:
-#                     associatedLinks.append((curComp,nextComp))
-            if doBreak:
-                break
-
-        nextComp = nextCompList[np.argmin(np.where(distToNextComp>0,distToNextComp,np.max(distToNextComp)+np.abs(distToNextComp)+1))]
-        if ((nextComp-curComp>1 and compDir[nextComp]=='+' and compDir[curComp]=='+') or \
-           (curComp-nextComp>1 and compDir[nextComp]=='-' and compDir[curComp]=='-')):
-            associatedLinks.append((curComp,nextComp))
-        blockLength += compLength(nextComp,components)
-        block.append(nextComp)
-        curComp = nextComp
-
-    blockList.append((accessionID,blockLength,associatedLinks+checkOvercoming(block,accessionLinks,accessionToLinks),block))
-
-    if not isBackward and not isOverStart and not isOverEnd:
-
-        stopSearch = False
-
-
-        for comp in range(toComp-1,0,-1):
-            compLinks = np.array(list(accessionLinks.get(comp,set())))
-            if len(accessionToLinks.get(comp,set()))==0 and accessionID in components[comp-1].get('starts',[]):
-                stopSearch = True
-
-            if len(compLinks)==0:
-                continue
-
-            distToNextComp = compLinks - comp
-
-            if np.all(distToNextComp==1):
-                break
-
-            for linkEnd in np.where(distToNextComp>1)[0]:
-                stopSearch = True
-                if not (comp<accEnds[accessionID] and (compLinks[linkEnd]>accEnds[accessionID])):
-                    blockList.append(processForwardLink(comp,compLinks[linkEnd],accessionLinks,accessionToLinks,accessionID,components))
-
-            if stopSearch:
-                break
-
-    return blockList
-
-# Cell
-def processForwardLink(fromComp,toComp,accessionLinks,accessionToLinks,accessionID,components):
-
-    block = [toComp]
-    associatedLinks = [(fromComp,toComp)]
-    blockLength = compLength(toComp, components)
-    curComp = toComp
-
-    stopSearch = False
-
-    while True:
-        nextCompList = np.array(list(accessionLinks.get(curComp,set())))
-
-        if len(nextCompList)==0 and accessionID in components[curComp-1].get('ends',[]):
-            stopSearch = True
-
-        if np.any(nextCompList<toComp):
-            break
-
-        distToNextComp = nextCompList-curComp
-
-        if np.all(distToNextComp<=0):
-            break
-
-        nextCompList = nextCompList[distToNextComp>0]
-        distToNextComp = distToNextComp[distToNextComp>0]
-
-        nextComp = nextCompList[np.argmin(distToNextComp)]
-        if (nextComp-curComp>1):
-            associatedLinks.append((curComp,nextComp))
-        blockLength += compLength(nextComp,components)
-        block.append(nextComp)
-        curComp = nextComp
-
-        if stopSearch:
-            break
-
-    return (accessionID,blockLength,associatedLinks+checkOvercoming(block,accessionLinks,accessionToLinks),block)
-
-# Cell
-def processNegativeLink(fromComp,toComp,accessionID,accStarts,accEnds,fromComponentLinksAcc,toComponentLinksAcc,accCompDir,components):
-    accessionFromLinks = fromComponentLinksAcc[accessionID]
-    accessionToLinks = toComponentLinksAcc[accessionID]
-
-    compDir = accCompDir[accessionID]
-
-    leftEnd = min(accStarts[accessionID],accEnds[accessionID])
-    rightEnd = min(accStarts[accessionID],accEnds[accessionID])
-
-    if fromComp is not None:
-        isOverEnd = (fromComp<accEnds[accessionID] and toComp>accEnds[accessionID])
-        isOverStart = (fromComp>=accStarts[accessionID] and toComp<accStarts[accessionID])
-    else:
-        isOverStart = (accStarts[accessionID]<accEnds[accessionID])
-        isOverEnd = False
-
-    isBackward = False
-
-    # This list will include tuples in the following structure:
-    # (accessionID, blockLength, associatedLinks, includedComponents)
-    blockList = []
-    block = [toComp]
-    blockLength = compLength(toComp,components)
-    if fromComp is not None:
-        associatedLinks = [(fromComp,toComp)]
-        if fromComp<=toComp:
-            # If it is forward link, then we need to check whether there are any backward link
-            # coming to the same component and associate them with this block as well
-            for fc in accessionToLinks[toComp]:
-                if fc>=toComp:
-                    isBackward = True
-                    if (fc,toComp) not in associatedLinks:
-                        associatedLinks.append((fc,toComp))
-        fComp = fromComp
-    else:
-        associatedLinks = []
-        fComp = 0
-        # Not sure whether it is correct to do like this or it should be taken into account
-        # when the block ends and we hit another forward link. Possibly, it will be more universal solution.
-#         if toComp+1 in accessionFromLinks.get(fromComp+1,set()):
-#             associatedLinks.append((fromComp+1,toComp+1))
-    curComp = toComp
-
-    doBreak = False
-#     pdb.set_trace()
-    while True:
-#         if curComp==2:
-#             pdb.set_trace()
-        nextCompList = np.array(list(accessionFromLinks.get(curComp,set())))
-        distToNextComp = nextCompList-curComp
-        if len(nextCompList)==0:
-            break
-        if np.all(distToNextComp>=0) or (np.any(np.logical_and(distToNextComp>0,nextCompList>toComp)) and (fComp>toComp)):
-
-            # add all forward link jumping over the start to associated links
-            for nextCompID in np.where(distToNextComp>=0)[0]:
-                nextComp = nextCompList[nextCompID]
-                if nextComp>leftEnd and curComp<=leftEnd or \
-                compDir[nextComp]=='+':# and \
-                   #np.all(np.array(list(accessionToLinks[nextComp]))>=nextComp):
-                    # The same. Not sure whether this condition is needed.
-                    associatedLinks.append((curComp,nextComp))
-            break
-        elif np.all(nextCompList<fComp) and (fComp<toComp):
-            associatedLinks.extend([(curComp,nextComp) for nextComp in nextCompList if nextComp<curComp-1])
-            break
-        elif np.any(distToNextComp>=0) or np.any(nextCompList<fComp) and (fComp<toComp):
-
-            if np.any(np.logical_and(nextCompList>=fComp,nextCompList<toComp)):
-                linksToAssociate = []
-                for nextComp in nextCompList:
-                    if (nextComp<=fComp or nextComp>toComp) and \
-                    not ((curComp==nextComp-1 and compDir[curComp]=='+' and compDir[nextComp]=='+') or \
-                         (curComp==nextComp+1 and compDir[curComp]=='-' and compDir[nextComp]=='-')) and \
-                    ((curComp,nextComp) not in associatedLinks):
-                        linksToAssociate.append((curComp,nextComp))
-                # These auxiliary blocks should be associated only with the links that create this break
-                # (recorded in `linksToAssociate`), but not with the links which creates the main block
-                # (which recorded in `associatedLinks`).
-                blockList.append((accessionID,blockLength,linksToAssociate,deepcopy(block)))
-            else:
-                break
-        elif np.any(np.logical_and(distToNextComp>=0,nextCompList>toComp)) and (fComp>toComp):
-
-            if np.any(np.logical_and(nextCompList<toComp)):
-                linksToAssociate = []
-                for nextComp in nextCompList:
-                    if (nextComp>toComp) and \
-                    not ((curComp==nextComp-1 and compDir[curComp]=='+' and compDir[nextComp]=='+') or \
-                         (curComp==nextComp+1 and compDir[curComp]=='-' and compDir[nextComp]=='-')) and \
-                    ((curComp,nextComp) not in associatedLinks):
-                        linksToAssociate.append((curComp,nextComp))
-                blockList.append((accessionID,blockLength,associatedLinks+linksToAssociate,deepcopy(block)))
-            else:
-                break
-        else:
-            for nextCompInd in np.where(distToNextComp<-1)[0]:
-                nextComp = nextCompList[nextCompInd]
-                if nextComp<leftEnd and curComp>leftEnd:
-                    doBreak = True
-                    break
-
-                if nextComp>=toComp:
-                    smallBlock = []
-                    smallAssociatedLinks = [(curComp,nextComp)]
-                    smallBlockSize = 0
-                    for compInd in range(curComp+1,nextComp):
-                        if accessionID in components[compInd-1]['occupants']:
-                            smallBlock.append(compInd)
-                            smallBlockSize += compLength(compInd,components)
-                    blockList.append((accessionID,smallBlockSize,smallAssociatedLinks,smallBlock))
-#                 else:
-#                     associatedLinks.append((curComp,nextComp))
-            if doBreak:
-                break
-
-        nextComp = nextCompList[np.argmin(np.where(distToNextComp<0,distToNextComp,np.max(distToNextComp)+np.abs(distToNextComp)+1))]
-        if not ((nextComp-curComp==1 and compDir[nextComp]=='+' and compDir[curComp]=='+') or \
-           (curComp-nextComp==1 and compDir[nextComp]=='-' and compDir[curComp]=='-')):
-            associatedLinks.append((curComp,nextComp))
-        blockLength += compLength(nextComp,components)
-        block.append(nextComp)
-        curComp = nextComp
-
-    leftmostBlockComp = min(block)
-
-
-    # If there was at least one link to the start of the block from the right (backward link),
-    # we should expect that there are links from the component just before
-    # (!!! is it just before or we should look further or hope that it will be picked up by other blocks?)
-    # the block going over it and all of them should also be associated with this block.
-    if (fComp>toComp or isBackward) and leftmostBlockComp>1:
-        for jumpToComp in accessionFromLinks.get(leftmostBlockComp-1,set()):
-            if jumpToComp>toComp:
-                associatedLinks.append((leftmostBlockComp-1,jumpToComp))
-
-    blockList.append((accessionID,blockLength,associatedLinks,block))
-
-    # At the moment checkOvercoming was substituted by the routine just above, but there is a possibility that it may be needed.
-    # Double check!
-    #+checkOvercoming(block,accessionFromLinks,accessionToLinks)
-
-    return blockList
-
-# Cell
 def removeLink(fromComp,toComp,accessionID,fromComponentLinks,toComponentLinks):
     '''
     At the moment this function will remove link from `fromComp` to 'toComp' for
@@ -2804,23 +2484,10 @@ def removeLink(fromComp,toComp,accessionID,fromComponentLinks,toComponentLinks):
             del toComponentLinks[toComp]
 
 # Cell
-def identifyCollapsibleBlocks(positiveBlockStarts,negativeBlockStarts,accStarts,accEnds,fromComponentLinksAcc,toComponentLinksAcc,accCompDir,components):
-    collapsibleBlocks = []
-    for backLink in positiveBlockStarts:
-        res = processBackwardLink(*backLink,accStarts,accEnds,fromComponentLinksAcc,toComponentLinksAcc,accCompDir,components)
-#         print(f'Back Link {backLink[0]} -> {backLink[1]} for accession {backLink[2]} ({graph.accessions[backLink[2]]})')
-#         print(res)
-        collapsibleBlocks.extend(res)
-
-    for forwardLink in negativeBlockStarts:
-        res = processNegativeLink(*forwardLink,accStarts,accEnds,fromComponentLinksAcc,toComponentLinksAcc,accCompDir,components)
-#         print(f'Back Link {backLink[0]} -> {backLink[1]} for accession {backLink[2]} ({graph.accessions[backLink[2]]})')
-#         print(res)
-        collapsibleBlocks.extend(res)
-    return collapsibleBlocks
-
-# Cell
 def processCollapsibleBlocks(zoomLevel,collapsibleBlocks,fromComponentLinks,toComponentLinks):
+#     if zoomLevel==576:
+#         pdb.set_trace()
+
     idToRemove = []
     for blockID,[accessionID,blockLength,linkList,componentList] in enumerate(collapsibleBlocks):
         if blockLength<zoomLevel:
@@ -2923,7 +2590,7 @@ def checkExternalLinks(blockStart,blockEnd,fromComponentLinks,toComponentLinks,c
             externalLinksComponents.append(compID)
             continue
 
-        for fromStrandDict in fromComponentLinks.get(compID,{}):
+        for fromStrandDict in fromComponentLinks.get(compID,{}).values():
             for toComp in fromStrandDict.keys():
                 if toComp>blockEnd or toComp<blockStart:
                     externalLinksComponents.append(compID)
@@ -2935,7 +2602,7 @@ def checkExternalLinks(blockStart,blockEnd,fromComponentLinks,toComponentLinks,c
         if passToNext:
             continue
 
-        for toStrandDict in toComponentLinks.get(compID,{}):
+        for toStrandDict in toComponentLinks.get(compID,{}).values():
             for fromComp in toStrandDict.keys():
                 if fromComp>blockEnd or fromComp<blockStart:
                     externalLinksComponents.append(compID)
@@ -3001,27 +2668,40 @@ def updateLinksRemoveComp(oldToNewInd,fromComponentLinks,toComponentLinks,collap
     newToComponentLinks={}
 
     for oldFromComp,fromCompDict in fromComponentLinks.items():
-        newFromCompDict = newFromComponentLinks.setdefault(oldToNewInd[oldFromComp-1][0]+1,{})
-        for fromStrand,fromStrandDict in fromCompDict.items():
-            newFromStrandDict = newFromCompDict.setdefault(fromStrand,{})
-            for toComp,toCompDict in fromStrandDict.items():
-                newFromStrandDict[oldToNewInd[toComp-1][0]+1] = toCompDict
+        if oldFromComp-1 in oldToNewInd:
+            newFromCompDict = newFromComponentLinks.setdefault(oldToNewInd[oldFromComp-1][0]+1,{})
+            for fromStrand,fromStrandDict in fromCompDict.items():
+                newFromStrandDict = newFromCompDict.setdefault(fromStrand,{})
+                for toComp,toCompDict in fromStrandDict.items():
+                    if toComp-1 in oldToNewInd:
+                        newFromStrandDict[oldToNewInd[toComp-1][0]+1] = toCompDict
 
     for oldToComp,toCompDict in toComponentLinks.items():
-        newToCompDict = newToComponentLinks.setdefault(oldToNewInd[oldToComp-1][0]+1,{})
-        for toStrand,toStrandDict in toCompDict.items():
-            newToStrandDict = newToCompDict.setdefault(toStrand,{})
-            for fromComp,fromCompDict in toStrandDict.items():
-                newToStrandDict[oldToNewInd[fromComp-1][0]+1] = fromCompDict
+        if oldToComp-1 in oldToNewInd:
+            newToCompDict = newToComponentLinks.setdefault(oldToNewInd[oldToComp-1][0]+1,{})
+            for toStrand,toStrandDict in toCompDict.items():
+                newToStrandDict = newToCompDict.setdefault(toStrand,{})
+                for fromComp,fromCompDict in toStrandDict.items():
+                    if fromComp-1 in oldToNewInd:
+                        newToStrandDict[oldToNewInd[fromComp-1][0]+1] = fromCompDict
 
     for acc in accStarts.keys():
         accStarts[acc] = oldToNewInd[accStarts[acc]-1][0]+1
         accEnds[acc] = oldToNewInd[accEnds[acc]-1][0]+1
 
-    for blockID,[accessionID,blockLength,associatedLinks,associatedComponents] in enumerate(collapsibleBlocks):
+    collapsibleBlocksToRemove = []
+    for blockID,[accessionID,blockLength,associatedLinks,associatedComponents] in enumerate(collapsibleBlocks[::-1]):
         collapsibleBlocks[blockID] = (accessionID,blockLength,
-                                      [[oldToNewInd[link[0]-1][0]+1,oldToNewInd[link[1]-1][0]+1] for link in associatedLinks],
-                                      [oldToNewInd[comp-1][0]+1 for comp in associatedComponents])
+                                      [[oldToNewInd[link[0]-1][0]+1,oldToNewInd[link[1]-1][0]+1] for link in associatedLinks \
+                                           if link[0]-1 in oldToNewInd and link[1]-1 in oldToNewInd],
+                                      [oldToNewInd[comp-1][0]+1 for comp in associatedComponents \
+                                           if comp-1 in oldToNewInd])
+        if len(collapsibleBlocks[blockID][2])==0:
+            collapsibleBlocksToRemove.append(blockID)
+
+    if len(collapsibleBlocksToRemove)>0:
+        for blockID in sorted(collapsibleBlocksToRemove,reverse=True):
+            del collapsibleBlocks[blockID]
 
     return newFromComponentLinks,newToComponentLinks,accStarts,accEnds,collapsibleBlocks
 
@@ -3030,17 +2710,20 @@ def removeIsolatedBlocks(isolatedBlockList,components,componentLengths,fromCompo
     if len(isolatedBlockList)==0:
         return components,componentLengths,fromComponentLinks,toComponentLinks,accStarts,accEnds,collapsibleBlocks
 
+    newToOldInd = list(range(len(components)))
+
     for isolatedBlockStart,isolatedBlockEnd in sorted(isolatedBlockList,key=lambda el: el[1],reverse=True):
         # deleting components and creating translation from new index to old index
-        newToOldInd = list(range(len(components)))
-        for compToRemove in range(isolatedBlockStart,isolatedBlockEnd+1):
+        for compToRemove in range(isolatedBlockEnd,isolatedBlockStart-1,-1):
             del components[compToRemove-1]
             del componentLengths[compToRemove-1]
             del newToOldInd[compToRemove-1]
 
-    newToOldInd = {ind:[el] for ind,el in enumerate(newToOldInd)}
     # Converting new to old index to old to new index
     oldToNewInd = {el:[ind] for ind,el in enumerate(newToOldInd)}
+    # Converting new to old index from list to dict (not sure it is needed in the first place)
+#     newToOldInd = {ind:[el] for ind,el in enumerate(newToOldInd)}
+
 
     # updating links
     fromComponentLinks,toComponentLinks,accStarts,accEnds,collapsibleBlocks = \
@@ -3049,6 +2732,9 @@ def removeIsolatedBlocks(isolatedBlockList,components,componentLengths,fromCompo
 
 # Cell
 def clearInvisible(zoomLevel,collapsibleBlocks,fromComponentLinks,toComponentLinks,accStarts,accEnds,components,componentLengths):
+    print('Removing links according to collapsible blocks')
+    numOfCollapsibleBlocks = len(collapsibleBlocks)
+    numOfComponents = len(components)
     # Link removal
     processCollapsibleBlocks(zoomLevel,collapsibleBlocks,fromComponentLinks,toComponentLinks)
 
@@ -3062,6 +2748,9 @@ def clearInvisible(zoomLevel,collapsibleBlocks,fromComponentLinks,toComponentLin
     components,componentLengths,fromComponentLinks,toComponentLinks,accStarts,accEnds,collapsibleBlocks = \
     removeIsolatedBlocks(isolatedBlockList,components,componentLengths,fromComponentLinks,toComponentLinks,accStarts,accEnds,collapsibleBlocks)
 
+    print(f'All links associated with collapsibleComponents <{zoomLevel} were removed. Used {numOfCollapsibleBlocks - len(collapsibleBlocks)}, \
+    {numOfComponents-len(components)} were deleted as isolated.')
+
     return components,componentLengths,fromComponentLinks,toComponentLinks,accStarts,accEnds,collapsibleBlocks
 
 # Cell
@@ -3070,7 +2759,7 @@ def exportToPantograph(graph=None, inputPath=None, GenomeGraphParams={},
                                     isSeq=True,
                                     redisConn=None,
                                     listOfExports=['schematise', 'genomeToPangenome', 'annotationToGenome'],
-                                    zoomLevels=[1], maxLengthComponent=100, maxLengthChunk=20, inversionThreshold=0.5,
+                                    zoomLevels=[1], fillZoomLevels=True, maxLengthComponent=100, maxLengthChunk=20, inversionThreshold=0.5,
                                     debug=False, returnDebugData=False):
 
     if graph is None:
@@ -3165,34 +2854,50 @@ def exportToPantograph(graph=None, inputPath=None, GenomeGraphParams={},
                 inversionThreshold=inversionThreshold,
                 redisConn=redisConn)
 
-    # Converting link dicts from component first to path/accession first.
-    # It is needed only for collapsible block identification which happens only once.
-    # So, they should be removed after collapsible blocks are removed.
-    # First line also returns dictionary giving direction (inversion) of each component in each accession.
-    fromComponentLinksAcc,accCompDir = compLinksToAccCompLinks(fromComponentLinks,doCompDir=True)
-    toComponentLinksAcc = compLinksToAccCompLinks(toComponentLinks)
+    if len(zoomLevels)>1 or fillZoomLevels:
+        # Converting link dicts from component first to path/accession first.
+        # It is needed only for collapsible block identification which happens only once.
+        # So, they should be removed after collapsible blocks are removed.
+        # First line also returns dictionary giving direction (inversion) of each component in each accession.
+        fromComponentLinksAcc,accCompDir = compLinksToAccCompLinks(fromComponentLinks,doCompDir=True)
+#         toComponentLinksAcc = compLinksToAccCompLinks(toComponentLinks)
 
-    # This identifies collapsible block starts based on links.
-    # For forward components
-    positiveBlockStarts = getBackwardPositiveLinks(toComponentLinks,toComponentLinksAcc,accStarts,accEnds)
-    # For inversed components
-    negativeBlockStarts = getForwardNegativeLinks(toComponentLinks,toComponentLinksAcc,accStarts,accEnds,invertedStarts)
+#         # This identifies collapsible block starts based on links.
+#         # For forward components
+#         positiveBlockStarts = getBackwardPositiveLinks(toComponentLinks,toComponentLinksAcc,accStarts,accEnds)
+#         # For inversed components
+#         negativeBlockStarts = getForwardNegativeLinks(toComponentLinks,toComponentLinksAcc,accStarts,accEnds,invertedStarts)
 
-    #Identifying all collapsible blocks.
-    # The return is a list of tuples containg the following elements:
-    # accession ID, length of block, list of associated links, list of associated components.
-    collapsibleBlocks = identifyCollapsibleBlocks(positiveBlockStarts,negativeBlockStarts,
-                                                  accStarts,accEnds,
-                                                  fromComponentLinksAcc,toComponentLinksAcc,accCompDir,
-                                                  components)
+        # Identifying all collapsible blocks.
+        # The return is a list of tuples containg the following elements:
+        # accession ID, length of block, list of associated links, list of associated components.
+        collapsibleBlocks = identifyCollapsibleBlocks(toComponentLinks,fromComponentLinksAcc,components,accStarts,accEnds,accCompDir)
+#         collapsibleBlocks = identifyCollapsibleBlocks(positiveBlockStarts,negativeBlockStarts,
+#                                                       accStarts,accEnds,
+#                                                       fromComponentLinksAcc,toComponentLinksAcc,accCompDir,
+#                                                       components)
 
-    del fromComponentLinksAcc
-    del toComponentLinksAcc
-    del accCompDir
-    del positiveBlockStarts
-    del negativeBlockStarts
+        if returnDebugData:
+            retCollapsibleBlocks = deepcopy(collapsibleBlocks)
 
-    for zoomLevel in zoomLevels[1:]:
+        del fromComponentLinksAcc
+#         del toComponentLinksAcc
+        del accCompDir
+#         del positiveBlockStarts
+#         del negativeBlockStarts
+    elif returnDebugData:
+        retCollapsibleBlocks = []
+
+    _zoomLevels = deepcopy(zoomLevels)
+
+    if fillZoomLevels:
+        maxBlock = max(collapsibleBlocks,key=lambda bl: bl[1])
+
+        while _zoomLevels[-1]<maxBlock[1]:
+            _zoomLevels.append(_zoomLevels[-1]*2)
+
+    for zoomLevel in _zoomLevels[1:]:
+
         # Collapsing is done through removing some particular links (not satisfying specific conditions)
         components,componentLengths,fromComponentLinks,toComponentLinks,accStarts,accEnds,collapsibleBlocks = \
         clearInvisible(zoomLevel,collapsibleBlocks,fromComponentLinks,toComponentLinks,
@@ -3227,4 +2932,4 @@ def exportToPantograph(graph=None, inputPath=None, GenomeGraphParams={},
 
     if returnDebugData:
         return zoomComponentLengths,zoomNodeToComponent,zoomComponentToNodes,zoomComponents,zoomCompNucleotides,zoomAccStarts,zoomAccEnds, \
-                invertedStarts,invertedEnds,toComponentLinks,fromComponentLinks,fromLinks,toLinks,graph
+                invertedStarts,invertedEnds,toComponentLinks,fromComponentLinks,retCollapsibleBlocks,fromLinks,toLinks,graph,rootStruct
