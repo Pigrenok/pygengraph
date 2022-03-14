@@ -2413,6 +2413,10 @@ def calcLengthBlock(startComp,endComp,components):
 
 # Cell
 def processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components):
+
+    # Potentially, we need to change this process to use actual paths and take into account the cardinalities/relation of the arrows
+    # This will make it slower, but more accurate. That also will make linking through removed links more accurate as well.
+
     blockSet = set()
 
     accessionFromLinks = fromComponentLinksAcc[accID]
@@ -2452,8 +2456,15 @@ def processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,
 #             if len(linksToAssociate)==0:
 #                 pdb.set_trace()
             if len(linksToAssociate)>0:
-                blockSet.add((accID,blockLength,tuple(linksToAssociate),tuple(deepcopy(block))))
+                # This row adds collapsible block for the case where we can continue to follow the block, but the there is an outgoing arrow
+                # This usually happens in case of partial repeats.
+                # There two options here:
+                # - add associatedLinks, which contains original incoming arrow. In this case original incoming arrow will be removed with the smallest block
+                # - do not add associatedLinks. In this case, the original incoming arrow will be removed only with the largest block.
+                blockSet.add((accID,blockLength,tuple(associatedLinks | linksToAssociate),tuple(deepcopy(block))))
         else:
+            # Potentially, we would want to stop the block following if we found another incoming arrow,
+            # but that is not that simple as this can cause breaking of large repeat due to small extra repeat inside.
             associatedLinks.update(linksToAssociate)
             break
 
@@ -2463,7 +2474,8 @@ def processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,
 
 #     if len(associatedLinks)==0:
 #         pdb.set_trace()
-    blockSet.add((accID,blockLength,tuple(associatedLinks),tuple(block)))
+    if curComp!=endComp:
+        blockSet.add((accID,blockLength,tuple(associatedLinks),tuple(block)))
 
     if fromComp is not None:
         if np.abs(toComp-fromComp)>1:
@@ -2509,10 +2521,10 @@ def identifyCollapsibleBlocks(toComponentLinks,fromComponentLinksAcc,components,
                             updateCollapsibleBlockDict(collapsibleBlocks,
                                                        processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
 
-    for accID,toComp in accStarts.items():
-        # collapsibleBlocks.update(processBlock(None,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
-        updateCollapsibleBlockDict(collapsibleBlocks,
-                                   processBlock(None,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
+#     for accID,toComp in accStarts.items():
+#         # collapsibleBlocks.update(processBlock(None,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
+#         updateCollapsibleBlockDict(collapsibleBlocks,
+#                                    processBlock(None,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,components))
 
     _collapsibleBlocks = []
     for blockLength,accessionDict in collapsibleBlocks.items():
