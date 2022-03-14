@@ -2116,7 +2116,7 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
 #,newToOldInd,oldToNewInd
 
 # Cell
-def splitPositiveNegative(compID,components):
+def splitPositiveNegative(compID,accs,components):
     '''
     This function simply pulls all accession presented in the component and split them into forward and inversed.
 
@@ -2124,6 +2124,9 @@ def splitPositiveNegative(compID,components):
     ==========
 
     `compID`: int. Number of the component in the current zoom layer (0-based).
+    `accs`: int or Iterable. Should provide either overall number of accession/paths in the graph or
+            a list of all (intended) accessions for the given component. It is used only for carrying over links
+            through empty components for some accessions.
     `components`: list[dict]. List of component dictionaries, one of the main data structure representing zoom layer.
 
     Returns
@@ -2133,15 +2136,26 @@ def splitPositiveNegative(compID,components):
     `negAcc`: list[int]. IDs of accession which has inverse direction in given component.
 
     '''
+    if isinstance(accs,int):
+        emptyAcc = set(range(accs))
+    elif isinstance(accs,Iterable):
+        emptyAcc = set(accs)
+    else:
+        raise TypeError(f'`accs` should be either int or Iterable, but {type(accs)} was given.')
     posAcc = []
     negAcc = []
     for pathID,pathInversion,_ in components[compID]['matrix']:
+        emptyAcc -= set([pathID])
         if pathInversion==1:
             negAcc.append(pathID)
         else:
             posAcc.append(pathID)
 
-    return posAcc,negAcc
+#     for pathID in allAcc:
+#         negAcc.append(pathID)
+#         posAcc.append(pathID)
+
+    return posAcc,negAcc,emptyAcc
 
 # Cell
 def intersectAccLists(accList,dirDict):
@@ -2161,13 +2175,15 @@ def updateLinks(newToOldInd,oldToNewInd,
 
 
     '''
+
     for newComp,oldCompList in enumerate(newToOldInd):
+
 
         leftOldCompId = oldCompList[0] + 1
         rightOldCompId = oldCompList[-1] + 1
         newCompId = newComp + 1
 
-        newCompPosAcc,newCompNegAcc = splitPositiveNegative(newComp,components)
+        newCompPosAcc,newCompNegAcc,newCompEmptyAcc = splitPositiveNegative(newComp,list(accStarts.keys()),components)
 
         # The next two if blocks set conditions for processing or not processing left and right of the current new component
         # The side should not be processed if the end of the previous node is coming from the same component
@@ -2197,12 +2213,14 @@ def updateLinks(newToOldInd,oldToNewInd,
                     # To positive strand
                     # Getting to comp (new) id
                     toNewCompId = oldToNewInd[toOldComp-1][0]
-                    toCompPosAcc,toCompNegAcc = splitPositiveNegative(toNewCompId,components)
+                    toCompPosAcc,toCompNegAcc,toCompEmptyAcc = splitPositiveNegative(toNewCompId,list(accStarts.keys()),components)
                     # Check whether the to comp (old) is on the left of the new comp
                     if newToOldInd[toNewCompId][0]==toOldComp-1:
                         # Getting accession list which come out from positive and goes to positive.
                         accList = intersectAccLists(list(set(newCompPosAcc).intersection(toCompPosAcc)),
                                                     toOldCompDirDict)
+    #                     accList = list(set(newCompPosAcc).intersection(toCompPosAcc).intersection(toOldCompDirDict.get('+',[])))
+
                         if len(accList)>0:
                             if not(toNewCompId+1==newCompId and \
                                 (fromComp-1!=newToOldInd[toNewCompId][-1] or toOldComp-1!=newToOldInd[toNewCompId][0])):
@@ -2212,15 +2230,23 @@ def updateLinks(newToOldInd,oldToNewInd,
                                         accList,
                                         newFromComponentLinks,newToComponentLinks)
 
+                        ### Wrap creating empty links into a separate function!!!
+                        if fromComp+1==toOldComp and newCompId+1==toNewCompId+1:
+                            continuityLinks = set(fromComponentLinks.get(fromComp,{}).get('+',{}).get(fromComp+1,{}).get('+',[]))
+                            emptyLinks = (set(newCompPosAcc)|set(newCompEmptyAcc)).intersection(set(toCompPosAcc)|set(toCompEmptyAcc)).intersection(continuityLinks)
+                            if len(emptyLinks)>0:
+                                addLink(newCompId,'+',toNewCompId+1,'+',emptyLinks,newFromComponentLinks,newToComponentLinks)
+
                     # To negative strand
                     # Getting to comp (new) id
                     toNewCompId = oldToNewInd[toOldComp-1][-1]
-                    toCompPosAcc,toCompNegAcc = splitPositiveNegative(toNewCompId,components)
+                    toCompPosAcc,toCompNegAcc,toCompEmptyAcc = splitPositiveNegative(toNewCompId,list(accStarts.keys()),components)
                     # Check whether the to comp (old) is on the right of the new comp
                     if newToOldInd[toNewCompId][-1]==toOldComp-1:
                         # Getting accession list which come out from positive and goes to negative.
                         accList = intersectAccLists(list(set(newCompPosAcc).intersection(toCompNegAcc)),
                                                     toOldCompDirDict)
+    #                     accList = list(set(newCompPosAcc).intersection(toCompNegAcc).intersection(toOldCompDirDict.get('-',[])))
                         if len(accList)>0:
                             addLink(newCompId,'+',toNewCompId+1,'-',
                                     accList,
@@ -2230,17 +2256,19 @@ def updateLinks(newToOldInd,oldToNewInd,
         if doLeft:
 #             for fromComp in [leftOldCompId,rightOldCompId]:
             fromComp = leftOldCompId
+#             toCompDict = fromComponentLinks.get(fromComp,{}).get('-',{})
             for toCompDict in fromComponentLinks.get(fromComp,{}).values():
                 for toOldComp,toOldCompDirDict in toCompDict.items():
                     # To positive strand
                     # Getting to comp (new) id
                     toNewCompId = oldToNewInd[toOldComp-1][0]
-                    toCompPosAcc,toCompNegAcc = splitPositiveNegative(toNewCompId,components)
+                    toCompPosAcc,toCompNegAcc,toCompEmptyAcc = splitPositiveNegative(toNewCompId,list(accStarts.keys()),components)
                     # Check whether the to comp (old) is on the left of the new comp
                     if newToOldInd[toNewCompId][0]==toOldComp-1:
                         # Getting accession list which come out from negative and goes to positive.
                         accList = intersectAccLists(list(set(newCompNegAcc).intersection(toCompPosAcc)),
                                                     toOldCompDirDict)
+    #                     accList = list(set(newCompNegAcc).intersection(toCompPosAcc).intersection(toOldCompDirDict.get('+',[])))
                         if len(accList)>0:
                             addLink(newCompId,'-',toNewCompId+1,'+',
                                     accList,
@@ -2249,11 +2277,12 @@ def updateLinks(newToOldInd,oldToNewInd,
                     # to Negative strand
                     # Getting to comp (new) id
                     toNewCompId = oldToNewInd[toOldComp-1][-1]
-                    toCompPosAcc,toCompNegAcc = splitPositiveNegative(toNewCompId,components)
+                    toCompPosAcc,toCompNegAcc,toCompEmptyAcc = splitPositiveNegative(toNewCompId,list(accStarts.keys()),components)
                     # Check whether the to comp (old) is on the right of the new comp
                     if newToOldInd[toNewCompId][-1]==toOldComp-1:
                         accList = intersectAccLists(list(set(newCompNegAcc).intersection(toCompNegAcc)),
                                                     toOldCompDirDict)
+    #                     accList = list(set(newCompNegAcc).intersection(toCompNegAcc).intersection(toOldCompDirDict.get('-',[])))
                         if len(accList)>0:
                             if not (toNewCompId+1==newCompId and \
                                 (fromComp-1!=newToOldInd[toNewCompId][0] or toOldComp-1!=newToOldInd[toNewCompId][-1])):
@@ -2263,20 +2292,29 @@ def updateLinks(newToOldInd,oldToNewInd,
                                         accList,
                                         newFromComponentLinks,newToComponentLinks)
 
+                        if fromComp-1==toOldComp and newCompId-1==toNewCompId+1:
+                            continuityLinks = set(fromComponentLinks.get(fromComp,{}).get('-',{}).get(fromComp+1,{}).get('-',[]))
+                            emptyLinks = (set(newCompNegAcc)|set(newCompEmptyAcc)).intersection(set(toCompNegAcc)|set(toCompEmptyAcc)).intersection(continuityLinks)
+                            if len(emptyLinks)>0:
+                                addLink(newCompId,'-',toNewCompId+1,'-',emptyLinks,newFromComponentLinks,newToComponentLinks)
+
+
         # Arrival on the left (to positive block)
         if doLeft:
 #             for toComp in [leftOldCompId,rightOldCompId]:
             toComp = leftOldCompId
-            for fromCompDict in toComponentLinks.get(leftOldCompId,{}).values():
+#             fromCompDict = toComponentLinks.get(toComp,{}).get('+',{})
+            for fromCompDict in toComponentLinks.get(toComp,{}).values():
                 for fromOldComp,fromOldCompDirDict in fromCompDict.items():
                     # From positive strand
                     # Getting from comp (new) id
                     fromNewCompId = oldToNewInd[fromOldComp-1][-1]
-                    fromCompPosAcc,fromCompNegAcc = splitPositiveNegative(fromNewCompId,components)
+                    fromCompPosAcc,fromCompNegAcc,fromCompEmptyAcc = splitPositiveNegative(fromNewCompId,list(accStarts.keys()),components)
                     # Check whether the from comp (old) is on the right of the new comp
                     if newToOldInd[fromNewCompId][-1]==fromOldComp-1:
                         accList = intersectAccLists(list(set(newCompPosAcc).intersection(fromCompPosAcc)),
                                                     fromOldCompDirDict)
+    #                     accList = list(set(newCompPosAcc).intersection(fromCompPosAcc).intersection(fromOldCompDirDict.get('+',[])))
                         if len(accList)>0:
                             if not (fromNewCompId+1==newCompId and \
                                 (fromOldComp-1!=newToOldInd[fromNewCompId][-1] or toComp-1!=newToOldInd[fromNewCompId][0])):
@@ -2285,15 +2323,21 @@ def updateLinks(newToOldInd,oldToNewInd,
                                 addLink(fromNewCompId+1,'+',newCompId,'+',
                                         accList,
                                         newFromComponentLinks,newToComponentLinks)
+                        if toComp-1==fromOldComp and newCompId-1==fromNewCompId+1:
+                            continuityLinks = set(toComponentLinks.get(toComp,{}).get('+',{}).get(toComp-1,{}).get('+',[]))
+                            emptyLinks = (set(newCompPosAcc)|set(newCompEmptyAcc)).intersection(set(fromCompPosAcc)|set(fromCompEmptyAcc)).intersection(continuityLinks)
+                            if len(emptyLinks)>0:
+                                addLink(fromNewCompId+1,'+',newCompId,'+',emptyLinks,newFromComponentLinks,newToComponentLinks)
 
                     # From negative strand
                     # Getting to comp (new) id
                     fromNewCompId = oldToNewInd[fromOldComp-1][0]
-                    fromCompPosAcc,fromCompNegAcc = splitPositiveNegative(fromNewCompId,components)
+                    fromCompPosAcc,fromCompNegAcc,fromCompEmptyAcc = splitPositiveNegative(fromNewCompId,list(accStarts.keys()),components)
                     # Check whether the to comp (old) is on the left of the new comp
                     if newToOldInd[fromNewCompId][0]==fromOldComp-1:
                         accList = intersectAccLists(list(set(newCompPosAcc).intersection(fromCompNegAcc)),
                                                     fromOldCompDirDict)
+    #                     accList = list(set(newCompPosAcc).intersection(fromCompNegAcc).intersection(fromOldCompDirDict.get('-',[])))
                         if len(accList)>0:
                             addLink(fromNewCompId+1,'-',newCompId,'+',
                                     accList,
@@ -2303,16 +2347,18 @@ def updateLinks(newToOldInd,oldToNewInd,
             # Arrival on the right (to negative block)
 #             for toComp in [leftOldCompId,rightOldCompId]:
             toComp = rightOldCompId
-            for fromCompDict in toComponentLinks.get(leftOldCompId,{}).values():
+#             fromCompDict = toComponentLinks.get(toComp,{}).get('-',{})
+            for fromCompDict in toComponentLinks.get(toComp,{}).values():
                 for fromOldComp,fromOldCompDirDict in fromCompDict.items():
                     # From positive strand
                     # Getting from comp (new) id
                     fromNewCompId = oldToNewInd[fromOldComp-1][-1]
-                    fromCompPosAcc,fromCompNegAcc = splitPositiveNegative(fromNewCompId,components)
+                    fromCompPosAcc,fromCompNegAcc,fromCompEmptyAcc = splitPositiveNegative(fromNewCompId,list(accStarts.keys()),components)
                     # Check whether the from comp (old) is on the right of the new comp
                     if newToOldInd[fromNewCompId][0]==fromOldComp-1:
                         accList = intersectAccLists(list(set(newCompNegAcc).intersection(fromCompPosAcc)),
                                                     fromOldCompDirDict)
+    #                     accList = list(set(newCompNegAcc).intersection(fromCompPosAcc).intersection(fromOldCompDirDict.get('+',[])))
                         if len(accList)>0:
                             addLink(fromNewCompId+1,'+',newCompId,'-',
                                     accList,
@@ -2321,11 +2367,12 @@ def updateLinks(newToOldInd,oldToNewInd,
                     # From negative strand
                     # Getting from comp (new) id
                     fromNewCompId = oldToNewInd[fromOldComp-1][0]
-                    fromCompPosAcc,fromCompNegAcc = splitPositiveNegative(fromNewCompId,components)
+                    fromCompPosAcc,fromCompNegAcc,fromCompEmptyAcc = splitPositiveNegative(fromNewCompId,list(accStarts.keys()),components)
                     # Check whether the from comp (old) is on the left of the new comp
                     if newToOldInd[fromNewCompId][-1]==fromOldComp-1:
                         accList = intersectAccLists(list(set(newCompNegAcc).intersection(fromCompNegAcc)),
                                                     fromOldCompDirDict)
+    #                     accList = list(set(newCompNegAcc).intersection(fromCompNegAcc).intersection(fromOldCompDirDict.get('-',[])))
                         if len(accList)>0:
                             if not (fromNewCompId+1==newCompId and \
                                 (fromOldComp-1!=newToOldInd[fromNewCompId][0] or toComp-1!=newToOldInd[fromNewCompId][-1])):
@@ -2334,6 +2381,12 @@ def updateLinks(newToOldInd,oldToNewInd,
                                 addLink(fromNewCompId+1,'-',newCompId,'-',
                                         accList,
                                         newFromComponentLinks,newToComponentLinks)
+
+                        if toComp+1==fromOldComp and newCompId+1==fromNewCompId+1:
+                            continuityLinks = set(toComponentLinks.get(toComp,{}).get('-',{}).get(toComp-1,{}).get('-',[]))
+                            emptyLinks = (set(newCompNegAcc)|set(newCompEmptyAcc)).intersection(set(fromCompNegAcc)|set(fromCompEmptyAcc)).intersection(continuityLinks)
+                            if len(emptyLinks)>0:
+                                addLink(fromNewCompId+1,'-',newCompId,'-',emptyLinks,newFromComponentLinks,newToComponentLinks)
 
     for acc in accStarts.keys():
         accStarts[acc] = oldToNewInd[accStarts[acc]-1][0]+1
