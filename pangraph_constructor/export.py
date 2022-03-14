@@ -1599,14 +1599,14 @@ def getOccInvChange(binColLengths,binBlockLength,binOcc,binInv,prevOcc,prevInv,i
     inv = {}
     for pathID in binOcc:
         # Averaging occupancy
-        occ[pathID] = sum([bl*bo for bl,bo in zip(binColLengths[pathID],binOcc[pathID])])/binBlockLength
+        occ[pathID] = sum([bl*bo for bl,bo in zip(binColLengths,binOcc[pathID])])/binBlockLength
         # Do comparison through floor and then abs difference > 0
         if np.abs(np.floor(occ[pathID]+0.5)-np.floor(prevOcc.get(pathID,occ[pathID])+0.5))>0:
             occChanged = True
         prevOcc[pathID] = occ[pathID]
 
         # Averaging invertion
-        inv[pathID] = sum([bl*bi for bl,bi in zip(binColLengths[pathID],binInv[pathID])])/binBlockLength
+        inv[pathID] = sum([bl*bo*bi for bl,bo,bi in zip(binColLengths,binOcc[pathID],binInv[pathID])])/(binBlockLength*occ[pathID])
         if (inv[pathID]-inversionThreshold)*(prevInv.get(pathID,inv[pathID])-inversionThreshold)<0 or \
         (inv[pathID]-inversionThreshold)*(prevInv.get(pathID,inv[pathID])-inversionThreshold)==0 and \
         inv[pathID]*prevInv.get(pathID,inv[pathID])>inversionThreshold*inversionThreshold:
