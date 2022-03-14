@@ -22,6 +22,8 @@ import time
 import itertools
 import warnings
 
+from collections.abc import Iterable
+
 import pdb
 
 from copy import deepcopy
@@ -560,6 +562,8 @@ def finaliseComponentBase(component,
     component["occupants"] = sorted(list(occupants))
     component['last_bin'] = component['first_bin'] + nBins - 1
     component['lastCol'] = component['firstCol'] + nBins - 1
+    component['binColStarts'] = list(range(component['firstCol'],component['lastCol']+1))
+    component['binColEnds'] = list(range(component['firstCol'],component['lastCol']+1))
     componentNucleotides.append(nucleotides)
 
     firstBin = component['last_bin'] + 1
@@ -1543,8 +1547,9 @@ def checkLinksZoom(compNum,fromComponentLinks,toComponentLinks):
 
 # Cell
 def finaliseComponentZoom(component,components,componentLengths,#componentNucleotides,
-                          nBins,nCols,occupants,binBlockLengths,matrix,#nucleotides,
-                          starts,ends,
+                          nBins,nCols,occupants,
+                          binBlockLengths,binColStarts,binColEnds,
+                          matrix,starts,ends,
                           forwardPaths,invertedPaths,inversionThreshold=0.5):
 
     componentLengths.append(nBins)
@@ -1556,7 +1561,13 @@ def finaliseComponentZoom(component,components,componentLengths,#componentNucleo
     component['binsToCols'] = binBlockLengths
     component["occupants"] = sorted(list(occupants))
     component['last_bin'] = component['first_bin'] + nBins - 1
-    component['lastCol'] = component['firstCol'] + nCols - 1
+
+    component['firstCol'] = min(binColStarts)
+    component['lastCol'] = max(binColEnds)
+
+    # Is it needed?
+    component['binColStarts'] = binColStarts
+    component['binColEnds'] = binColEnds
 
     curStarts = starts.intersection(forwardPaths)
     if len(curStarts)>0:
@@ -1571,13 +1582,14 @@ def finaliseComponentZoom(component,components,componentLengths,#componentNucleo
 #     componentNucleotides.append(nucleotides)
 
     firstBin = component['last_bin'] + 1
-    firstCol = component['lastCol'] + 1
+#     firstCol = component['lastCol'] + 1
     components.append(component)
     component = deepcopy(componentTemplate)
     component['first_bin'] = firstBin
-    component['firstCol'] = firstCol
-    return component,components,componentLengths,0,0,set(),[],{},starts,ends
-    # component,components,componentLengths,(componentNucleotides),nBins,nCols,occupants,binBlockLengths,matrix,(nucleotides),starts,ends
+#     component['firstCol'] = firstCol
+    return component,components,componentLengths,0,0,set(),[],[],[],{},starts,ends
+    # component,components,componentLengths,(componentNucleotides),nBins,nCols,occupants,
+    # binBlockLengths,binColStarts,binColEnds,matrix,starts,ends
 
 # Cell
 def getOccInvChange(binColLengths,binBlockLength,binOcc,binInv,prevOcc,prevInv,inversionThreshold=0.5):
@@ -1606,7 +1618,11 @@ def getOccInvChange(binColLengths,binBlockLength,binOcc,binInv,prevOcc,prevInv,i
     return occChanged,invChanged,occ,inv,prevOcc,prevInv
 
 # Cell
-def recordBinZoom(occ,inv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,inversionThreshold=0.5):
+def recordBinZoom(occ,inv,binPosArray,binAnn,nBins,nCols,
+                  binBlockLength,binBlockLengths,
+                  binColLengths,
+                  binColStart,binColStarts,binColEnd,binColEnds,
+                  matrix,inversionThreshold=0.5):
     # need to check for occupancy and inversion change in comparison with previous bin
     # and if that happens, break the component before this bin (should be special boolean returned.
 
@@ -1622,14 +1638,20 @@ def recordBinZoom(occ,inv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlock
 
     binBlockLengths.append(binBlockLength)
 
-    return {},{},{},{},{},nBins+1,nCols+binBlockLength,0,binBlockLengths,matrix
-    # binColLength,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,matrix
+    binColStarts.append(binColStart)
+    binColEnds.append(binColEnd)
+
+    return 0,[],binColStarts,binColEnds,{},{},{},{},nBins+1,nCols+binBlockLength,binBlockLengths,matrix
+    # binBlockLength,binColLengths,binColStarts,binColEnds,
+    # binOcc,binInv,binPosArray,binAnn,nBins,nCols,
+    # binBlockLengths,matrix
 
 # Cell
 def finaliseBinZoom(compNum,
                     binOcc,binInv,binPosArray,binAnn,
                     nBins,nCols,
-                    binBlockLength,binColLengths,binBlockLengths,
+                    binBlockLength,binBlockLengths,binColLengths,
+                    binColStart,binColStarts,binColEnd,binColEnds,
                     matrix,
                     prevOcc,prevInv,
                     newComponent,newComponents,newComponentLengths,#compAccDir,#newComponentNucleotides,
@@ -1687,20 +1709,26 @@ def finaliseBinZoom(compNum,
         oldToNewInd[-1].append(len(newComponents))
 
         newComponent,newComponents,newComponentLengths,\
-        nBins,nCols,_,binBlockLengths,matrix,\
-        starts,ends = \
+        nBins,nCols,_,binBlockLengths,binColStarts,binColEnds,\
+        matrix,starts,ends = \
             finaliseComponentZoom(newComponent,newComponents,newComponentLengths,
-                                  nBins,nCols,occupants,binBlockLengths,matrix,
-                                  starts,ends,forwardPaths,invertedPaths,inversionThreshold=inversionThreshold)
+                                  nBins,nCols,occupants,binBlockLengths,
+                                  binColStarts,binColEnds,
+                                  matrix,starts,ends,
+                                  forwardPaths,invertedPaths,inversionThreshold=inversionThreshold)
 
 
 
-    binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix = \
+    binBlockLength,binColLengths,binColStarts,binColEnds,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLengths,matrix = \
     recordBinZoom(occ,inv,binPosArray,binAnn,
-                    nBins,nCols,binBlockLength,binBlockLengths,matrix,
+                    nBins,nCols,binBlockLength,binBlockLengths,binColLengths,
+                    binColStart,binColStarts,binColEnd,binColEnds,
+                    matrix,
                     inversionThreshold=inversionThreshold)
 
-    return binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,\
+    return binColLengths,binColStarts,binColEnds,\
+            binOcc,binInv,binPosArray,binAnn,nBins,nCols,\
+            binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,\
             newComponent,newComponents,newComponentLengths,\
             newFromComponentLinks,newToComponentLinks,\
             occupants,collapsibleBlocks,\
@@ -1775,15 +1803,20 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
     #nucleotides = ''
     newToOldInd = [[]]
     oldToNewInd = []
-    binColLengths = {}
+
     binMeanOcc = {}
     binMeanInv = {}
     binOcc = {}
     binInv = {}
     binPosArray = {}
     binAnn = {}
+
+    binColStarts = []
+    binColEnds = []
+    binColLengths = []
     binBlockLength = 0
     binBlockLengths = []
+
     matrix = {}
     nBins = 0
     nCols = 0
@@ -1811,14 +1844,19 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
 
         oldToNewInd.append([]) # len(newComponents)
         newToOldInd[-1].append(compNum)
-        compColLength = component['lastCol']-component['firstCol']+1 # do I need it?
         occupants.update(component['occupants'])
         starts.update(component.get('starts',[]))
         ends.update(component.get('ends',[]))
         for binNum in range(0,component['last_bin']-component['first_bin']+1):
-            binBlockLengthAddition = 0
-            #nucleotides += componentNucleotides[compNum][binNum]
-            binColLength = component['binsToCols'][binNum]
+            if binBlockLength>0:
+                binColStart = min(binColStart,component['binColStarts'][binNum])
+                binColEnd = max(binColEnd,component['binColEnds'][binNum])
+            else:
+                binColStart = component['binColStarts'][binNum]
+                binColEnd = component['binColEnds'][binNum]
+
+            binColLengths.append(component['binsToCols'][binNum])
+            binBlockLength += binColLengths[-1]
             for pathID,compInvBin,pathMatrix in component['matrix']:
                 if compInvBin==1:
                     invertedPaths.add(pathID)
@@ -1840,24 +1878,25 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
                     binPosArray.setdefault(pathID,[]).extend(binsMatrix[binPos][2])
                     binAnn.setdefault(pathID,set()).update(binsMatrix[binPos][3])
 
-                    binColLengths.setdefault(pathID,[]).append(binColLength)
-                    binBlockLengthAddition = max([binBlockLengthAddition,binColLength])
+#                     binColLengths.setdefault(pathID,[]).append(binColLength)
+#                     binBlockLengthAddition = max([binBlockLengthAddition,binColLength])
                 except ValueError:
                     continue
 
-            binBlockLength += binBlockLengthAddition
             if binBlockLength >= zoomLevel:
                 # If bin got equal or larger than target zoom level bin size
                 # (it can grow over by less than previous zoom level)
                 # then bin is closing and new bin will be formed.
-                [binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
+                [binColLengths,binColStarts,binColEnds,binOcc,binInv,binPosArray,binAnn,nBins,nCols,
+                    binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
                     newComponent,newComponents,newComponentLengths,
                     newFromComponentLinks,newToComponentLinks,
                     occupants,collapsibleBlocksUpdate,
                     starts,ends,newToOldInd,oldToNewInd] = \
                 finaliseBinZoom(compNum,binOcc,binInv,binPosArray,binAnn,
                     nBins,nCols,
-                    binBlockLength,binColLengths,binBlockLengths,
+                    binBlockLength,binBlockLengths,binColLengths,
+                    binColStart,binColStarts,binColEnd,binColEnds,
                     matrix,
                     prevOcc,prevInv,
                     newComponent,newComponents,newComponentLengths,
@@ -1911,12 +1950,15 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
 
 #                     keepNucl = nucleotides[-1]
                     # close component
+
                     newComponent,newComponents,newComponentLengths,\
-                    nBins,nCols,occupants,binBlockLengths,\
+                    nBins,nCols,occupants,binBlockLengths,binColStarts,binColEnds,\
                     matrix,starts,ends = \
                         finaliseComponentZoom(newComponent,newComponents,newComponentLengths,
-                                              nBins,nCols,occupants,binBlockLengths,matrix,
-                                              starts,ends,forwardPaths,invertedPaths,inversionThreshold=inversionThreshold)
+                                              nBins,nCols,occupants,binBlockLengths,
+                                              binColStarts,binColEnds,
+                                              matrix,starts,ends,
+                                              forwardPaths,invertedPaths,inversionThreshold=inversionThreshold)
 #                     nucleotides = keepNucl
                     occupants = set(component['occupants'])
 #         pdb.set_trace()
@@ -1924,14 +1966,16 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
         isEndBreak = isStartEnd(compNum,components)
 
         if isEndBreak and binBlockLength>0:
-            [binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
-                    newComponent,newComponents,newComponentLengths,
-                    newFromComponentLinks,newToComponentLinks,
-                    occupants,collapsibleBlocksUpdate,
-                    starts,ends,newToOldInd,oldToNewInd] = \
+            [binColLengths,binColStarts,binColEnds,binOcc,binInv,binPosArray,binAnn,nBins,nCols,
+            binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
+            newComponent,newComponents,newComponentLengths,
+            newFromComponentLinks,newToComponentLinks,
+            occupants,collapsibleBlocksUpdate,
+            starts,ends,newToOldInd,oldToNewInd] = \
                 finaliseBinZoom(compNum,binOcc,binInv,binPosArray,binAnn,
                     nBins,nCols,
-                    binBlockLength,binColLengths,binBlockLengths,
+                    binBlockLength,binBlockLengths,binColLengths,
+                    binColStart,binColStarts,binColEnd,binColEnds,
                     matrix,
                     prevOcc,prevInv,
                     newComponent,newComponents,newComponentLengths,
@@ -1941,53 +1985,75 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
                     forwardPaths,invertedPaths,
                     newToOldInd,oldToNewInd,
                     inversionThreshold=inversionThreshold)
-
 
         if compNum==len(components)-1:
             # Close the bin
             if binBlockLength>0:
-                [binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
-                    newComponent,newComponents,newComponentLengths,
-                    newFromComponentLinks,newToComponentLinks,
-                    occupants,collapsibleBlocksUpdate,
-                    starts,ends,newToOldInd,oldToNewInd] = \
-                finaliseBinZoom(compNum,binOcc,binInv,binPosArray,binAnn,
-                    nBins,nCols,
-                    binBlockLength,binColLengths,binBlockLengths,
-                    matrix,
-                    prevOcc,prevInv,
-                    newComponent,newComponents,newComponentLengths,
-                    newFromComponentLinks,newToComponentLinks,
-                    occupants,collapsibleBlocksUpdate,
-                    starts,ends,
-                    forwardPaths,invertedPaths,
-                    newToOldInd,oldToNewInd,
-                    inversionThreshold=inversionThreshold)
+                [binColLengths,binColStarts,binColEnds,binOcc,binInv,binPosArray,binAnn,nBins,nCols,
+                binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
+                newComponent,newComponents,newComponentLengths,
+                newFromComponentLinks,newToComponentLinks,
+                occupants,collapsibleBlocksUpdate,
+                starts,ends,newToOldInd,oldToNewInd] = \
+                    finaliseBinZoom(compNum,binOcc,binInv,binPosArray,binAnn,
+                        nBins,nCols,
+                        binBlockLength,binBlockLengths,binColLengths,
+                        binColStart,binColStarts,binColEnd,binColEnds,
+                        matrix,
+                        prevOcc,prevInv,
+                        newComponent,newComponents,newComponentLengths,
+                        newFromComponentLinks,newToComponentLinks,
+                        occupants,collapsibleBlocksUpdate,
+                        starts,ends,
+                        forwardPaths,invertedPaths,
+                        newToOldInd,oldToNewInd,
+                        inversionThreshold=inversionThreshold)
+#                 [binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
+#                     newComponent,newComponents,newComponentLengths,
+#                     newFromComponentLinks,newToComponentLinks,
+#                     occupants,collapsibleBlocksUpdate,
+#                     starts,ends,newToOldInd,oldToNewInd] = \
+#                 finaliseBinZoom(compNum,binOcc,binInv,binPosArray,binAnn,
+#                     nBins,nCols,
+#                     binBlockLength,binColLengths,binBlockLengths,
+#                     matrix,
+#                     prevOcc,prevInv,
+#                     newComponent,newComponents,newComponentLengths,
+#                     newFromComponentLinks,newToComponentLinks,
+#                     occupants,collapsibleBlocksUpdate,
+#                     starts,ends,
+#                     forwardPaths,invertedPaths,
+#                     newToOldInd,oldToNewInd,
+#                     inversionThreshold=inversionThreshold)
 
             # break the last component
             if nBins>0:
 
                 oldToNewInd[-1].append(len(newComponents))
-                newComponent,newComponents,newComponentLengths,\
-                nBins,nCols,occupants,binBlockLengths,matrix,\
-                starts,ends = \
-                        finaliseComponentZoom(newComponent,newComponents,newComponentLengths,
-                                              nBins,nCols,occupants,binBlockLengths,matrix,
-                                              starts,ends,range(len(graph.accessions)),range(len(graph.accessions)),inversionThreshold=inversionThreshold)
 
+                newComponent,newComponents,newComponentLengths,\
+                nBins,nCols,occupants,binBlockLengths,binColStarts,binColEnds,\
+                matrix,starts,ends = \
+                    finaliseComponentZoom(newComponent,newComponents,newComponentLengths,
+                                          nBins,nCols,occupants,binBlockLengths,
+                                          binColStarts,binColEnds,
+                                          matrix,starts,ends,
+                                          range(len(graph.accessions)),range(len(graph.accessions)),inversionThreshold=inversionThreshold)
 
         elif any(checkForBreaksZoom(compNum,components,fromComponentLinks,toComponentLinks)):
             # Break at the end of the component because of the links
 #             pdb.set_trace()
             if binBlockLength>0:
-                [binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
-                    newComponent,newComponents,newComponentLengths,
-                    newFromComponentLinks,newToComponentLinks,
-                    occupants,collapsibleBlocksUpdate,
-                    starts,ends,newToOldInd,oldToNewInd] = \
+                [binColLengths,binColStarts,binColEnds,binOcc,binInv,binPosArray,binAnn,nBins,nCols,
+                binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
+                newComponent,newComponents,newComponentLengths,
+                newFromComponentLinks,newToComponentLinks,
+                occupants,collapsibleBlocksUpdate,
+                starts,ends,newToOldInd,oldToNewInd] = \
                 finaliseBinZoom(compNum,binOcc,binInv,binPosArray,binAnn,
                     nBins,nCols,
-                    binBlockLength,binColLengths,binBlockLengths,
+                    binBlockLength,binBlockLengths,binColLengths,
+                    binColStart,binColStarts,binColEnd,binColEnds,
                     matrix,
                     prevOcc,prevInv,
                     newComponent,newComponents,newComponentLengths,
@@ -1997,32 +2063,48 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
                     forwardPaths,invertedPaths,
                     newToOldInd,oldToNewInd,
                     inversionThreshold=inversionThreshold)
+
+#                 [binColLengths,binOcc,binInv,binPosArray,binAnn,nBins,nCols,binBlockLength,binBlockLengths,matrix,prevOcc,prevInv,
+#                     newComponent,newComponents,newComponentLengths,
+#                     newFromComponentLinks,newToComponentLinks,
+#                     occupants,collapsibleBlocksUpdate,
+#                     starts,ends,newToOldInd,oldToNewInd] = \
+#                 finaliseBinZoom(compNum,binOcc,binInv,binPosArray,binAnn,
+#                     nBins,nCols,
+#                     binBlockLength,binColLengths,binBlockLengths,
+#                     matrix,
+#                     prevOcc,prevInv,
+#                     newComponent,newComponents,newComponentLengths,
+#                     newFromComponentLinks,newToComponentLinks,
+#                     occupants,collapsibleBlocksUpdate,
+#                     starts,ends,
+#                     forwardPaths,invertedPaths,
+#                     newToOldInd,oldToNewInd,
+#                     inversionThreshold=inversionThreshold)
 
             # Break component
             if nBins>0:
 
                 newToOldInd.append([])
                 oldToNewInd[-1].append(len(newComponents))
-                newComponent,newComponents,newComponentLengths,\
-                nBins,nCols,occupants,binBlockLengths,matrix,\
-                starts,ends = \
-                        finaliseComponentZoom(newComponent,newComponents,newComponentLengths,
-                                              nBins,nCols,occupants,binBlockLengths,matrix,
-                                              starts,ends,range(len(graph.accessions)),range(len(graph.accessions)),inversionThreshold=inversionThreshold)
 
+                newComponent,newComponents,newComponentLengths,\
+                nBins,nCols,occupants,binBlockLengths,binColStarts,binColEnds,\
+                matrix,starts,ends = \
+                    finaliseComponentZoom(newComponent,newComponents,newComponentLengths,
+                                          nBins,nCols,occupants,binBlockLengths,
+                                          binColStarts,binColEnds,
+                                          matrix,starts,ends,
+                                          range(len(graph.accessions)),range(len(graph.accessions)),inversionThreshold=inversionThreshold)
 
         elif nBins>0 or binBlockLength>0:
             oldToNewInd[-1].append(len(newComponents))
 
-#         if compNum in [186,187,188]:
-#             pdb.set_trace()
+#     pdb.set_trace()
 
     newFromComponentLinks,newToComponentLinks,accStarts,accEnds,collapsibleBlocks = \
         updateLinks(newToOldInd,oldToNewInd,fromComponentLinks,toComponentLinks,collapsibleBlocks,accStarts,accEnds,
                     newComponents,compAccDir,newFromComponentLinks,newToComponentLinks)
-
-#     if zoomLevel==3:
-#         pdb.set_trace()
 
     collapsibleBlocks.extend(collapsibleBlocksUpdate)
 
