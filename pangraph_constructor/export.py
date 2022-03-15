@@ -6,12 +6,12 @@ __all__ = ['componentTemplate', 'chunkTemplate', 'rootStructTemplate', 'outLeftR
            'nodeToComponentLinks', 'fillLinksBase', 'addLink', 'finaliseChunk', 'addLinksToComp', 'checkLinks',
            'getMatrixPathElement', 'joinComponents', 'searchIndicesPosRecord', 'searchIndicesGeneRecord', 'exportLayer',
            'combineIntervals', 'checkLinksZoom', 'finaliseComponentZoom', 'getOccInvChange', 'recordBinZoom',
-           'finaliseBinZoom', 'checkForBreaksZoom', 'isStartEnd', 'nextLayerZoom', 'splitPositiveNegative',
-           'intersectAccLists', 'updateLinks', 'calcLengthBlock', 'processBlock', 'updateCollapsibleBlockDict',
-           'identifyCollapsibleBlocks', 'compLinksToAccCompLinks', 'compLength', 'removeLink',
-           'processCollapsibleBlocks', 'testStartEnd', 'findEmptyEdges', 'checkExternalLinks', 'createNewBoundaries',
-           'identifyIsolatedBlocks', 'updateLinksRemoveComp', 'removeIsolatedBlocks', 'clearInvisible',
-           'exportToPantograph']
+           'finaliseBinZoom', 'checkChange', 'checkForBreaksZoom', 'isStartEnd', 'nextLayerZoom',
+           'splitPositiveNegative', 'intersectAccLists', 'updateLinks', 'calcLengthBlock', 'processBlock',
+           'updateCollapsibleBlockDict', 'identifyCollapsibleBlocks', 'compLinksToAccCompLinks', 'compLength',
+           'removeLink', 'processCollapsibleBlocks', 'testStartEnd', 'findEmptyEdges', 'checkExternalLinks',
+           'createNewBoundaries', 'identifyIsolatedBlocks', 'updateLinksRemoveComp', 'removeIsolatedBlocks',
+           'clearInvisible', 'exportToPantograph']
 
 # Internal Cell
 
@@ -1735,12 +1735,44 @@ def finaliseBinZoom(compNum,
             starts,ends,newToOldInd,oldToNewInd
 
 # Cell
-def checkForBreaksZoom(compNum,components,fromComponentLinks,toComponentLinks):
+def checkChange(compNum,components,zoomLevel):
+    doBreak = False
+    curComp = components[compNum]
+    nextComp = components[compNum+1]
+
+    if sum(curComp['binsToCols'])<zoomLevel or sum(nextComp['binsToCols'])<zoomLevel:
+        return False
+
+    paths = list(set(curComp['occupants'])|set(nextComp['occupants']))
+    for pathID in paths:
+        curPathMatrix = getMatrixPathElement(curComp['matrix'],pathID)
+        nextPathMatrix = getMatrixPathElement(nextComp['matrix'],pathID)
+
+
+        if curPathMatrix is not None and nextPathMatrix is not None:
+            curEdgeBinOcc = curPathMatrix[2][1][-1 if curPathMatrix[1]==0 else 0][0] # the last index==1 gives inversion
+            nextEdgeBinOcc = nextPathMatrix[2][1][0 if nextPathMatrix[1]==0 else -1][0]
+            # Checking for breaking in occupancy
+            if np.abs(np.floor(nextEdgeBinOcc+0.5)-np.floor(curEdgeBinOcc+0.5))>0:
+                doBreak = True
+
+            if curPathMatrix[1]!=nextPathMatrix[1]:
+                doBreak = True
+
+        else:
+            # If one of the component in the path has empty block.
+            # At the moment nothing is happening here, but potentially we can enforce break if that is the case.
+            pass
+    return doBreak
+
+# Cell
+def checkForBreaksZoom(zoomLevel,compNum,components,fromComponentLinks,toComponentLinks):
     if compNum<len(components)-1:
         breakByLinks = checkLinksZoom(compNum,fromComponentLinks,toComponentLinks)
+        breakByChange = checkChange(compNum,components,zoomLevel)
     else:
         return [false]
-    return [breakByLinks]
+    return [breakByLinks,breakByChange]
 
 # Cell
 def isStartEnd(compNum,components):
@@ -2040,7 +2072,7 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
                                           matrix,starts,ends,
                                           range(len(graph.accessions)),range(len(graph.accessions)),inversionThreshold=inversionThreshold)
 
-        elif any(checkForBreaksZoom(compNum,components,fromComponentLinks,toComponentLinks)):
+        elif any(checkForBreaksZoom(zoomLevel,compNum,components,fromComponentLinks,toComponentLinks)):
             # Break at the end of the component because of the links
 #             pdb.set_trace()
             if binBlockLength>0:
