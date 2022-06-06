@@ -1563,7 +1563,8 @@ def finaliseComponentZoom(component,components,componentLengths,#componentNucleo
                                 for pathID,matrixPathArray in matrix.items()],key=lambda el: el[0]))
 
     component['binsToCols'] = binBlockLengths
-    component["occupants"] = sorted(list(occupants))
+    component["occupants"] = sorted(list(matrix.keys()))
+
     component['last_bin'] = component['first_bin'] + nBins - 1
 
     component['firstCol'] = min(binColStarts)
@@ -1760,6 +1761,7 @@ def checkChange(compNum,components,zoomLevel):
             if np.abs(np.floor(nextEdgeBinOcc+0.5)-np.floor(curEdgeBinOcc+0.5))>0:
                 doBreak = True
 
+            # Checking for breaking in inversion (using recorded binary inversion)
             if curPathMatrix[1]!=nextPathMatrix[1]:
                 doBreak = True
 
@@ -1920,6 +1922,9 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
                     continue
 
             if binBlockLength >= zoomLevel:
+                # Probably this needs to be changed to binBlockLength + current bin size >= zoomLevel and
+                # not include the current bin into the new bin.
+
                 # If bin got equal or larger than target zoom level bin size
                 # (it can grow over by less than previous zoom level)
                 # then bin is closing and new bin will be formed.
@@ -2469,7 +2474,7 @@ def processBlock(fromComp,toComp,accID,accEnds,accCompDir,fromComponentLinksAcc,
 
     while True:
         nextCompList = np.array(list(accessionFromLinks.get(curComp,set())))
-        distToNextComp = nextCompList-curComp # Do I need it?
+#         distToNextComp = nextCompList-curComp # Do I need it?
 
         nextCompFollow = None
         linksToAssociate = set()
