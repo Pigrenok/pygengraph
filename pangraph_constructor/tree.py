@@ -183,7 +183,7 @@ class TremauxTree(nx.DiGraph):
             # Remove self-cycle or reverse (cycle making) paths larger cycles will be removed later.
             graphInEdgeList = [edge for edge in graphInEdgeList if edge[0]!=node]
 
-            graphInEdgeValueList = [self.parentGraph.edgePathsUnique.get(edge,0) \
+            graphInEdgeValueList = [self.parentGraph._getEdgeValue(*edge) \
                                     for edge in graphInEdgeList]
 
             graphInEdgeValueSortIndex = np.flip(np.argsort(graphInEdgeValueList))
@@ -248,7 +248,7 @@ class TremauxTree(nx.DiGraph):
 #             pdb.set_trace()
 
         # get number of paths passing (value) each edge in the path
-        pathValues = [self.parentGraph.edgePathsUnique[(path[i-1],path[i])] for i in range(1,len(path))]
+        pathValues = [self.parentGraph._getEdgeValue(path[i-1],path[i]) for i in range(1,len(path))]
         # sort the values of the path
         pathValIndSort = np.argsort(pathValues)
 
@@ -293,7 +293,7 @@ class TremauxTree(nx.DiGraph):
                 continue
 
             # Calc values of all incoming edges to the end of edge
-            incomingEdgesValue = [self.parentGraph.edgePathsUnique[edge] for edge in allIncomingEdges]
+            incomingEdgesValue = [self.parentGraph._getEdgeValue(*edge) for edge in allIncomingEdges]
             # Get the sorting order (decreasing) of incoming edges
             edgeSortInd = np.flip(np.argsort(incomingEdgesValue))
 

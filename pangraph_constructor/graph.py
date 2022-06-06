@@ -332,6 +332,7 @@ class GenomeGraph:
         self.inPathUnique = [len(self.inPathUnique.get(key,[])) for key in range(len(self.nodes))]
         self.outPathUnique = [len(self.outPathUnique.get(key,[])) for key in range(len(self.nodes))]
         self.edgePathsUnique = {key:len(value) for key,value in self.edgePathsUnique.items()}
+
     def _revertLinks(self):
         backLinks = {}
         for fromNode,links in self.forwardLinks.items():
@@ -755,17 +756,21 @@ class GenomeGraph:
 
         return None
 
-    def _getEdgeValue(self,start,end,unique=True):
+    def _getEdgeValue(self,start,end,unique=False):
+
         if start is None:
+            endInPathRatio = (self.nodePass[end-1]-self.inPath[end-1])/self.nodePass[end-1]
             if unique:
-                return self.nodePassUnique[end-1]
+                return self.nodePassUnique[end-1]*endInPathRatio
             else:
-                return self.nodePass[end-1]
+                return self.nodePass[end-1]*endInPathRatio
         else:
+            startOutPathRatio = self.edgePaths.get((start,end),0)/self.outPath[start-1]
+            endInPathRatio = self.edgePaths.get((start,end),0)/self.inPath[end-1]
             if unique:
-                return self.edgePathsUnique.get((start,end),0)
+                return self.edgePathsUnique.get((start,end),0)*startOutPathRatio*endInPathRatio
             else:
-                return self.edgePaths.get((start,end),0)
+                return self.edgePaths.get((start,end),0)*startOutPathRatio*endInPathRatio
 
     def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
 
@@ -850,21 +855,22 @@ class GenomeGraph:
                         if bubbleNode is not None:
                             bubbleNodeOutEdges = list(self.tremauxTree.out_edges(bubbleNode)) + \
                                                 [(bubbleNode,node) for node in self.tremauxTree.bubbleEdges.get(bubbleNode,[])]
-                            bubbleNodeOutEdgesValue = [self.edgePathsUnique.get(edge,0) for edge in bubbleNodeOutEdges]
+                            bubbleNodeOutEdgesValue = [self._getEdgeValue(*edge) for edge in bubbleNodeOutEdges]
                         else:
                             bubbleNodeOutEdgesValue = [self._getEdgeValue(bubbleNode,endNode)]
 
                         if max(bubbleNodeOutEdgesValue)>curBubbleEdgePaths:
                             continue
 
-                        if bubbleNode is not None:
-                            if self._getEdgeValue(bubbleNode,endNode,unique=False)/self.inPath[endNode-1]>bubblePriorityThreshold or \
-                            self._getEdgeValue(bubbleNode,endNode,unique=False)/self.outPath[bubbleNode-1]>bubblePriorityThreshold:
-                                bubblePriority = True
-                            else:
-                                bubblePriority = False
-                        else:
-                            bubblePriority = True
+#                         if bubbleNode is not None:
+#                             if self._getEdgeValue(bubbleNode,endNode,unique=False)/self.inPath[endNode-1]>bubblePriorityThreshold or \
+#                             self._getEdgeValue(bubbleNode,endNode,unique=False)/self.outPath[bubbleNode-1]>bubblePriorityThreshold:
+#                                 bubblePriority = True
+#                             else:
+#                                 bubblePriority = False
+#                         else:
+#                             bubblePriority = True
+                        bubblePriority = True
 
                     if bubbleNode!=startNode:
                         # We are not on the main (original) edge
@@ -927,8 +933,9 @@ class GenomeGraph:
 
 
             bubblePriorityQueue.sort(key=lambda b: self._getEdgeValue(b[0],endNode))
-            if len(bubblePriorityQueue)>1 or \
-            (len(bubblePriorityQueue)==1 and bubblePriorityQueue[0][1]!=(startNode,endNode)):
+            if len(bubblePriorityQueue)>=1:
+#             or \
+#                 (len(bubblePriorityQueue)==1 and bubblePriorityQueue[-1][1]!=(startNode,endNode)):
 #                 queue.append((startNode,endNode))#Why would I add the processed block again? Should I add descendant edges of the end node here?
                 # It should save a lot of wasted time and speed up the process.
                 queueLen = len(queue)
@@ -945,8 +952,8 @@ class GenomeGraph:
                             endNodeAdded = self._addNextEdgesToQueue(startNode,endNode,
                                                     processed,queue,stopNodes,stopNodesOrigin)
                             curEdgePassed = True
-#                         else:
-#                             queue.append((startNode,endNode))
+                        else:
+                            queue.append((startNode,endNode))
                 if not curEdgePassed:
                     queue[queueLen:queueLen] = [(startNode,endNode)]
             else:
@@ -964,7 +971,7 @@ class GenomeGraph:
 
         edgesToAdd = [edge for edge in list(self.tremauxTree.edges(endNode)) if edge not in processed and edge not in queue]
 
-        edgesToAdd.sort(key=lambda edge: self.edgePathsUnique.get(edge,0))
+        edgesToAdd.sort(key=lambda edge: self._getEdgeValue(*edge))
         if endNode in stopNodes and len(edgesToAdd)>0:
             bubbleEnd = stopNodesOrigin[endNode]
             bubbleEndEdge = list(self.tremauxTree.in_edges(bubbleEnd))[0]
