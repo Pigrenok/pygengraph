@@ -170,6 +170,16 @@ class bidict(dict):
 
         self[key] = list(valKey)
 
+    def remove(self,key,value):
+        valKey = set(self.setdefault(key,[]))
+
+        if isinstance(value,Iterable):
+            valKey.difference_update(value)
+        else:
+            valKey.remove(value)
+
+        self[key] = list(valKey)
+
 # Cell
 def pathFileToPathDict(filePath,directional=True,sort=True):
     '''
