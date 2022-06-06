@@ -197,25 +197,42 @@ class GenomeGraph:
         self.outPath = [0]*len(self.nodes)
         self.edgePaths = {}
 
-        for path in self.paths:
+        self.nodePassUnique = {}
+        self.inPathUnique = {}
+        self.outPathUnique = {}
+        self.edgePathsUnique = {}
+
+        for pathID,path in enumerate(self.paths):
 
             previousNode = None
             for nodeStrand in path:
                 pathNode = int(nodeStrand[:-1])-1
                 pathStrand = int(nodeStrand[-1]=='-') # 0 if "+", 1 if "-"
                 self.nodePass[pathNode] += 1
+                self.nodePassUnique.setdefault(pathNode,set()).add(pathID)
                 self.nodeStrandPaths[pathNode][pathStrand] += 1
                 self.outPath[pathNode] += 1
+                self.outPathUnique.setdefault(pathNode,set()).add(pathID)
                 self.inPath[pathNode] += 1
+                self.inPathUnique.setdefault(pathNode,set()).add(pathID)
                 if previousNode is not None:
                     self.edgePaths.setdefault((previousNode+1,pathNode+1),0)
                     self.edgePaths[(previousNode+1,pathNode+1)] += 1
+
+                    self.edgePathsUnique.setdefault((previousNode+1,pathNode+1),set())\
+                                            .add(pathID)
                 else:
                     self.pathStarts[pathNode] += 1
                     self.inPath[pathNode] -= 1
                 previousNode = pathNode
             self.outPath[previousNode] -= 1
 
+        # We are not interested in pathIDs in *Unique blocks, so,
+        # converting them back to standard format.
+        self.nodePassUnique = [len(self.nodePassUnique.get(key,[])) for key in range(len(self.nodes))]
+        self.inPathUnique = [len(self.inPathUnique.get(key,[])) for key in range(len(self.nodes))]
+        self.outPathUnique = [len(self.outPathUnique.get(key,[])) for key in range(len(self.nodes))]
+        self.edgePathsUnique = {key:len(value) for key,value in self.edgePathsUnique.items()}
     def _revertLinks(self):
         backLinks = {}
         for fromNode,links in self.forwardLinks.items():
@@ -617,20 +634,39 @@ class GenomeGraph:
             warnings.warn(f'You attempted to add node with {nodeID}, but it already exists in the graph. The addition was ignored.')
         pass
 
-    def _getStartNodes(self,bubbleNode):
-        allPaths = list(nx.shortest_path(self.tremauxTree,None,bubbleNode).values())
-        startList = []
-        for path in allPaths:
-            if len(startList)>0:
-                for node in startList.copy():
-                    if nx.has_path(self.tremauxTree,node,path[0]):
-                        continue
-                    if nx.has_path(self.tremauxTree,path[0],node):
-                        startList.remove(node)
+    def _getStartNode(self,bubbleNode):
+#         allPaths = list(nx.shortest_path(self.tremauxTree,None,bubbleNode).values())
+#         startList = []
+#         for path in allPaths:
+#             if len(startList)>0:
+#                 for node in startList.copy():
+#                     if nx.has_path(self.tremauxTree,node,path[0]):
+#                         continue
+#                     if nx.has_path(self.tremauxTree,path[0],node):
+#                         startList.remove(node)
 
-            startList.append(path[0])
+#             startList.append(path[0])
 
-        return startList
+#         return startList
+        rootNodes = self.tremauxTree.getRootNodes()
+
+        for root in rootNodes:
+            if nx.has_path(self.tremauxTree,root,bubbleNode):
+                return root
+
+        return None
+
+    def _getEdgeValue(self,start,end,unique=True):
+        if start is None:
+            if unique:
+                return self.nodePassUnique[end-1]
+            else:
+                return self.nodePass[end-1]
+        else:
+            if unique:
+                return self.edgePathsUnique.get((start,end),0)
+            else:
+                return self.edgePaths.get((start,end),0)
 
     def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
 
@@ -638,37 +674,49 @@ class GenomeGraph:
         self.generateTremauxTree(byPath)
         print('Done!')
         queue = []
+        stopNodes = set()
+        stopNodesOrigin = {}
         processed = []
         self.order = []
 
+#         pdb.set_trace()
+
         print('Getting root nodes')
-        rootNodes = self.tremauxTree.getRootNodes()[::-1]
+        rootNodes = self.tremauxTree.getRootNodes()
 #         self.order.append(rootNode)
+
+        # The first root node won't be added to the order automatically,
+        # but will be processed as all other nodes.
         startNode = rootNodes.pop()
-        self.order.append(startNode)
-        descendantsToAdd = list(self.tremauxTree.edges(startNode))
-        descendantsToAdd.sort(key=lambda edge: self.edgePaths.get(edge,0))
-        queue.extend(descendantsToAdd)
+#         self.order.append(startNode)
+#         descendantsToAdd = list(self.tremauxTree.edges(startNode))
+#         descendantsToAdd.sort(key=lambda edge: self.edgePathsUnique.get(edge,0))
+#         queue.extend(descendantsToAdd)
+        queue.append((None,startNode))
 
         print('Start Loop...')
         while len(queue)>0 or len(rootNodes)>0:
-#             pdb.set_trace()
             if len(queue)==0:
                 try:
                     while len(queue)==0:
                         startNode = rootNodes.pop()
-                        descendantsToAdd = list(self.tremauxTree.edges(startNode))
-                        if len(descendantsToAdd)>0:
-                            descendantsToAdd.sort(key=lambda edge: self.edgePaths.get(edge,0))
-                            queue.extend([edge for edge in descendantsToAdd if edge not in processed])
-                        if startNode not in self.order:
-                            self.order.append(startNode)
+#                         descendantsToAdd = list(self.tremauxTree.edges(startNode))
+#                         if len(descendantsToAdd)>0:
+#                             descendantsToAdd.sort(key=lambda edge: self.edgePathsUnique.get(edge,0))
+#                             queue.extend([edge for edge in descendantsToAdd if edge not in processed])
+#                         if startNode not in self.order:
+#                             self.order.append(startNode)
+                        queue.append((None,startNode))
                 except IndexError:
                     break
 
             startNode,endNode = queue.pop()
 
-            print(f'{len(queue)} - {len(processed)} - {len(self.order)} - {startNode} - {endNode}')
+#             if endNode==840:
+#                 pdb.set_trace()
+
+#             print(f'Queue: {len(queue)} - Processed: {len(processed)} - Order: {len(self.order)} - Start: {startNode} - End: {endNode}')
+            print(f'\rNodes in order: {len(self.order)}/{len(self.nodes)}',end='')
 
             if (startNode,endNode) in processed:
                 continue
@@ -680,10 +728,10 @@ class GenomeGraph:
             endNodeAdded = False
 
             bubblePriorityQueue = []
-            bubbleEdges = self.tremauxTree.bubbleEdges.inverse.get(endNode,[])
+            bubbleEdges = self.tremauxTree.bubbleEdges.inverse.get(endNode,[])+[startNode]
             if len(bubbleEdges)>0:
                 if byPath:
-                    bubbleEdgesOrder = np.argsort([self.edgePaths.get((edge,endNode),0) for edge in bubbleEdges])[::-1]
+                    bubbleEdgesOrder = np.argsort([self._getEdgeValue(edge,endNode) for edge in bubbleEdges])
                 else:
                     bubbleEdgesOrder = list(range(len(bubbleEdges)))
                 # Chech that bubble node is not in order already
@@ -696,80 +744,144 @@ class GenomeGraph:
 
                 for bEdge in bubbleEdgesOrder:
                     bubbleNode = bubbleEdges[bEdge]
-                    if bubbleNode in self.order:
+                    if bubbleNode in self.order and bubbleNode!=startNode:
                         continue
                     if byPath:
-                        curBubbleEdgePaths = self.edgePaths.get((bubbleNode,endNode),0)
-                        bubbleNodeOutEdges = list(self.tremauxTree.out_edges(bubbleNode)) + \
-                                            [(bubbleNode,node) for node in self.tremauxTree.bubbleEdges[bubbleNode]]
+                        curBubbleEdgePaths = self._getEdgeValue(bubbleNode,endNode)
+                        if bubbleNode is not None:
+                            bubbleNodeOutEdges = list(self.tremauxTree.out_edges(bubbleNode)) + \
+                                                [(bubbleNode,node) for node in self.tremauxTree.bubbleEdges.get(bubbleNode,[])]
+                            bubbleNodeOutEdgesValue = [self.edgePathsUnique.get(edge,0) for edge in bubbleNodeOutEdges]
+                        else:
+                            bubbleNodeOutEdgesValue = [self._getEdgeValue(bubbleNode,endNode)]
 
-                        bubbleNodeEdgePathsMax = max([self.edgePaths.get(edge,0) for edge in bubbleNodeOutEdges])
-                        if bubbleNodeEdgePathsMax>curBubbleEdgePaths:
+                        if max(bubbleNodeOutEdgesValue)>curBubbleEdgePaths:
                             continue
 
-                        if self.edgePaths[(bubbleNode,endNode)]/self.outPath[bubbleNode-1]>=bubblePriorityThreshold:
-                            bubblePriority = True
-                        else:
-                            bubblePriority = False
-
-                    lca = nx.lowest_common_ancestor(self.tremauxTree,endNode,bubbleNode)
-                    if byPath:
-                        if lca is None:
-                            startBubbleNodes = self._getStartNodes(bubbleNode)
-                            startBubbleNodes.sort(key=lambda node: self.nodePass[node-1])
-                            lcaDescendantsToProcess = []
-                            for startBubbleNode in startBubbleNodes:
-                                snDescendantsToProcess = [(startBubbleNode,node) for node in list(self.tremauxTree[startBubbleNode])\
-                                                          if node not in self.order and nx.has_path(self.tremauxTree,node,bubbleNode)]
-                                snDescendantsToProcess.sort(key=lambda node: self.edgePaths.get((startBubbleNode,node),0))
-                                lcaDescendantsToProcess.extend(snDescendantsToProcess)
-                        else:
-                            lcaDescendantsToProcess = [(lca,node) for node in list(self.tremauxTree[lca]) \
-                                                       if node not in self.order and nx.has_path(self.tremauxTree,node,bubbleNode)]
-                            lcaDescendantsToProcess.sort(key=lambda node: self.edgePaths.get((lca,node),0))
-
-                        for edge in lcaDescendantsToProcess:
-                            if edge in queue:
-                                queue.remove(edge)
-                        if len(lcaDescendantsToProcess)>0:
-                            if bubblePriority:
-                                bubblePriorityQueue.append((bubbleNode,[edge for edge in lcaDescendantsToProcess if edge not in processed]))
+                        if bubbleNode is not None:
+                            if self._getEdgeValue(bubbleNode,endNode,unique=False)/self.inPath[endNode-1]>bubblePriorityThreshold or \
+                            self._getEdgeValue(bubbleNode,endNode,unique=False)/self.outPath[bubbleNode-1]>bubblePriorityThreshold:
+                                bubblePriority = True
                             else:
-                                queue.extend([edge for edge in lcaDescendantsToProcess if edge not in processed])
-                    else:
-                        # TODO!!!
-                        # rewrite pure graph sorting to process alternative branches by adding the top nodes
-                        # of each branch to the queue for immediate processing.
-                        pathToAdd = nx.shortest_path(self.tremauxTree,lca,bubbleNode)
-                        if lca is None:
-                            allPaths = list(pathToAdd.values())
-                            allPaths.sort(key=len)
-                            pathToAdd = allPaths[-1]
+                                bubblePriority = False
                         else:
-                            if endNode not in self.order and byPath:
-                                self.order.append(endNode)
-                                endNodeAdded = True
-                        # WRONG!
-                        self.order.extend([node for node in pathToAdd if node not in self.order])
+                            bubblePriority = True
+
+                    if bubbleNode!=startNode:
+                        # We are not on the main (original) edge
+                        lca = nx.lowest_common_ancestor(self.tremauxTree,endNode,bubbleNode)
+                        if byPath:
+                            if lca is None:
+                                _lca = self._getStartNode(bubbleNode)
+    #                             startBubbleNodes.sort(key=lambda node: self.nodePassUnique[node-1])
+    #                             lcaDescendantsToProcess = []
+    #                             for startBubbleNode in startBubbleNodes:
+    #                                 snDescendantsToProcess = [(startBubbleNode,node) for node in list(self.tremauxTree[startBubbleNode])\
+    #                                                           if node not in self.order and nx.has_path(self.tremauxTree,node,bubbleNode)]
+    #                                 snDescendantsToProcess.sort(key=lambda node: self.edgePathsUnique.get((startBubbleNode,node),0))
+    #                                 lcaDescendantsToProcess.extend(snDescendantsToProcess)
+
+                            else:
+                                _lca = lca
+                #                             lcaDescendantsToProcess = [(lca,node) for node in list(self.tremauxTree[lca]) \
+    #                                                        if node not in self.order and nx.has_path(self.tremauxTree,node,bubbleNode)]
+    #                             lcaDescendantsToProcess.sort(key=lambda node: self.edgePathsUnique.get((lca,node),0))
+                            if _lca==bubbleNode:
+                                # BubbleNode is the top of another tree
+                                lcaDescendantsToProcess = [(None,bubbleNode)]
+                            else:
+                                lcaDescendantsToProcess = [(_lca,node) for node in list(self.tremauxTree[_lca])\
+                                                                  if node not in self.order and nx.has_path(self.tremauxTree,node,bubbleNode)]
+                                lcaDescendantsToProcess.sort(key=lambda edge: self.edgePathsUnique.get(edge,0))
+
+                            for edge in lcaDescendantsToProcess:
+                                if edge in queue:
+                                    queue.remove(edge)
+                            if len(lcaDescendantsToProcess)>0:
+                                if bubblePriority:
+                                    bubblePriorityQueue.append((bubbleNode,[edge for edge in lcaDescendantsToProcess if edge not in processed]))
+                                else:
+                                    queue.extend([edge for edge in lcaDescendantsToProcess if edge not in processed and edge[0] is not None])
+                        else:
+                            # TODO!!!
+                            # rewrite pure graph sorting to process alternative branches by adding the top nodes
+                            # of each branch to the queue for immediate processing.
+                            pathToAdd = nx.shortest_path(self.tremauxTree,lca,bubbleNode)
+                            if lca is None:
+                                allPaths = list(pathToAdd.values())
+                                allPaths.sort(key=len)
+                                pathToAdd = allPaths[-1]
+                            else:
+                                if endNode not in self.order and byPath:
+                                    self.order.append(endNode)
+                                    endNodeAdded = True
+                            # WRONG!
+                            self.order.extend([node for node in pathToAdd if node not in self.order])
+                    else:
+                        # We consider startNode as bubble
+                        if byPath:
+                            if bubblePriority:
+                                bubblePriorityQueue.append((bubbleNode,(startNode,endNode)))
+                            else:
+                                # Do we need to add the current edge back to queue???
+                                pass
 
 
-
-            if len(bubblePriorityQueue)>0:
-                queue.append((startNode,endNode))#Why would I add the processed block again? Should I add descendant edges of the end node here?
+            bubblePriorityQueue.sort(key=lambda b: self._getEdgeValue(b[0],endNode))
+            if len(bubblePriorityQueue)>1 or \
+            (len(bubblePriorityQueue)==1 and bubblePriorityQueue[0][1]!=(startNode,endNode)):
+#                 queue.append((startNode,endNode))#Why would I add the processed block again? Should I add descendant edges of the end node here?
                 # It should save a lot of wasted time and speed up the process.
-                bubblePriorityQueue.sort(key=lambda b: self.edgePaths[b[0],endNode])
+                queueLen = len(queue)
+                curEdgePassed = False
                 while len(bubblePriorityQueue)>0:
                     bNode,bToAdd = bubblePriorityQueue.pop()
-                    queue.extend(bToAdd)
-            else:
-                processed.append((startNode,endNode))
-                if endNode not in self.order:
-                    self.order.append(endNode)
-                    endNodeAdded = True
 
-                edgesToAdd = [edge for edge in list(self.tremauxTree.edges(endNode)) if edge not in processed and edge not in queue]
-                edgesToAdd.sort(key=lambda edge: self.edgePaths.get(edge,0))
-                queue.extend(edgesToAdd)
+                    if bNode!=startNode:
+                        queue.extend(bToAdd)
+                        stopNodes.add(bNode)
+                        stopNodesOrigin[bNode] = endNode
+                    else:
+                        if len(bubblePriorityQueue)==0:
+                            endNodeAdded = self._addNextEdgesToQueue(startNode,endNode,
+                                                    processed,queue,stopNodes,stopNodesOrigin)
+                            curEdgePassed = True
+#                         else:
+#                             queue.append((startNode,endNode))
+                if not curEdgePassed:
+                    queue[queueLen:queueLen] = [(startNode,endNode)]
+            else:
+                endNodeAdded = self._addNextEdgesToQueue(startNode,endNode,
+                                                    processed,queue,stopNodes,stopNodesOrigin)
+        print()
+
+    def _addNextEdgesToQueue(self,startNode,endNode,processed,queue,stopNodes,stopNodesOrigin):
+        endNodeAdded = False
+        processed.append((startNode,endNode))
+        # Should we add start or end???
+        if endNode not in self.order:
+            self.order.append(endNode)
+            endNodeAdded = True
+
+        edgesToAdd = [edge for edge in list(self.tremauxTree.edges(endNode)) if edge not in processed and edge not in queue]
+
+        edgesToAdd.sort(key=lambda edge: self.edgePathsUnique.get(edge,0))
+        if endNode in stopNodes and len(edgesToAdd)>0:
+            bubbleEnd = stopNodesOrigin[endNode]
+            bubbleEndEdge = list(self.tremauxTree.in_edges(bubbleEnd))[0]
+            try:
+                bubbleEndEdgeInd = queue.index(bubbleEndEdge)
+            except ValueError:
+                bubbleEndEdgeInd = len(queue)
+
+            queue[bubbleEndEdgeInd:bubbleEndEdgeInd] = edgesToAdd
+#             queue.append(bubbleEndEdge)
+            stopNodes.remove(endNode)
+            del stopNodesOrigin[endNode]
+        else:
+            queue.extend(edgesToAdd)
+
+        return endNodeAdded
 
     def toGFA(self,gfaFile,doSeq=True):
         '''
@@ -846,10 +958,11 @@ class GenomeGraph:
 
         for nodeID in range(len(self.nodes)):
             if self.nodeStrandPaths[nodeID][1]>self.nodeStrandPaths[nodeID][0]:
-                print(f'Node {nodeID+1} inverted')
+                print(f'\rNode {nodeID+1} inverted',end='')
                 self._invertNode(nodeID,pathNodeArray)
 
         self._pathCount()
+        print()
 
     def _invertNode(self,nodeID,pathNodeArray):
 

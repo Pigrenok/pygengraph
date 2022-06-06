@@ -9,7 +9,7 @@ import pdb
 
 import networkx as nx
 from networkx.algorithms.operators.binary import compose
-from networkx import NetworkXNoPath
+from networkx import NetworkXNoPath,NetworkXNoCycle
 
 from .utils import bidict
 
@@ -43,6 +43,16 @@ class TremauxTree(nx.DiGraph):
 
             self.processSpecialEdges(addEdges)
 
+            for root in self.startingNodes.copy():
+                incomingBubbles = self.bubbleEdges.inverse.get(root,[])
+                incomingBubbles = [node for node in incomingBubbles if len(self.edges(node))==0]
+                if len(incomingBubbles)>0:
+                    incomingBubbles.sort(key=lambda node: self.parentGraph.edgePathsUnique.get((node,root),0))
+                    upNode = incomingBubbles[-1]
+                    self.add_edge(upNode,root)
+                    self.bubbleEdges.remove(upNode,root)
+                    self.startingNodes.remove(root)
+    # unused?
     def _getNodeStartFit(self):
         nodeStartTest = []
         for node in range(1,len(self.parentGraph.nodes)+1):
@@ -51,87 +61,159 @@ class TremauxTree(nx.DiGraph):
         return nodeStartTest
 
     def _generateTree(self,byPath=True):
+#         if byPath:
+#             inEdge = self.parentGraph.inPath
+#             outEdge = self.parentGraph.outPath
+#             nodeStartPath = self._getNodeStartFit()
+#             startingNodes = np.where(nodeStartPath==np.max(nodeStartPath))[0]+1
+#         else:
+#             inEdge = self.originalGraph.in_degree
+#             outEdge = self.originalGraph.out_degree
+#             startingNodes = np.arange(1,len(inEdge)+1)
+
+#         selectedOutPaths = np.array(outEdge)[startingNodes-1]
+#         self.startingNodes = startingNodes[np.where(selectedOutPaths==np.max(selectedOutPaths))]
+#         selectedInPaths = np.array(inEdge)[startingNodes-1]
+#         self.startingNodes = startingNodes[np.where(selectedInPaths==np.min(selectedInPaths))].tolist()
+#         self.startingNodes = set(self.startingNodes)
+#         self.startingNodes.update((np.where(np.array(inEdge)==0)[0]+1).tolist())
+#         self.startingNodes = list(self.startingNodes)
+# #         self.startingNodes.sort(key=[self.parentGraph.pathStarts[node] for node in self.startingNodes])
+
+        tremauxTree = nx.dfs_tree(self.originalGraph)
+
+        self.startingNodes = []
+
+
+
+#         if len(self.startingNodes)>0:
+#             treeCombined = nx.DiGraph()
+#             for startNode in self.startingNodes:
+#                 if startNode not in treeCombined:
+#                     treeCombined = compose(treeCombined,nx.dfs_tree(self.originalGraph,source=startNode))
+
         if byPath:
-            inEdge = self.parentGraph.inPath
-            outEdge = self.parentGraph.outPath
-            nodeStartPath = self._getNodeStartFit()
-            startingNodes = np.where(nodeStartPath==np.max(nodeStartPath))[0]+1
+#                 preprocessIter = 1
+            self._preprocessPathTree(tremauxTree)
+#                 try:
+#                     nx.find_cycle(treeCombined,orientation='original')
+#                     raise RuntimeError(f'Found cycle in tree after preprocessing')
+#                 except NetworkXNoCycle:
+#                     pass
+
+#                 accessibleNodes = set()
+#                 for rootNode in self.startingNodes:
+#                     accessibleNodes = accessibleNodes.update(list(nx.dfs_preorder_nodes(treeCombined,source=rootNode)))
+
+#                 assert len(accessibleNodes)==len(self.parentGraph.nodes)
+
+#                 incorrectEdges = [(node,len(treeCombined.in_edges(node))) \
+#                                   for node in accessibleNodes \
+#                                   if len(treeCombined.in_edges(node))>1]
+#                 if len(incorrectEdges)>0:
+#                     print(f'Nodes with more than 1 in edges: {incorrectEdges}')
+#                 assert len(incorrectEdges)==0
+
+#                 print(f'Preprocessing run {preprocessIter:02d}')
+#                 while True:
+#                     try:
+#                         nx.find_cycle(treeCombined,orientation='original')
+#                     except NetworkXNoCycle:
+#                         break
+#                     preprocessIter += 1
+#                     self._preprocessPathTree(treeCombined)
+#                     print(f'Preprocessing run {preprocessIter:02d}')
         else:
-            inEdge = self.originalGraph.in_degree
-            outEdge = self.originalGraph.out_degree
-            startingNodes = np.arange(1,len(inEdge)+1)
+            for toNode,numDeg in tremauxTree.in_degree:
+                if numDeg>1:
+                    for fromNode,_ in list(tremauxTree.in_edges(nbunch=toNode))[1:]:
+                        tremauxTree.remove_edge(edge,toNode)
+#         else:
+#             raise ValueError("Something went wrong. I cannot find a single suitable starting node. It seems there is no nodes in the graph.")
 
-        selectedOutPaths = np.array(outEdge)[startingNodes-1]
-        self.startingNodes = startingNodes[np.where(selectedOutPaths==np.max(selectedOutPaths))]
-        selectedInPaths = np.array(inEdge)[startingNodes-1]
-        self.startingNodes = startingNodes[np.where(selectedInPaths==np.min(selectedInPaths))].tolist()
-        self.startingNodes = set(self.startingNodes)
-        self.startingNodes.update((np.where(np.array(inEdge)==0)[0]+1).tolist())
-        self.startingNodes = list(self.startingNodes)
-#         self.startingNodes.sort(key=[self.parentGraph.pathStarts[node] for node in self.startingNodes])
+        for tree in nx.weakly_connected_components(tremauxTree):
+            subgraphNode = tree.pop()
+            while True:
+                treeInEdges = list(tremauxTree.in_edges(subgraphNode))
+                if len(treeInEdges)>0:
+                    subgraphNode = treeInEdges[0][0]
+                    pass
+                else:
+                    break
+            self.startingNodes.append(subgraphNode)
 
-        if len(self.startingNodes)>0:
-            treeCombined = nx.DiGraph()
-            for startNode in self.startingNodes:
-                if startNode not in treeCombined:
-                    treeCombined = compose(treeCombined,nx.dfs_tree(self.originalGraph,source=startNode))
+        self.startingNodes.sort(key=lambda node: self.parentGraph.nodePassUnique[node-1])
 
-            if byPath:
-                self._preprocessPathTree(treeCombined)
-                self._preprocessPathTree(treeCombined)
-            else:
-                for toNode,numDeg in treeCombined.in_degree:
-                    if numDeg>1:
-                        for fromNode,_ in list(treeCombined.in_edges(nbunch=toNode))[1:]:
-                            treeCombined.remove_edge(edge,toNode)
-        else:
-            raise ValueError("Something went wrong. I cannot find a single suitable starting node. It seems there is no nodes in the graph.")
+        return tremauxTree
 
-        return treeCombined
-
+    # unused
     def _preprocessPathTree(self,treeCombined):
-#         pdb.set_trace()
-        for node in self.originalGraph.nodes:
-#             if node==29:
+        processedNodes = []
+
+        dfsNodeOrder = list(nx.dfs_preorder_nodes(treeCombined))
+
+        for node in dfsNodeOrder:
+#             if node==4006:
 #                 pdb.set_trace()
+
+            processedNodes.append(node)
+
             # get all edges coming to given node in the full graph
             graphInEdgeList = list(self.originalGraph.in_edges(node))
             # get all edges coming to a given node in the tremaux tree
             try:
+                # treeInEdgeList can be either 1 edge or zero (in the tree only one incoming edge is allowed)
                 treeInEdgeList = list(treeCombined.in_edges(node))
             except nx.NetworkXError:
-                treeInEdgeList = []
-#             print(f'Node: {node}')
-#             print(f'Graph edges: {graphInEdgeList}')
-#             print(f'Tree edges: {treeInEdgeList}')
-            # Remove self-cycle paths larger cycles will be removed later.
-            graphInEdgeList = [edge for edge in graphInEdgeList if edge[0]!=edge[1]] # removed '(not nx.has_path(treeCombined,edge[1],edge[0]) or edge[::-1] in treeCombined.edges) and '
-#
-            if len(graphInEdgeList)>0:# and len(treeInEdgeList)>0:
-                # Get number of paths passing each edge
-                edgePaths = [self.parentGraph.edgePaths.get(edge,0) for edge in graphInEdgeList]
+                # treeInEdgeList = []
+                warnings.warn(f"Node {node} in the Tremaux tree does not have any incoming edges. \
+                Only root node(s) are allowed to have no incoming edges. If it is not an intended root node,\
+                then it is an error and you have inaccessible nodes in the tree (which will fail sorting later).")
+                continue
+
+#             if len(treeInEdgeList)>1:
+#                 raise RuntimeError(f"The node {node} in the Tremaux tree have more than one incoming edge,\
+#                 which is contradictory to the definition of the Tremaux tree. Something went wrong!")
+
+            # Because there can be only one (or none) incoming edge to every node in Tremaux tree, we extract it.
+#             treeInEdge = treeInEdgeList[0]
+            # And calculate its value (number of paths passing through this edge)
+#             treeInEdgeValue = self.parentGraph.edgePathsUnique.get(treeInEdge,0)
+
+            # Remove self-cycle or reverse (cycle making) paths larger cycles will be removed later.
+            graphInEdgeList = [edge for edge in graphInEdgeList if edge[0]!=node]
+
+            graphInEdgeValueList = [self.parentGraph.edgePathsUnique.get(edge,0) \
+                                    for edge in graphInEdgeList]
+
+            graphInEdgeValueSortIndex = np.flip(np.argsort(graphInEdgeValueList))
+
+            for edgeToKeepInd in graphInEdgeValueSortIndex:
                 # Find the edge with maximum number of paths passing
-                edgeToKeepInd = np.argmax(edgePaths)
                 edgeToKeep = graphInEdgeList[edgeToKeepInd]
-                edgeToKeepValue = edgePaths[edgeToKeepInd]
-#                 print(f'Edge to keep: {edgeToKeep}')
-                # If the best edge not in the tree already
-                if edgeToKeep not in treeInEdgeList:
-                    if nx.has_path(treeCombined,edgeToKeep[1],edgeToKeep[0]):
-                        print(f'Node: {node}')
-                        print(f'Graph edges: {graphInEdgeList}')
-                        print(f'Tree edges: {treeInEdgeList}')
-                        print(f'Edge to keep: {edgeToKeep}')
+                edgeToKeepValue = graphInEdgeValueList[edgeToKeepInd]
+                if nx.has_path(treeCombined,edgeToKeep[1],edgeToKeep[0]):
+                    print(f'Node: {node}')
+                    print(f'Graph edges: {graphInEdgeList}')
+                    print(f'Tree edge: {treeInEdgeList}')
+                    print(f'Edge to keep: {edgeToKeep}')
 
-                        print('Cycle found!')
-                        # Get all posible cycle path:
-                        edgesToRemove = []
-                        edgesToAdd = []
-                        breakSubstitute = False
+                    print('Cycle found!')
+                    # Get all posible cycle path:
+                    edgesToRemove = []
+                    edgesToAdd = []
+                    breakSubstitute = False
 
-                        for path in nx.all_shortest_paths(treeCombined,edgeToKeep[1],edgeToKeep[0]):
-                            print(f'Path to break: {path}')
-                            pathBreakpoint = self._severePathPoint(treeCombined,path,edgeToKeepValue)
+                    for path in nx.all_shortest_paths(treeCombined,edgeToKeep[1],edgeToKeep[0]):
+                        print(f'Path to break: {path}')
+                        if len(path)==2 and list(edgeToKeep[::-1])==path:
+                            if path[1] not in processedNodes:
+                                edgesToRemove.append(path)
+                            else:
+                                breakSubstitute = True
+                                break
+                        else:
+                            pathBreakpoint = self._severePathPoint(treeCombined,path,edgeToKeepValue,processedNodes)
                             if pathBreakpoint is not None:
                                 edgesToRemove.append(pathBreakpoint[0])
                                 edgesToAdd.append(pathBreakpoint[1])
@@ -140,16 +222,21 @@ class TremauxTree(nx.DiGraph):
                                 breakSubstitute = True
                                 break
 
-                        if not breakSubstitute:
-                            print('Edge substituted!')
-                            self._substituteEdges(treeCombined,[edgeToKeep],treeInEdgeList)
-                            for edgeToRemove,edgeToAdd in zip(edgesToRemove,edgesToAdd):
-                                print(f'Edge {edgeToAdd} substitute edge {edgeToRemove}')
-                                self._substituteEdges(treeCombined,[edgeToAdd],[edgeToRemove])
-                    else:
+                    if not breakSubstitute:
+                        print('Edge substituted!')
                         self._substituteEdges(treeCombined,[edgeToKeep],treeInEdgeList)
+#                             for edgeToRemove,edgeToAdd in zip(edgesToRemove,edgesToAdd):
+                        print(f'Edges {edgesToAdd} added instead of {edgesToRemove}')
+                        self._substituteEdges(treeCombined,edgesToAdd,edgesToRemove)
+                        break
+                    else:
+                        continue
+                else:
+                    self._substituteEdges(treeCombined,[edgeToKeep],treeInEdgeList)
+                    break
 
-    def _severePathPoint(self,G,path,newEdgeValue):
+    #unused
+    def _severePathPoint(self,G,path,newEdgeValue,processedNodes):
         '''
             Heuristics for finding the best position in the path to severe (and substitute).
             It will find the lowest value possible edge in the path and find the highest possible value of alternative.
@@ -157,11 +244,11 @@ class TremauxTree(nx.DiGraph):
             If there is no alternative, it will return None
         '''
 
-#         if path[0]==29 and path[-1]==124:
+#         if path==[3869, 3867]:
 #             pdb.set_trace()
 
         # get number of paths passing (value) each edge in the path
-        pathValues = [self.parentGraph.edgePaths[(path[i-1],path[i])] for i in range(1,len(path))]
+        pathValues = [self.parentGraph.edgePathsUnique[(path[i-1],path[i])] for i in range(1,len(path))]
         # sort the values of the path
         pathValIndSort = np.argsort(pathValues)
 
@@ -171,12 +258,26 @@ class TremauxTree(nx.DiGraph):
         edgeToSubstitute = None
         edgeToSubValue = None
         for pathPos in pathValIndSort:
+            if pathValues[pathPos]>newEdgeValue:
+                # If we get to the edge that has a value higher than the edge that we try to preserve,
+                # then this substitute does not make any sense.
+                return res
+
             # Start and end of current edge in the path
             curStart = path[pathPos]
             curEnd = path[pathPos+1]
 
+            if curEnd in processedNodes:
+                # We cannot remove edges ending in the nodes that were already processed.
+                # Otherwise we can break something that we already established.
+                continue
+
+            edgeRemoved = False
             # Combine tuple of current edge
             curEdge = (curStart,curEnd)
+            if not G.has_edge(*curEdge):
+                edgeRemoved = True
+                break
             # Calculate value of current edge in the path
             curEdgeValue = pathValues[pathPos]
 
@@ -192,10 +293,12 @@ class TremauxTree(nx.DiGraph):
                 continue
 
             # Calc values of all incoming edges to the end of edge
-            incomingEdgesValue = [self.parentGraph.edgePaths[edge] for edge in allIncomingEdges]
+            incomingEdgesValue = [self.parentGraph.edgePathsUnique[edge] for edge in allIncomingEdges]
             # Get the sorting order (decreasing) of incoming edges
             edgeSortInd = np.flip(np.argsort(incomingEdgesValue))
 
+            if not edgeRemoved:
+                G.remove_edge(*curEdge)
 
             for edgeInd in edgeSortInd:
                 altEdge = allIncomingEdges[edgeInd]
@@ -209,12 +312,15 @@ class TremauxTree(nx.DiGraph):
 
 #                 if altEdge[0] == 6861:
 #                     pdb.set_trace()
+                if altEdge[1] in processedNodes:
+                    continue
 
-                G.remove_edge(*curEdge)
-            # Add alt edge temporarily!
+                # Add alt edge temporarily!
                 # if the alternative still manifest loop, disregard this option
-                if (nx.has_path(G,path[0],altEdge[0]) and nx.has_path(G,altEdge[-1],path[-1])) or nx.has_path(G,*altEdge[::-1]):
-                    G.add_edge(*curEdge)
+                if (nx.has_path(G,path[0],altEdge[0]) \
+                    and nx.has_path(G,altEdge[-1],path[-1])) \
+                    or (nx.has_path(G,*altEdge[::-1])):
+#                     G.add_edge(*curEdge)
                     continue
 
                 edgeToSubstitute = altEdge
@@ -224,14 +330,18 @@ class TremauxTree(nx.DiGraph):
             if edgeToSubstitute is not None:
                 res = [curEdge,edgeToSubstitute,edgeToSubValue]
                 break
+            elif not edgeRemoved:
+                G.add_edge(*curEdge)
 
         return res
 
     def _substituteEdges(self,G,edgesToAddList,edgesToRemoveList):
         # Remove current incoming edge in the tree
-        G.remove_edges_from(edgesToRemoveList)
+        if len(edgesToRemoveList)>0:
+            G.remove_edges_from(edgesToRemoveList)
         # and replace it with newly identified best edge
-        G.add_edges_from(edgesToAddList)
+        if len(edgesToAddList)>0:
+            G.add_edges_from(edgesToAddList)
 
     def _getMissingEdges(self):
         graphEdges = set(list(self.originalGraph.edges))
