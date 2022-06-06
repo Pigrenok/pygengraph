@@ -1404,6 +1404,7 @@ def exportLayer(zoomLevel,components,componentNucleotides,
 #         print(f'Component Length is {component["last_bin"]-component["first_bin"]+1}')
 #         redisStartTime = time.time()
         if redisConn is not None:
+
             for pathID,inv,matrixPathArray in component['matrix']:
 #                 print(f'Recording search indices for path {accessions[pathID]}')
                 pathRedisStartTime = time.time()
@@ -1413,7 +1414,10 @@ def exportLayer(zoomLevel,components,componentNucleotides,
                     else:
                         overallBin = component['first_bin']+binNum
 
-                    posMapping.setdefault(pathID,{}).update({int(overallBin):(int(posStart),int(posEnd)) for posStart,posEnd in binMatrix[2]})
+#                     if pathID==5 and overallBin==20350:
+#                         pdb.set_trace()
+
+                    posMapping.setdefault(pathID,{}).update({int(overallBin):[(int(posStart),int(posEnd)) for posStart,posEnd in binMatrix[2]]})
 
 
 
