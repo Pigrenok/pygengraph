@@ -141,3 +141,5 @@ checklink/cookies.txt
 
 *.gff
 *.gfa
+
+dumps/*.dump
