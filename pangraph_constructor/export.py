@@ -668,7 +668,7 @@ def baseLayerZoom(graph,
         if debug or debugTime:
             print(f'Processing node {nodeIdx:0{numNodesDigits}}/{numNodes:0{numNodesDigits}}')
         else:
-            print(f'\rProcessing node {nodeIdx:0{numNodesDigits}}/{numNodes:0{numNodesDigits}}',end='')
+            print(f'\nProcessing node {nodeIdx:0{numNodesDigits}}/{numNodes:0{numNodesDigits}}',end='')
 
         if debugTime:
             startNodeTime = time.time()
@@ -1000,7 +1000,7 @@ def nodeToComponentLinks(components,componentToNode,nodeToComponent,fromLinks,to
         if debug:
             print(f'Processing component links {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}')
         else:
-            print(f'\rProcessing component links {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}',end='')
+            print(f'\nProcessing component links {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}',end='')
 
         component = components[compNum]
 
@@ -1399,7 +1399,7 @@ def exportLayer(zoomLevel,components,componentNucleotides,
         if debug:
             print(f'Recording component {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}')
         else:
-            print(f'\rRecording component {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}',end='')
+            print(f'\nRecording component {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}',end='')
         component = addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks)
 #         print(f'Component Length is {component["last_bin"]-component["first_bin"]+1}')
 #         redisStartTime = time.time()
@@ -1875,7 +1875,7 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
         if debug or debugTime:
             print(f'Processing component {compNum+1:0{numComponentsDigits}}/{numComponents:0{numComponentsDigits}}')
         else:
-            print(f'\rProcessing component {compNum+1:0{numComponentsDigits}}/{numComponents:0{numComponentsDigits}}',end='')
+            print(f'\nProcessing component {compNum+1:0{numComponentsDigits}}/{numComponents:0{numComponentsDigits}}',end='')
 
         forwardPaths = set(range(len(graph.accessions)))
         invertedPaths = set()

@@ -271,8 +271,8 @@ def iset_add(r,name,intervalMapping):
         to two sorted sets, if number of added elements are not equal, DataError is raised.
 
     '''
-    starts = {f'{n}_{seqnum}':interval[0] for n,inv in intervalMapping.items() for seqnum,interval in enumerate(inv)}
-    ends = {f'{n}_{seqnum}':interval[1] for n,inv in intervalMapping.items() for seqnum,interval in enumerate(inv)}
+    starts = {f'{n}_{seqnum}':int(interval[0]) for n,inv in intervalMapping.items() for seqnum,interval in enumerate(inv)}
+    ends = {f'{n}_{seqnum}':int(interval[1]) for n,inv in intervalMapping.items() for seqnum,interval in enumerate(inv)}
     numAddedStarts = r.zadd(f'{name}Start',mapping=starts)
     numAddedEnds = r.zadd(f'{name}End',mapping=ends)
     if numAddedStarts!=numAddedEnds:
@@ -334,7 +334,7 @@ def iset_score(r,name,start,end=None):
 #     r.execute_command('ZRANGESTORE',*['endSetTemp','geneEnd',start,'inf','BYSCORE'])
     r.zrangestore(f'startSetTemp_{tid}',f'{name}Start','-inf',_endPos,byScore=True)
     r.zrangestore(f'endSetTemp_{tid}',f'{name}End',start,'inf',byScore=True)
-    res = [el.decode().split('_')[0] for el in r.zinter([f'startSetTemp_{tid}',f'endSetTemp_{tid}'])]
+    res = ['_'.join(el.decode().split('_')[:-1]) for el in r.zinter([f'startSetTemp_{tid}',f'endSetTemp_{tid}'])]
     r.delete(f'startSetTemp_{tid}',f'endSetTemp_{tid}')
     return res
 

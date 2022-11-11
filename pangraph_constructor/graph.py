@@ -41,7 +41,7 @@ def calcNodeLengths(graph):
     for nodeIdx in range(numNodes):
         print(f'\rProcessing node {nodeIdx+1:0{numNodesDigits}}/{numNodes:0{numNodesDigits}}',end='')
         if graph.nodesData[nodeIdx]=='':
-            nodeLengths[nodeIdx] = len(graph.nodes[nodeIdx])
+            nodeLengths[nodeIdx] = 1#len(graph.nodes[nodeIdx])
         else:
             nodeLengths[nodeIdx] = len(graph.nodesData[nodeIdx])
 
@@ -654,21 +654,29 @@ class GenomeGraph:
         raise NotImplementedError('Generating graph from nodes and links is not yet implemented.')
 
 # Cell
-    def _getNodeID(self,node,maxNodeNameLength,pathID):
-        _node = node.zfill(maxNodeNameLength)
+    def _getNodeID(self,node,pathID,nodeNameLengths=None):
         try:
-            nodeID = self.nodes.index(_node)+1
-            self.nodesAnnotation[nodeID-1].setdefault(pathID,{}).setdefault(_node,[]).append((0,len(_node)-1))
+            nodeID = self.nodes.index(node)+1
+            if nodeNameLengths is not None:
+                nodeLength = nodeNameLengths[nodeID]
+            else:
+                nodeLength = 1
+            self.nodesAnnotation[nodeID-1].setdefault(pathID, {}).setdefault(node, []).append((0, nodeLength - 1))
         except ValueError:
-            self.nodes.append(_node)
-            self.nodesAnnotation.append({pathID:{_node:[(0,len(_node)-1)]}})
+            self.nodes.append(node)
             nodeID = len(self.nodes)
+            if nodeNameLengths is not None:
+                nodeLength = nodeNameLengths[nodeID]
+            else:
+                nodeLength = 1
+            self.nodesAnnotation.append({pathID:{node:[(0,nodeLength - 1)]}})
+
             self.nodeNameToID[str(nodeID)] = nodeID
 
         return nodeID
 
 # Cell
-    def _graphFromPaths(self,paths,sequenceFiles=None,nodeNameLength=None):
+    def _graphFromPaths(self,paths,sequenceFiles=None,nodeNameLengths=None):
         if sequenceFiles is not None:
             warnings.warn("sequenceFiles reading with path is not yet implemented.")
 
@@ -676,10 +684,10 @@ class GenomeGraph:
             raise ValueError(f"paths should be dict but {type(paths)} was given.")
 
 #         if sequenceFiles is None:
-        if nodeNameLength is None:
-            maxNodeNameLength = len(max([max(path,key=lambda a: len(a)) for path in paths.values()],key=lambda a: len(a))) - 1
-        else:
-            maxNodeNameLength = nodeNameLength
+        # if nodeNameLength is None:
+        #     maxNodeNameLength = len(max([max(path,key=lambda a: len(a)) for path in paths.values()],key=lambda a: len(a))) - 1
+        # else:
+        #     maxNodeNameLength = nodeNameLength
 
         self.nodeNameToID = {}
         self.nodes = []
@@ -693,14 +701,14 @@ class GenomeGraph:
             self.accessions.append(pathID)
             prevNode = path[0][:-1]
             prevDirection = path[0][-1]
-            prevNodeID = self._getNodeID(prevNode,maxNodeNameLength,pathID)
+            prevNodeID = self._getNodeID(prevNode,pathID,nodeNameLengths)
             newPath = [f'{prevNodeID}{prevDirection}']
             for nodeDir in path[1:]:
 
                 node = nodeDir[:-1]
                 direction = nodeDir[-1]
 
-                nodeID = self._getNodeID(node,maxNodeNameLength,pathID)
+                nodeID = self._getNodeID(node,pathID,nodeNameLengths)
                 newPath.append(f'{nodeID}{direction}')
                 links.setdefault(prevNodeID,{}).setdefault(prevDirection,set()).add((nodeID,direction))
 
