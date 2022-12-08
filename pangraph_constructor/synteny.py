@@ -124,13 +124,17 @@ def recordSegment(name,segmentIDs,segmentIDToNumDict,sequence=None,gfaFile=None,
     return segID
 
 # Cell
-def recordAnnotation(nodeID,accessionID,sequenceID,og,atList,nodesAnnotation,nodesChr):
+def recordAnnotation(nodeID,accessionID,sequenceID,og,atList,sequence,nodesAnnotation,nodesChr):
     if len(nodesAnnotation)==nodeID-1:
         nodesAnnotation.append({})
 
-    nodesAnnotation[nodeID-1].setdefault(accessionID,{})[og] = [(0,len(og)-1)]
+    geneLen = 1
+    if len(sequence)>0:
+        geneLen = len(sequence)
+
+    nodesAnnotation[nodeID-1].setdefault(accessionID,{})[og] = [(0,geneLen-1)]#[(0,len(og)-1)]
     for at in atList:
-        nodesAnnotation[nodeID-1].setdefault(accessionID,{})[at] = [(0,len(at)-1)]
+        nodesAnnotation[nodeID-1].setdefault(accessionID,{})[at] = [(0,geneLen-1)]#[(0,len(at)-1)]
 
     if len(nodesChr)==nodeID-1:
         nodesChr.append({})
@@ -207,7 +211,7 @@ def generatePathsLinks(genes,sequenceID,accessionID,
 
             if isUS:
                 usID = recordSegment(us,segmentIDs,segmentIDToNumDict,usSeq,gfaFile=gfaFile,segmentData=segmentData)
-                recordAnnotation(usID,accessionID,geneSeqID,us,[],nodeAnnotation,nodesChr)
+                recordAnnotation(usID,accessionID,geneSeqID,us,[],usSeq,nodeAnnotation,nodesChr)
 
         if og not in OGList:
             ogID = recordSegment(og,segmentIDs,segmentIDToNumDict,geneSeq,gfaFile=gfaFile,segmentData=segmentData)
@@ -215,7 +219,7 @@ def generatePathsLinks(genes,sequenceID,accessionID,
         else:
             ogID = segmentIDs.index(og)+1
 
-        recordAnnotation(ogID,accessionID,geneSeqID,og,atList,nodeAnnotation,nodesChr)
+        recordAnnotation(ogID,accessionID,geneSeqID,og,atList,geneSeq,nodeAnnotation,nodesChr)
 
         pathAdd = [f'{ogID}{"+" if geneForward else "-"}']
         if doUS and isUS:
