@@ -219,35 +219,6 @@ class bidict(dict):
         self[key] = list(valKey)
 
 # Cell
-def getDBID(pathToDictFile,caseName):
-    dbid = None
-    if os.path.exists(pathToDictFile):
-        caseToDBID = joblib.load(pathToDictFile)
-    else:
-        caseToDBID = {caseName:0}
-        dbid = 0
-
-    dbid = caseToDBID.get(caseName,None)
-
-    if dbid is None:
-        dbidArray = sorted(list(caseToDBID.values()))
-        if dbidArray[0]>0:
-            dbid = 0
-        else:
-            prevID = 0
-            if len(dbidArray)>1:
-                for curID in dbidArray[1:]:
-                    if prevID + 1 < curID:
-                        break
-                    prevID = curID
-            dbid = prevID + 1
-        caseToDBID[caseName] = dbid
-
-    joblib.dump(caseToDBID,pathToDictFile)
-
-    return dbid
-
-# Cell
 def resetDB(pathToDictFile,redisServer='redis',port=6379):
     os.remove(pathToDictFile)
     conn = Redis(host=redisServer,port=port,db=0)

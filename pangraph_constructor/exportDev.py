@@ -45,7 +45,7 @@ from functools import partial
 from redis import ResponseError
 
 from .utils import pathConvert,NpEncoder,adjustZoomLevels
-from .utils import iset_add,getDBID,resetDB
+from .utils import iset_add,resetDB
 from .graph import GenomeGraph
 from .graph import initialPathAnalysis,calcNodeLengths
 from .graph import getNodesStructurePathNodeInversionRate,pathNodeDirToCombinedArray,getNextNodePath
