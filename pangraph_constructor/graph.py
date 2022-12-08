@@ -188,16 +188,28 @@ def getNodesStructurePathNodeInversionRate(pathNodeArray,pathDirArray,pathLength
     return pathNodeInversionRate,[nodesStruct[key] for key in sorted(nodesStruct.keys())],np.array(combinedNodeDirArray)
 
 # Cell
-def convertPathsToGraph(fullPath,doSorting=False):
-    paths = pathFileToPathDict(fullPath,True,True)
-    coregraph = GenomeGraph(pathsDict=paths)
-    if doSorting:
-        coregraph.treeSort()
-        assert len(coregraph.nodes)==len(coregraph.order),\
-            f'Graph sorting failed, not all nodes appear in graph order: Number of nodes {len(coregraph.nodes)}, number in sorted order {len(coregraph.order)}'
+def convertPathsToGraph(fullPath,doSorting=False,v2=False):
+    '''
+    Parameters
+    ==========
+    `doSorting`: False or str. If False, nodes will appear in the sequence as they appear in the paths (starting from first path)
+                 if "nodesort", then it is assumed that nodes are the sequence numbers of the nodes in which they should be
+                 ordered (1-based numbering), if "treesort", then standard TreeSort algorithm is used for sorting the graph.
 
-    for i,node in enumerate(coregraph.nodes):
-        coregraph.order[i] = int(node)
+    '''
+
+    paths = pathFileToPathDict(fullPath,True,True,v2)
+    coregraph = GenomeGraph(pathsDict=paths)
+
+    if doSorting:
+        if doSorting=='treesort':
+            coregraph.treeSort()
+            assert len(coregraph.nodes)==len(coregraph.order),\
+                f'Graph sorting failed, not all nodes appear in graph order: Number of nodes {len(coregraph.nodes)}, \
+                number in sorted order {len(coregraph.order)}'
+        elif doSorting=='nodesort':
+            for i,node in enumerate(coregraph.nodes):
+                coregraph.order[int(node)-1] = i+1
 
     coreGFApath = f'{os.path.splitext(fullPath)[0]}.gfa'
     coregraph.toGFA(coreGFApath,False)
