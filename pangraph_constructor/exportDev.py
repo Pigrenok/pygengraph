@@ -610,6 +610,9 @@ def baseLayerZoom(graph,
     annotationNames = {}
     
     combAnnotation = {}
+    combGenPos = {}
+    combGenPosSearch = {}
+    combAltChrGenPos = {}
     annFirstBin = 0
 #     breakComponentWhenBinEnds = False
 #         breakCompBeforeBin = False
@@ -633,12 +636,17 @@ def baseLayerZoom(graph,
         nodeStat(nodeIdx,pathNodeArray,nodeLengths)
         
         # Combining annotations
-        for accID,accNodeAnn in graph.nodesAnnotation[nodeIdx-1].items():    
-            for annString,intervals in accNodeAnn.items():
+        for accID,accNodeAnn in graph.nodesMetadata[nodeIdx-1].items():    
+            for annString,intervals in accNodeAnn['annotation'].items():
                 for interval in intervals:
                     combAnnotation.setdefault(accID,{}).\
                     setdefault(annString,[]).\
                     append((interval[0]+annFirstBin,interval[1]+annFirstBin))
+            for genPos in accNodeAnn.get('genPos',[]):
+                combGenPos.setdefault(accID,{})[f'{genPos["chr"]}:{"..".join(map(str,genPos["genomePosition"]))}']=[(annFirstBin,annFirstBin+nodeLengths[nodeIdx-1]-1)]
+                combGenPosSearch.setdefault(accID,{})[annFirstBin] = [genPos["genomePosition"]]
+            for altGenPos in accNodeAnn.get('altChrGenPos',[]):
+                combAltChrGenPos.setdefault(accID,{})[f'{altGenPos["chr"]}:{"..".join(map(str,altGenPos["genomePosition"]))}']=[(annFirstBin,annFirstBin+nodeLengths[nodeIdx-1]-1)]
         annFirstBin +=nodeLengths[nodeIdx-1]
         
         # Check whether the component should be broken before and/or after current node
@@ -929,13 +937,13 @@ def baseLayerZoom(graph,
             componentLengths,
             components,
             componentNucleotides,
-            fromLinks,toLinks,
-            fromComponentLinks,toComponentLinks,
-            accStarts,accEnds,
-            invertedStarts,invertedEnds,
-            combAnnotation)
+            fromLinks, toLinks,
+            fromComponentLinks, toComponentLinks,
+            accStarts, accEnds,
+            invertedStarts, invertedEnds,
+            combAnnotation, combGenPos, combAltChrGenPos, combGenPosSearch)
 
-# %% ../05_exportDev.ipynb 23
+# %% ../05_exportDev.ipynb 25
 def splitforwardInversedNodeComp(pathList,component,isInverse):
     forward = []
     inversed = []
@@ -3744,12 +3752,18 @@ def recordZoomLevelForDebug(zoomNodeToComponent,
             zoomComponentToNodes, \
             zoomComponents
 
-# %% ../05_exportDev.ipynb 117
-def searchIndicesGeneRecord(redisConn,redisCaseID,geneMapping):
+# %% ../05_exportDev.ipynb 120
+def searchIndicesGeneRecord(redisConn,redisCaseID,geneMapping,genPosMapping,altChrGenPosMapping,genPosSearchMapping):
     for pathID,geneMappingPath in geneMapping.items():
         iset_add(redisConn,f'{redisCaseID}.{pathID}.Gene',geneMappingPath)
+    for pathID,genPosMappingPath in genPosMapping.items():
+        iset_add(redisConn,f'{redisCaseID}.{pathID}.GenPos',genPosMappingPath)
+    for pathID,genPosSearchMappingPath in genPosSearchMapping.items():
+        iset_add(redisConn,f'{redisCaseID}.{pathID}.GenPosSearch',genPosSearchMappingPath)
+    for pathID,altChrGenPosMappingPath in altChrGenPosMapping.items():
+        iset_add(redisConn,f'{redisCaseID}.{pathID}.AltChrGenPos',altChrGenPosMappingPath)
 
-# %% ../05_exportDev.ipynb 118
+# %% ../05_exportDev.ipynb 121
 def exportToPantograph(graph=None, inputPath=None, GenomeGraphParams={}, 
                        outputPath=None, outputName=None, outputSuffix=None, 
                        isSeq=True,
@@ -3845,7 +3859,7 @@ def exportToPantograph(graph=None, inputPath=None, GenomeGraphParams={},
     fromComponentLinks,toComponentLinks,
     accStarts,accEnds,
     invertedStarts,invertedEnds,
-    combAnnotation] = baseLayerZoom(graph,
+    combAnnotation,combGenPos,combAltChrGenPos,combGenPosSearch] = baseLayerZoom(graph,
                                       outputPath,outputName,
                                       pathNodeArray,pathDirArray,
                                       pathLengths,nodeLengths,
@@ -3862,7 +3876,7 @@ def exportToPantograph(graph=None, inputPath=None, GenomeGraphParams={},
                                 1)
     
     if redisConn is not None:
-        searchIndicesGeneRecord(redisConn,outputName,combAnnotation)
+        searchIndicesGeneRecord(redisConn,outputName,combAnnotation,combGenPos,combAltChrGenPos, combGenPosSearch)
     
     fromComponentLinks,toComponentLinks, \
     linkLengths,pairedLinks,interconnectedLinks,blockEdges = \

@@ -431,8 +431,11 @@ class GenomeGraph:
         '''
         self.nodes = []
         self.nodesData = []
-        self.nodesAnnotation = []
-        self.nodesChr = []
+        # self.node = []
+        self.nodesMetadata = []
+        '''
+        
+        '''
         self.forwardLinks = {}
         self.overlaps = {}
         self.paths = []
@@ -562,7 +565,7 @@ def _loadGFA(self, gfaFile, isGFASeq=True, accessionsToRemove=None):
 
     if os.path.exists(annotationFile):
         print(f'Found node annotation file {annotationFile}, loading associations.')
-        self.nodesAnnotation = joblib.load(annotationFile)
+        self.nodesMetadata = joblib.load(annotationFile)
         emptyAnnotation = False
     else:
         emptyAnnotation = True
@@ -610,7 +613,7 @@ def _loadGFA(self, gfaFile, isGFASeq=True, accessionsToRemove=None):
         self.nodesData.append(segSeq)
 
     if emptyAnnotation:
-        self.nodesAnnotation = [{}]*len(self.nodes)
+        self.nodesMetadata = [{}]*len(self.nodes)
 
     print('\nLoading segments finished.')
 
@@ -661,12 +664,12 @@ def _loadGFA(self, gfaFile, isGFASeq=True, accessionsToRemove=None):
             addedPaths += 1
     print(f'\nLoading paths finished. {addedPaths} paths added, {ignoredPaths} paths ignored.')
 
-# %% ../01_graph.ipynb 25
+# %% ../01_graph.ipynb 26
 @patch_to(GenomeGraph)
 def _graphFromNodesLinks(self,nodes,links):
     raise NotImplementedError('Generating graph from nodes and links is not yet implemented.')
 
-# %% ../01_graph.ipynb 27
+# %% ../01_graph.ipynb 28
 @patch_to(GenomeGraph)
 def _getNodeID(self,node,pathID,nodeNameLengths=None):
     try:
@@ -675,7 +678,7 @@ def _getNodeID(self,node,pathID,nodeNameLengths=None):
             nodeLength = nodeNameLengths[nodeID]
         else:
             nodeLength = 1
-        self.nodesAnnotation[nodeID-1].setdefault(pathID, {}).setdefault(node, []).append((0, nodeLength - 1))
+        self.nodesMetadata[nodeID-1].setdefault(pathID, {}).setdefault('annotation').setdefault(node, []).append((0, nodeLength - 1))
     except ValueError:
         self.nodes.append(node)
         nodeID = len(self.nodes)
@@ -683,13 +686,13 @@ def _getNodeID(self,node,pathID,nodeNameLengths=None):
             nodeLength = nodeNameLengths[nodeID]
         else:
             nodeLength = 1
-        self.nodesAnnotation.append({pathID:{node:[(0,nodeLength - 1)]}})
+        self.nodesMetadat.append({pathID:{'annotation':{node:[(0,nodeLength - 1)]}}})
 
         self.nodeNameToID[str(nodeID)] = nodeID
 
     return nodeID
 
-# %% ../01_graph.ipynb 28
+# %% ../01_graph.ipynb 29
 @patch_to(GenomeGraph)
 def _graphFromPaths(self,paths,sequenceFiles=None,nodeNameLengths=None):
     if sequenceFiles is not None:
@@ -754,8 +757,8 @@ def _processAnnotation(self, annotationFile, links, ATmap=None, seqFile=None, se
     path = []
     for seqID in seqList:
 
-        p, cigar, usCounter = generatePathsLinks(genes.loc[genes.sequenceID == seqID], seqID, accessionID, sequences, self.OGList,
-                                                 self.nodes, self.nodesAnnotation, self.nodesChr, self.nodeNameToID, links,
+        p, cigar, usCounter = generatePathsLinks(genes, seqID, accessionID, sequences, self.OGList,
+                                                 self.nodes, self.nodesMetadata, self.nodeNameToID, links,
                                                  self.usCounter, doUS=doUS, segmentData=self.nodesData)
         path = path + p
     if isRef:
@@ -857,18 +860,18 @@ def updateAnnotationFromNodes(self,isSeq=True):
     `isSeq`: Whether it contains names as names or as seq.
     '''
     offset = 0
-    for annID in range(len(self.nodesAnnotation)):
+    for annID in range(len(self.nodesMetadata)):
         if isSeq:
             nodeSeq = self.nodesData[annID]
         else:
             nodeSeq = self.nodes[annID]
-        annEl = self.nodesAnnotation[annID]
+        annEl = self.nodesMetadata[annID]
         updatedAnnEl = {}
         for pathName in annEl:
-            updatedAnnEl[pathName] = {nodeSeq:[(0,len(nodeSeq)-1)]}
-        self.nodesAnnotation[annID] = updatedAnnEl
+            updatedAnnEl[pathName] = {'annotation':{nodeSeq:[(0,len(nodeSeq)-1)]}}
+        self.nodesMetadata[annID] = updatedAnnEl
 
-# %% ../01_graph.ipynb 38
+# %% ../01_graph.ipynb 39
 @patch_to(GenomeGraph)
 def generateTremauxTree(self,byPath=True):
     _nxGraph = nx.DiGraph()
@@ -1170,12 +1173,12 @@ def toGFA(self,gfaFile,doSeq=True):
 
     translator = {}
     nodeNameList = []
-    nodesAnnotation = []
+    nodesMetadata = []
 
     for i,nodeID in enumerate(self.order):
         nodeSeq = self.nodesData[nodeID-1]
         nodeName = self.nodes[nodeID-1]
-        nodesAnnotation.append(self.nodesAnnotation[nodeID-1])
+        nodesMetadata.append(self.nodesMetadata[nodeID-1])
         if doSeq and len(nodeSeq)>0:
             gfaWriter.write(f'S\t{i+1}\t{nodeSeq}\n')
             nodeNameList.append(nodeName)
@@ -1220,10 +1223,10 @@ def toGFA(self,gfaFile,doSeq=True):
         with open(jsonFile,'w') as jsf:
             json.dump(nodeNameList,jsf)
 
-    if len(nodesAnnotation)==len(self.nodes):
-        joblib.dump(nodesAnnotation,annotationFile)
+    if len(nodesMetadata)==len(self.nodes):
+        joblib.dump(nodesMetadata,annotationFile)
 
-# %% ../01_graph.ipynb 47
+# %% ../01_graph.ipynb 48
 @patch_to(GenomeGraph)
 def addAccessionAnnotation(self,annotationFile,sequenceFile=None):
     '''
