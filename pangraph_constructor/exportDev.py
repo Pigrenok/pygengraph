@@ -1107,6 +1107,8 @@ def convertRemovableComponents(translateDict,linkLengths,pairedLinks,interconnec
         This should be controlled in link removal routine.
     
     '''
+    if linkLengths is None or pairedLinks is None or interconnectedLinks is None or blockEdges is None:
+        return None,None,None,None
     processedLinks = {}
     print('Converting link to block lengths associations')
     linkLengthsConv = {}
@@ -1166,11 +1168,11 @@ def convertRemovableComponents(translateDict,linkLengths,pairedLinks,interconnec
     
     return linkLengthsConv,pairedLinksConv,interconnectedLinksConv,blockEdgesConv
 
-# %% ../05_exportDev.ipynb 28
+# %% ../05_exportDev.ipynb 30
 def nodeToComponentLinks(components,componentToNode,nodeToComponent,
                          fromLinks,toLinks,graph,
                          fromComponentLinks,toComponentLinks,
-                         linkLengths,pairedLinks,interconnectedLinks,blockEdges,
+                         linkLengths=None,pairedLinks=None,interconnectedLinks=None,blockEdges=None,
                          debug=False):
     numComps = len(components)
     numCompsDigits = np.int(np.ceil(np.log10(numComps)))
@@ -1838,6 +1840,35 @@ def getRemovableStructures(graph = None,
     return linkLengths,pairedLinks,interconnectedLinks,blockEdges,pathNodeInversionRate
 
 # %% ../05_exportDev.ipynb 65
+def getBlockEdges(graph = None,
+                   nodeLengths=None, pathLengths = None, 
+                   pathNodeArray = None, pathDirArray = None,
+                   pathNextNode = None, forwardLinks = None,
+                   inversionThreshold=0.5):
+    # initialising main data structures
+
+    # I would rather get ready graph structure
+    # graph = GenomeGraph(gfaPath=f'{fileDir}{os.path.sep}{filename}',isGFASeq=False)
+
+    # Preparing paths for link-block identifications
+    
+    if nodeLengths is None or pathLengths is None or pathNodeArray is None or pathDirArray is None and pathNextNode is not None or forwardLinks is None:
+        if graph is not None:
+            forwardLinks = graph.forwardLinks
+            
+            nodeLengths = calcNodeLengths(graph)
+
+            pathLengths,pathNodeArray,pathNodeLengths,pathDirArray,pathNodeLengthsCum = initialPathAnalysis(graph,nodeLengths)
+        else:
+            raise AttributeError(f'Either `graph` or `nodeLengths`, `pathLengths`, `pathNodeArray` and `pathDirArray` should be provided.')
+
+    pathNodeInversionRate,nodesStructure,combinedNodeDirArray = getNodesStructurePathNodeInversionRate(pathNodeArray,pathDirArray,pathLengths,inversionThreshold=inversionThreshold)
+    
+    blockEdges = identifyRearrangementBlocks(nodesStructure,nodeLengths)
+    
+    return blockEdges,pathNodeInversionRate
+
+# %% ../05_exportDev.ipynb 68
 def addLink(fromComp,fromStrand,toComp,toStrand,pathList,fromComponentLinks,toComponentLinks):
     fromComponentLinks.setdefault(fromComp,{}).setdefault(fromStrand,{}).\
                        setdefault(toComp,{}).setdefault(toStrand,set()).\
@@ -1846,7 +1877,7 @@ def addLink(fromComp,fromStrand,toComp,toStrand,pathList,fromComponentLinks,toCo
                      setdefault(fromComp,{}).setdefault(fromStrand,set()).\
                      update(pathList)
 
-# %% ../05_exportDev.ipynb 67
+# %% ../05_exportDev.ipynb 70
 def getOccInv(binColLengths,binBlockLength,binOcc,binInv,inversionThreshold=0.5):
     occ = {}
     inv = {}
@@ -3836,12 +3867,23 @@ def exportToPantograph(graph=None, inputPath=None, GenomeGraphParams={},
 
     pathLengths,pathNodeArray,pathNodeLengths,pathDirArray,pathNodeLengthsCum = initialPathAnalysis(graph,nodeLengths)
     
-    linkLengths,pairedLinks,interconnectedLinks,blockEdges,pathNodeInversion = \
-                getRemovableStructures(nodeLengths = nodeLengths, pathLengths = pathLengths, 
-                                       pathNodeArray = pathNodeArray, pathDirArray = pathDirArray,forwardLinks = graph.forwardLinks,
-                                       inversionThreshold = inversionThreshold)
+    if zoomLevels[0]>1:
+        zoomLevels = [1] + zoomLevels
     
-    if returnDebugData: 
+    if len(zoomLevels)>1 or fillZoomLevels:
+        linkLengths,pairedLinks,interconnectedLinks,blockEdges,pathNodeInversion = \
+                    getRemovableStructures(nodeLengths = nodeLengths, pathLengths = pathLengths, 
+                                           pathNodeArray = pathNodeArray, pathDirArray = pathDirArray,forwardLinks = graph.forwardLinks,
+                                           inversionThreshold = inversionThreshold)
+    else:
+        linkLengths = None
+        pairedLinks = None
+        interconnectedLinks = None
+        blockEdges,pathNodeInversion = getBlockEdges(nodeLengths = nodeLengths, pathLengths = pathLengths, 
+                                   pathNodeArray = pathNodeArray, pathDirArray = pathDirArray,forwardLinks = graph.forwardLinks,
+                                   inversionThreshold = inversionThreshold)
+    
+    if returnDebugData:
         initialLinkLengths = deepcopy(linkLengths)
         initialPairedLinks = deepcopy(pairedLinks)
         initialInterconnectedLinks = deepcopy(interconnectedLinks)
