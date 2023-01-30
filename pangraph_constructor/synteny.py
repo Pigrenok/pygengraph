@@ -166,10 +166,10 @@ def addLink(links,prevPathSegment,name,forward):
         links[prevPathSegment].add(f'{name}\t{"+" if forward else "-"}')
     return f'{name}\t{"+" if forward else "-"}'
 
-# %% ../03_synteny.ipynb 14
-def generatePathsLinks(genes,sequenceID,accessionID,
+# %% ../03_synteny.ipynb 16
+def generatePathsLinks(genesAll,sequenceID,accessionID,
                        sequences,OGList,segmentIDs,
-                       nodeAnnotation,nodesChr,
+                       nodesMetadata,
                        segmentIDToNumDict,links,usCounter,
                        doUS=True,segmentData=None,gfaFile=None):
     '''

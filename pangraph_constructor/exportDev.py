@@ -9,15 +9,15 @@ __all__ = ['componentTemplate', 'chunkTemplate', 'rootStructTemplate', 'outLeftR
            'addToLinkPool', 'blockFromSingleLink', 'checkIndividualLink', 'processDoublePairedLinks',
            'processIndividualLink', 'recordLinkBlockAssociation', 'findNextNode', 'processPseudoPair',
            'processStartsEnds', 'postprocessLinksBlocks', 'processPathBreaks', 'addBlockEdge',
-           'identifyRearrangementBlocks', 'getRemovableStructures', 'addLink', 'getOccInv', 'combineIntervals',
-           'recordBinZoom', 'getAverageInv', 'finaliseComponentZoom', 'finaliseBinZoom', 'getMatrixPathElement',
-           'checkChange', 'joinComponents', 'checkLinksZoom', 'checkForBreaksZoom', 'splitPositiveNegative',
-           'intersectAccLists', 'updateLinks', 'isStartEnd', 'nextLayerZoom', 'removeLink', 'processCollapsibleBlocks',
-           'clearRearrangementBlocks', 'testStartEnd', 'findEmptyEdges', 'checkExternalLinks', 'createNewBoundaries',
-           'identifyIsolatedBlocks', 'updateLinksRemoveComp', 'removeIsolatedBlocks', 'clearInvisible',
-           'createZoomLevelDir', 'finaliseChunk', 'addLinksToComp', 'checkLinks', 'searchIndicesPosRecord',
-           'exportLayer', 'compLinksToAccCompLinks', 'recordZoomLevelForDebug', 'searchIndicesGeneRecord',
-           'exportToPantograph']
+           'identifyRearrangementBlocks', 'getRemovableStructures', 'getBlockEdges', 'addLink', 'getOccInv',
+           'combineIntervals', 'recordBinZoom', 'getAverageInv', 'finaliseComponentZoom', 'finaliseBinZoom',
+           'getMatrixPathElement', 'checkChange', 'joinComponents', 'checkLinksZoom', 'checkForBreaksZoom',
+           'splitPositiveNegative', 'intersectAccLists', 'updateLinks', 'isStartEnd', 'nextLayerZoom', 'removeLink',
+           'processCollapsibleBlocks', 'clearRearrangementBlocks', 'testStartEnd', 'findEmptyEdges',
+           'checkExternalLinks', 'createNewBoundaries', 'identifyIsolatedBlocks', 'updateLinksRemoveComp',
+           'removeIsolatedBlocks', 'clearInvisible', 'createZoomLevelDir', 'finaliseChunk', 'addLinksToComp',
+           'checkLinks', 'searchIndicesPosRecord', 'exportLayer', 'compLinksToAccCompLinks', 'recordZoomLevelForDebug',
+           'searchIndicesGeneRecord', 'exportToPantograph']
 
 # %% ../05_exportDev.ipynb 5
 import traceback
@@ -82,7 +82,7 @@ rootStructTemplate = {
     "zoom_levels": {}
 }
 
-# %% ../05_exportDev.ipynb 13
+# %% ../05_exportDev.ipynb 14
 def outLeftRight(nodeInversionInPath,leftFarLink,rightFarLink,reason,debug=False,inversionThreshold=0.5):
     
     if (nodeInversionInPath<=inversionThreshold):
@@ -96,7 +96,7 @@ def outLeftRight(nodeInversionInPath,leftFarLink,rightFarLink,reason,debug=False
         
     return leftFarLink,rightFarLink
 
-# %% ../05_exportDev.ipynb 14
+# %% ../05_exportDev.ipynb 15
 def recordLinks(nodeIdx,nextNode,pathID,step,nodeInversionInPath,nonLinearCond,pathNodeArray,fromLinks,toLinks,debug=False,inversionThreshold=0.5):
     leftFarLink = False
     rightFarLink = False
@@ -148,7 +148,7 @@ def recordLinks(nodeIdx,nextNode,pathID,step,nodeInversionInPath,nonLinearCond,p
                     toLinks.setdefault(intermediateNodeIdx+1*step,{}).setdefault(intermediateNodeIdx,[]).append(pathID)
     return leftFarLink,rightFarLink,fromLinks,toLinks
 
-# %% ../05_exportDev.ipynb 15
+# %% ../05_exportDev.ipynb 16
 def checkForBreak(nodeIdx,nodeLen,
                   nodePathsIdx,nodeSeqInPath,
                   uniqueNodePathsIDs,pathNodeCount,
@@ -444,7 +444,7 @@ def checkForBreak(nodeIdx,nodeLen,
             occupancy,inversion,
             invertedStarts,invertedEnds)
 
-# %% ../05_exportDev.ipynb 16
+# %% ../05_exportDev.ipynb 17
 def nodeStat(nodeIdx,pathNodeArray,nodeLengths):
     '''
     Function calculate information about node as part of the overall graph.
@@ -489,7 +489,7 @@ def nodeStat(nodeIdx,pathNodeArray,nodeLengths):
     
     return nodePathsIdx,nodeSeqInPath,nodeLen,uniqueNodePathsIDs,pathNodeCount
 
-# %% ../05_exportDev.ipynb 17
+# %% ../05_exportDev.ipynb 18
 def finaliseComponentBase(component,
                       components,componentNucleotides,
                       matrix,occupants,nBins,componentLengths,nucleotides,zoomLevel,accessions,inversionThreshold=0.5):
@@ -517,7 +517,7 @@ def finaliseComponentBase(component,
     component['firstCol'] = firstCol
     return component,components,componentNucleotides,{},set(),0,''
 
-# %% ../05_exportDev.ipynb 18
+# %% ../05_exportDev.ipynb 19
 def processAnnotationInterval(posStart,posEnd,annotation,res):
     for pos in range(posStart,posEnd):
         r = []
@@ -527,13 +527,13 @@ def processAnnotationInterval(posStart,posEnd,annotation,res):
                     r.append(name)
         res[pos] = r
 
-# %% ../05_exportDev.ipynb 19
+# %% ../05_exportDev.ipynb 20
 def combineAnnotation(combAnnotation):
     for accAnn in combAnnotation.values():
         for annString,intList in accAnn.items():
             accAnn[annString] = combineIntervals(intList)
 
-# %% ../05_exportDev.ipynb 20
+# %% ../05_exportDev.ipynb 21
 def updateEdges(accEdge,edgeAccessions,compNum):
     '''
     Function fills up either accStarts or accEnds (on which component each accession starts and 
@@ -545,7 +545,7 @@ def updateEdges(accEdge,edgeAccessions,compNum):
         
     return accEdge
 
-# %% ../05_exportDev.ipynb 21
+# %% ../05_exportDev.ipynb 23
 def baseLayerZoom(graph,
                   outputPath,outputName,
                   pathNodeArray,pathDirArray,
@@ -963,7 +963,7 @@ def splitforwardInversedNodeComp(pathList,component,isInverse):
                 
     return forward,inversed
 
-# %% ../05_exportDev.ipynb 24
+# %% ../05_exportDev.ipynb 26
 def fillLinksBase(nodeInComp,nodeToComponent,fromLinks,toLinks,fromComponentLinks,toComponentLinks,compNum,components,doLeft=True,doRight=True):
     component = components[compNum]
     for node,isFirstNode in zip([nodeInComp[0],nodeInComp[-1]],[True,False]):
@@ -1042,7 +1042,7 @@ def fillLinksBase(nodeInComp,nodeToComponent,fromLinks,toLinks,fromComponentLink
                         
     return fromComponentLinks,toComponentLinks
 
-# %% ../05_exportDev.ipynb 25
+# %% ../05_exportDev.ipynb 27
 def convertLink(linkFrom,linkTo,translateDict,forwardLinks,isZoom):
     # (2247, 2319)
     # if linkFrom==2247 and linkTo in [2319,2320]:
@@ -1072,7 +1072,7 @@ def convertLink(linkFrom,linkTo,translateDict,forwardLinks,isZoom):
         
     return linkSetConv
 
-# %% ../05_exportDev.ipynb 26
+# %% ../05_exportDev.ipynb 28
 def recordUpdatedPairedLink(firstLinkSet,secondLinkSet,firstLink,secondLink,substituteLink,pairedLinksConv):
     if substituteLink==(firstLink[0],secondLink[1]):
         # Straight paired link of inverted double paired link
@@ -1090,7 +1090,7 @@ def recordUpdatedPairedLink(firstLinkSet,secondLinkSet,firstLink,secondLink,subs
         raise RuntimeError(f'Unusual paired link encountered {firstLink}+{secondLink} -> {substituteLink}')
     
 
-# %% ../05_exportDev.ipynb 27
+# %% ../05_exportDev.ipynb 29
 def convertRemovableComponents(translateDict,linkLengths,pairedLinks,interconnectedLinks,blockEdges,forwardLinks,isZoom=True):
     '''
     translateDict should be a dict in format {<old node/component id 0-based>:<new component id 1-based>}
@@ -1218,13 +1218,13 @@ def nodeToComponentLinks(components,componentToNode,nodeToComponent,
     
     return fromComponentLinks,toComponentLinks,linkLengthsConv,pairedLinksConv,interconnectedLinksConv,blockEdgesConv
 
-# %% ../05_exportDev.ipynb 37
+# %% ../05_exportDev.ipynb 39
 def findBreaksInPath(combinedArray,nextNodeDict):
     return [pos for pos,node in enumerate(combinedArray[:-1]) \
                       if (node<0 and combinedArray[pos+1]!=-1*nextNodeDict.inverse.get(-1*node,[-1*node-1])[0]) or\
                          (node>0 and combinedArray[pos+1]!=nextNodeDict.get(node,node+1))]
 
-# %% ../05_exportDev.ipynb 38
+# %% ../05_exportDev.ipynb 40
 def identifyPathBreaks(combinedNodeDirArray,pathLengths,pathNextNode):
     pathBreakCoordPairs = []
     for pathID in range(combinedNodeDirArray.shape[0]):
@@ -1235,7 +1235,7 @@ def identifyPathBreaks(combinedNodeDirArray,pathLengths,pathNextNode):
     
     return pathBreakCoordPairs
 
-# %% ../05_exportDev.ipynb 40
+# %% ../05_exportDev.ipynb 42
 def interweaveArrays(a,b):
     if len(a.shape)>1 or len(b.shape)>1:
         raise ValueError('Both input arrays should be 1D arrays')
@@ -1249,7 +1249,7 @@ def interweaveArrays(a,b):
     
     return c
 
-# %% ../05_exportDev.ipynb 41
+# %% ../05_exportDev.ipynb 43
 def extractGapsBlocks(block,path,nodeLengths,getComplex=False):
     '''
     This function either split block by gaps (e.g. block [1,2,4,5,6,8] will yield [1,2],[4,5,6],[8])
@@ -1311,7 +1311,7 @@ def extractGapsBlocks(block,path,nodeLengths,getComplex=False):
     else:
         return [tuple(block)],False#checkSplitBlock(block)
 
-# %% ../05_exportDev.ipynb 42
+# %% ../05_exportDev.ipynb 44
 def checkSplitBlock(block,gapList=None):
     '''
     Not used at the moment
@@ -1337,15 +1337,15 @@ def checkSplitBlock(block,gapList=None):
     else:
         return [tuple(block)]
 
-# %% ../05_exportDev.ipynb 43
+# %% ../05_exportDev.ipynb 45
 def blockListToLengths(blockList,nodeLengths):
     return [np.sum([nodeLengths[node-1] for node in block]) for block in blockList]
 
-# %% ../05_exportDev.ipynb 44
+# %% ../05_exportDev.ipynb 46
 def _blockToLengthLink(link,blockList,linkL,nodeLengths):
     linkL.append((link,max(blockListToLengths(blockList,nodeLengths))))
 
-# %% ../05_exportDev.ipynb 45
+# %% ../05_exportDev.ipynb 47
 def convertBlocksToLengths(linksBlocks,nodeLengths):
     ''' 
     Converting blocks associated with each link to lengths and then selecting the longest one (?)
@@ -1375,7 +1375,7 @@ def convertBlocksToLengths(linksBlocks,nodeLengths):
     print('\nReformating finished.')
     return linkLengths
 
-# %% ../05_exportDev.ipynb 47
+# %% ../05_exportDev.ipynb 49
 def addToLinkPool(link1,link2,interconnectedLinks):
     # Change signature of the function in the downstream function
     
@@ -1404,7 +1404,7 @@ def addToLinkPool(link1,link2,interconnectedLinks):
     interconnectedLinks.setdefault(link1,set()).add(link2)
     interconnectedLinks.setdefault(link2,set()).add(link1)
 
-# %% ../05_exportDev.ipynb 48
+# %% ../05_exportDev.ipynb 50
 def blockFromSingleLink(pathID,link,pathNodeInversionRate,pathNextNode):
     '''
     Identify block from a single link
@@ -1442,7 +1442,7 @@ def blockFromSingleLink(pathID,link,pathNodeInversionRate,pathNextNode):
     
     return tuple(block)
 
-# %% ../05_exportDev.ipynb 49
+# %% ../05_exportDev.ipynb 51
 def checkIndividualLink(link,pathID,usedSecondInPairLink):
     '''
     Function checks if this link is already second in pair. If it is, then it is not considered separately (return True?). 
@@ -1450,7 +1450,7 @@ def checkIndividualLink(link,pathID,usedSecondInPairLink):
     '''
     return link in usedSecondInPairLink.get(pathID,set())
 
-# %% ../05_exportDev.ipynb 50
+# %% ../05_exportDev.ipynb 52
 def processDoublePairedLinks(leftLink,rightLink,pathID,doublePairedLinks,pairedLinks,interconnectedLinks,linksBlocks,pathNextNode):
     # Check if it is second link already.
     # If it is, pair second link of the current pair with first link of the previous pair
@@ -1473,7 +1473,7 @@ def processDoublePairedLinks(leftLink,rightLink,pathID,doublePairedLinks,pairedL
     doublePairedLinks.setdefault(pathID,{})[rightLink] = leftLink
         
 
-# %% ../05_exportDev.ipynb 51
+# %% ../05_exportDev.ipynb 53
 def processIndividualLink(link,pathID,pathNodeInversionRate,pathNextNode,usedSecondInPairLink):
     if usedSecondInPairLink is not None and checkIndividualLink(link,pathID,usedSecondInPairLink):
         # If usedSecondInPairPath is provided, check if the link was already second in pair. In that case do not do anything.
@@ -1487,18 +1487,18 @@ def processIndividualLink(link,pathID,pathNodeInversionRate,pathNextNode,usedSec
     
     return [block]
 
-# %% ../05_exportDev.ipynb 52
+# %% ../05_exportDev.ipynb 54
 def recordLinkBlockAssociation(link,blockList,linksBlocks):
     linksBlocks.setdefault(link,set()).update(blockList)
     
 #     for iLink in interconnectedLinks.get(link,set()):
 #         linksBlocks.setdefault(iLink,set()).update(linksBlocks.get(link,set()))
 
-# %% ../05_exportDev.ipynb 53
+# %% ../05_exportDev.ipynb 55
 def findNextNode(node,combinedArray):
     return np.where(combinedArray==node)[0]
 
-# %% ../05_exportDev.ipynb 54
+# %% ../05_exportDev.ipynb 56
 def processPseudoPair(breakPos,returnPos,pathID,
                       pathNodeArray,combinedNodeDirArray,pathNextNode,nodeLengths,
                       usedSecondInPairPath,pairedLinks,linksBlocks):
@@ -1549,7 +1549,7 @@ def processPseudoPair(breakPos,returnPos,pathID,
     
     return blockList
 
-# %% ../05_exportDev.ipynb 55
+# %% ../05_exportDev.ipynb 57
 def processStartsEnds(mainLink,linkStarts,linkEnds,interconnectedLinks,forwardLinks):
     # TODO!!! Need to add checks for whether one link is intersecting the other or one is fully inside.
     potentialStartLinks = linkStarts.get(mainLink[0],set())
@@ -1587,7 +1587,7 @@ def processStartsEnds(mainLink,linkStarts,linkEnds,interconnectedLinks,forwardLi
                         addToLinkPool(mainLink,link,interconnectedLinks)
             linkEnds.setdefault(mainLink[1],set()).add(mainLink)
 
-# %% ../05_exportDev.ipynb 56
+# %% ../05_exportDev.ipynb 58
 def postprocessLinksBlocks(linksBlocks,interconnectedLinks):
     G = nx.Graph(interconnectedLinks)
     
@@ -1610,7 +1610,7 @@ def postprocessLinksBlocks(linksBlocks,interconnectedLinks):
 #         for connectedLink in associatedLinks:
 #             linksBlocks.setdefault(link,set()).update(linksBlocks.get(connectedLink,set()))
 
-# %% ../05_exportDev.ipynb 57
+# %% ../05_exportDev.ipynb 59
 def processPathBreaks(pathBreakCoordPairs,
                        pathNodeArray,pathNextNode,combinedNodeDirArray,pathNodeInversionRate,pathLengths,nodeLengths,forwardLinks):
     linksBlocks = {}
@@ -1750,12 +1750,12 @@ def processPathBreaks(pathBreakCoordPairs,
     print('\nProcessing path breaks finished.')
     return linksBlocks,pairedLinks,interconnectedLinks
 
-# %% ../05_exportDev.ipynb 59
+# %% ../05_exportDev.ipynb 61
 def addBlockEdge(edge,size,blockEdges):
     curBlockSize = blockEdges.get(edge,0)
     blockEdges[edge] = max(curBlockSize,size)
 
-# %% ../05_exportDev.ipynb 60
+# %% ../05_exportDev.ipynb 62
 def identifyRearrangementBlocks(nodesStructure,nodeLengths):
     '''
     block Edges is a dict with a structure:
@@ -1801,7 +1801,7 @@ def identifyRearrangementBlocks(nodesStructure,nodeLengths):
     print('\nIdentifying rearrangement blocks finished.')
     return blockEdges
 
-# %% ../05_exportDev.ipynb 62
+# %% ../05_exportDev.ipynb 64
 def getRemovableStructures(graph = None,
                            nodeLengths=None, pathLengths = None, 
                            pathNodeArray = None, pathDirArray = None,
@@ -1891,7 +1891,7 @@ def getOccInv(binColLengths,binBlockLength,binOcc,binInv,inversionThreshold=0.5)
 
     return occ,inv
 
-# %% ../05_exportDev.ipynb 68
+# %% ../05_exportDev.ipynb 71
 def combineIntervals(posPath):
     # posPath = pos.get(pathID)
     posArray = np.array(posPath)
@@ -1911,7 +1911,7 @@ def combineIntervals(posPath):
     newPos[-1].append(np.max(candidates))# !!!!    
     return newPos
 
-# %% ../05_exportDev.ipynb 69
+# %% ../05_exportDev.ipynb 72
 def recordBinZoom(occ,inv,binPosArray,nBins,nCols,
                   binBlockLength,binBlockLengths,
                   binColLengths,
@@ -1940,7 +1940,7 @@ def recordBinZoom(occ,inv,binPosArray,nBins,nCols,
     # binOcc,binInv,binPosArray,binAnn,nBins,nCols,
     # binBlockLengths,matrix
 
-# %% ../05_exportDev.ipynb 70
+# %% ../05_exportDev.ipynb 73
 def getAverageInv(binBlockLengths,matrixPathArray):
     num = 0
     dem = 0
@@ -1949,7 +1949,7 @@ def getAverageInv(binBlockLengths,matrixPathArray):
         dem += blockCols
     return num/dem
 
-# %% ../05_exportDev.ipynb 71
+# %% ../05_exportDev.ipynb 74
 def finaliseComponentZoom(component,components,componentLengths,#componentNucleotides,
                           nBins,nCols,occupants,
                           binBlockLengths,binColStarts,binColEnds,
@@ -1997,7 +1997,7 @@ def finaliseComponentZoom(component,components,componentLengths,#componentNucleo
     # component,components,componentLengths,(componentNucleotides),nBins,nCols,occupants,
     # binBlockLengths,binColStarts,binColEnds,matrix,starts,ends,compInvNum,compInvDen
 
-# %% ../05_exportDev.ipynb 73
+# %% ../05_exportDev.ipynb 76
 def finaliseBinZoom(compNum,
                     binOcc,binInv,binPosArray,
                     nBins,nCols,
@@ -2091,7 +2091,7 @@ def finaliseBinZoom(compNum,
             starts,ends,newToOldInd,oldToNewInd,\
             forwardPaths,invertedPaths,set() # The last one is pathsToInversion
 
-# %% ../05_exportDev.ipynb 75
+# %% ../05_exportDev.ipynb 78
 def getMatrixPathElement(matrix,pathID):
     res = [el for el in matrix if el[0]==pathID]
     if len(res)==1:
@@ -2101,7 +2101,7 @@ def getMatrixPathElement(matrix,pathID):
     
     return None
 
-# %% ../05_exportDev.ipynb 76
+# %% ../05_exportDev.ipynb 79
 def checkChange(compNum,components,zoomLevel,blockEdges):
     doBreak = False
     curComp = components[compNum]
@@ -2138,7 +2138,7 @@ def checkChange(compNum,components,zoomLevel,blockEdges):
 #             pass
     return doBreak
 
-# %% ../05_exportDev.ipynb 77
+# %% ../05_exportDev.ipynb 80
 def joinComponents(leftComp,rightComp, maxLengthComponent, inversionThreshold=0.5):
     '''
     !!! ⚠️ Currently not used
@@ -2213,7 +2213,7 @@ def joinComponents(leftComp,rightComp, maxLengthComponent, inversionThreshold=0.
     
     return newComp
 
-# %% ../05_exportDev.ipynb 78
+# %% ../05_exportDev.ipynb 81
 def checkLinksZoom(compNum,fromComponentLinks,toComponentLinks):
     # Check only outgoing from the right and incoming to the right
     # and check outgoing from the left on and incoming to the left on the next node.
@@ -2249,7 +2249,7 @@ def checkLinksZoom(compNum,fromComponentLinks,toComponentLinks):
     
     return False
 
-# %% ../05_exportDev.ipynb 79
+# %% ../05_exportDev.ipynb 82
 def checkForBreaksZoom(zoomLevel,compNum,components,fromComponentLinks,toComponentLinks, blockEdges):
     if compNum<len(components)-1:
         breakByLinks = checkLinksZoom(compNum,fromComponentLinks,toComponentLinks)
@@ -2258,7 +2258,7 @@ def checkForBreaksZoom(zoomLevel,compNum,components,fromComponentLinks,toCompone
         return [false]
     return [breakByLinks,breakByChange]
 
-# %% ../05_exportDev.ipynb 81
+# %% ../05_exportDev.ipynb 84
 def splitPositiveNegative(compID,accs,components):
     '''
     This function simply pulls all accession presented in the component and split them into forward and inversed.
@@ -2300,14 +2300,14 @@ def splitPositiveNegative(compID,accs,components):
     
     return posAcc,negAcc,emptyAcc
 
-# %% ../05_exportDev.ipynb 82
+# %% ../05_exportDev.ipynb 85
 def intersectAccLists(accList,dirDict):
     overallLinkAccList = set()
     for linkAccList in dirDict.values():
         overallLinkAccList.update(linkAccList)
     return set(accList).intersection(overallLinkAccList)
 
-# %% ../05_exportDev.ipynb 83
+# %% ../05_exportDev.ipynb 86
 def updateLinks(newToOldInd,oldToNewInd,
                 fromComponentLinks,toComponentLinks,
                 linkLengths,pairedLinks,interconnectedLinks,blockEdges,accStarts,accEnds,components,compAccDir,
@@ -2538,7 +2538,7 @@ def updateLinks(newToOldInd,oldToNewInd,
 #         pdb.set_trace()
     return newFromComponentLinks,newToComponentLinks,accStarts,accEnds,linkLengthsConv,pairedLinksConv,interconnectedLinksConv,blockEdgesConv
 
-# %% ../05_exportDev.ipynb 85
+# %% ../05_exportDev.ipynb 88
 def isStartEnd(compNum,components):
     isBreak = False
     leftComp = components[compNum]
@@ -2567,7 +2567,7 @@ def isStartEnd(compNum,components):
     
     return isBreak
 
-# %% ../05_exportDev.ipynb 86
+# %% ../05_exportDev.ipynb 89
 def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
                   fromComponentLinks,toComponentLinks,graph,
                   accStarts,accEnds,
@@ -2884,7 +2884,7 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
             accStarts,accEnds,newLinkLengths,newPairedLinks,newInterconnectedLinks,newBlockEdges\
             ,oldToNewInd,newToOldInd
 
-# %% ../05_exportDev.ipynb 89
+# %% ../05_exportDev.ipynb 92
 def removeLink(fromComponentLinks,toComponentLinks,linkList,remLinks,link,pairedLink=None,subLink=None,subLinks=None,remLinkAccessions=None):
     '''
     This function remove the main link.
@@ -3013,7 +3013,7 @@ def removeLink(fromComponentLinks,toComponentLinks,linkList,remLinks,link,paired
                 addLink(_fromComp,strand,_toComp,strand,accIntersect,fromComponentLinks,toComponentLinks)
         
 
-# %% ../05_exportDev.ipynb 90
+# %% ../05_exportDev.ipynb 93
 def processCollapsibleBlocks(zoomLevel,linkLengths,pairedLinks,interconnectedLinks,fromComponentLinks,toComponentLinks):
     
     # ❗Need to remove the links below zoom level everywhere, but the substitute links,
@@ -3042,11 +3042,11 @@ def processCollapsibleBlocks(zoomLevel,linkLengths,pairedLinks,interconnectedLin
         else:
             break
 
-# %% ../05_exportDev.ipynb 91
+# %% ../05_exportDev.ipynb 94
 def clearRearrangementBlocks(zoomLevel,blockEdges):
     return {edge:size for edge,size in blockEdges.items() if size>=zoomLevel}  
 
-# %% ../05_exportDev.ipynb 94
+# %% ../05_exportDev.ipynb 97
 def testStartEnd(compNum,isLeft,components,accStarts,accEnds):
     if isLeft:
         startInv = 0
@@ -3077,7 +3077,7 @@ def testStartEnd(compNum,isLeft,components,accStarts,accEnds):
         
     return False
 
-# %% ../05_exportDev.ipynb 95
+# %% ../05_exportDev.ipynb 98
 def findEmptyEdges(fromComponentLinks,toComponentLinks,accStarts,accEnds,components):
     '''
     Identify all empty edges by simply finding components that do not appear either in toComponentLinks (left empty)
@@ -3116,7 +3116,7 @@ def findEmptyEdges(fromComponentLinks,toComponentLinks,accStarts,accEnds,compone
         
     return leftEmptyList,rightEmptyList
 
-# %% ../05_exportDev.ipynb 97
+# %% ../05_exportDev.ipynb 100
 def checkExternalLinks(blockStart,blockEnd,fromComponentLinks,toComponentLinks,components):
     '''
     
@@ -3160,7 +3160,7 @@ def checkExternalLinks(blockStart,blockEnd,fromComponentLinks,toComponentLinks,c
     
     return externalLinksComponents
 
-# %% ../05_exportDev.ipynb 98
+# %% ../05_exportDev.ipynb 101
 def createNewBoundaries(blockStart,blockEnd,externalLinksComps,leftEmptyList,rightEmptyList):
     leftEmptyArray = np.sort(np.array(leftEmptyList))
     rightEmptyArray = np.sort(np.array(rightEmptyList))
@@ -3219,7 +3219,7 @@ def createNewBoundaries(blockStart,blockEnd,externalLinksComps,leftEmptyList,rig
         return []
     
 
-# %% ../05_exportDev.ipynb 101
+# %% ../05_exportDev.ipynb 104
 def identifyIsolatedBlocks(leftEmptyList,rightEmptyList,fromComponentLinks,toComponentLinks,components):
     if len(leftEmptyList)==0 or len(rightEmptyList)==0:
         return []
@@ -3246,7 +3246,7 @@ def identifyIsolatedBlocks(leftEmptyList,rightEmptyList,fromComponentLinks,toCom
     
     return isolatedBlockList
 
-# %% ../05_exportDev.ipynb 103
+# %% ../05_exportDev.ipynb 106
 def updateLinksRemoveComp(oldToNewInd,fromComponentLinks,toComponentLinks,
                           linkLengths,pairedLinks,interconnectedLinks,blockEdges,accStarts,accEnds):
     
@@ -3334,7 +3334,7 @@ def updateLinksRemoveComp(oldToNewInd,fromComponentLinks,toComponentLinks,
     
     return newFromComponentLinks,newToComponentLinks,accStarts,accEnds,newLinkLengths,newPairedLinks,newInterconnectedLinks,newBlockEdges
 
-# %% ../05_exportDev.ipynb 104
+# %% ../05_exportDev.ipynb 107
 def removeIsolatedBlocks(isolatedBlockList,components,componentLengths,
                          fromComponentLinks,toComponentLinks,
                          accStarts,accEnds,linkLengths,pairedLinks,interconnectedLinks,blockEdges):
@@ -3369,7 +3369,7 @@ def removeIsolatedBlocks(isolatedBlockList,components,componentLengths,
             linkLengths,pairedLinks,interconnectedLinks,blockEdges,\
             oldToNewInd,newToOldInd
 
-# %% ../05_exportDev.ipynb 106
+# %% ../05_exportDev.ipynb 109
 def clearInvisible(zoomLevel,linkLengths,pairedLinks,interconnectedLinks,blockEdges,
                    fromComponentLinks,toComponentLinks,
                    accStarts,accEnds,
@@ -3405,7 +3405,7 @@ def clearInvisible(zoomLevel,linkLengths,pairedLinks,interconnectedLinks,blockEd
             linkLengths,pairedLinks,interconnectedLinks,blockEdges,\
             oldToNewInd,newToOldInd
 
-# %% ../05_exportDev.ipynb 108
+# %% ../05_exportDev.ipynb 111
 def createZoomLevelDir(outputPath,outputName,zoomLevel):
     '''
     Creates a directory for zoom level chunks. The function will take care of correct directory level separator.
@@ -3425,7 +3425,7 @@ def createZoomLevelDir(outputPath,outputName,zoomLevel):
     
     os.makedirs(f'{outputPath}{os.path.sep}{outputName}{os.path.sep}{zoomLevel}',exist_ok=True)
 
-# %% ../05_exportDev.ipynb 109
+# %% ../05_exportDev.ipynb 112
 def finaliseChunk(rootStruct,zoomLevel,chunk,nucleotides,nBins,chunkNum,curCompCols,prevTotalCols,outputPath,outputName):
     endChunkBin = chunk['components'][-1]['last_bin']
     endChunkCol = chunk['components'][-1]['lastCol']
@@ -3461,7 +3461,7 @@ def finaliseChunk(rootStruct,zoomLevel,chunk,nucleotides,nBins,chunkNum,curCompC
     chunk['first_col'] = endChunkCol + 1
     return rootStruct,chunk,0,chunkNum + 1,prevTotalCols+curCompCols,0,'' #rootStruct,chunk,nBins,chunkNum,prevTotalCols,curCompCols
 
-# %% ../05_exportDev.ipynb 110
+# %% ../05_exportDev.ipynb 113
 def addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks):
     component = deepcopy(components[compNum])
     
@@ -3568,7 +3568,7 @@ def addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks):
         
     return component
 
-# %% ../05_exportDev.ipynb 111
+# %% ../05_exportDev.ipynb 114
 def checkLinks(leftComp,rightComp):
     leftRdepCond = np.all([link['upstream']+1==link['downstream'] for link in leftComp['rdepartures']])
     leftRarrCond = np.all([link['upstream']-1==link['downstream'] for link in leftComp['rarrivals']])
@@ -3578,12 +3578,12 @@ def checkLinks(leftComp,rightComp):
     
     return leftRdepCond and leftRarrCond and rightRarrCond and rightRdepCond
 
-# %% ../05_exportDev.ipynb 112
+# %% ../05_exportDev.ipynb 115
 def searchIndicesPosRecord(redisConn,redisCaseID,zoomLevel,accessions,posMapping):
     for pathID,posMappingPath in posMapping.items():
         iset_add(redisConn, f'{redisCaseID}.{zoomLevel}.{accessions[pathID]}.Pos',posMappingPath)
 
-# %% ../05_exportDev.ipynb 113
+# %% ../05_exportDev.ipynb 116
 def exportLayer(zoomLevel,components,componentNucleotides,
                 fromComponentLinks,toComponentLinks,
                 rootStruct,
@@ -3719,7 +3719,7 @@ def exportLayer(zoomLevel,components,componentNucleotides,
 
     return rootStruct
 
-# %% ../05_exportDev.ipynb 115
+# %% ../05_exportDev.ipynb 118
 def compLinksToAccCompLinks(compLinks,doCompDir=False):
     accCompLinks = {}
     if doCompDir:
@@ -3742,7 +3742,7 @@ def compLinksToAccCompLinks(compLinks,doCompDir=False):
     else:
         return accCompLinks
 
-# %% ../05_exportDev.ipynb 116
+# %% ../05_exportDev.ipynb 119
 def recordZoomLevelForDebug(zoomNodeToComponent,
                             zoomComponentToNodes,
                             zoomComponents,

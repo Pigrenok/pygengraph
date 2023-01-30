@@ -394,7 +394,7 @@ class LinkGetter:
             else:
                 yield (i+1,[])
 
-# %% ../01_graph.ipynb 18
+# %% ../01_graph.ipynb 19
 class GenomeGraph:
     def __init__(self,gfaPath=None,doOverlapCleaning=True,
                  paths=None,
@@ -476,7 +476,7 @@ class GenomeGraph:
             pdb.set_trace()
             self.removeOverlaps()
 
-# %% ../01_graph.ipynb 19
+# %% ../01_graph.ipynb 20
 @patch_to(GenomeGraph)
 def _revertLinks(self):
     backLinks = {}
@@ -493,7 +493,7 @@ def _revertLinks(self):
                 backLinks.setdefault(item[0],{}).setdefault(item[1],[]).append((fromNode,fromStrand))
     return backLinks
 
-# %% ../01_graph.ipynb 20
+# %% ../01_graph.ipynb 21
 # check edgePaths calculation. Incorrectly calculates the numbers 
 # (one too many in one of group of incoming edges to each node)
 @patch_to(GenomeGraph)
@@ -545,7 +545,7 @@ def _pathCount(self):
     self.outPathUnique = [len(self.outPathUnique.get(key,[])) for key in range(len(self.nodes))]
     self.edgePathsUnique = {key:len(value) for key,value in self.edgePathsUnique.items()}
 
-# %% ../01_graph.ipynb 23
+# %% ../01_graph.ipynb 24
 @patch_to(GenomeGraph)
 def _loadGFA(self, gfaFile, isGFASeq=True, accessionsToRemove=None):
     baseName = os.path.splitext(os.path.basename(gfaFile))[0]
@@ -739,7 +739,7 @@ def _graphFromPaths(self,paths,sequenceFiles=None,nodeNameLengths=None):
     self.forwardLinks = dict([(fromNode,dict([(fromStrand,list(toSet)) for fromStrand,toSet in strandDict.items()])) for fromNode,strandDict in links.items()])
     self.nodesData = ['']*len(self.nodes)
 
-# %% ../01_graph.ipynb 30
+# %% ../01_graph.ipynb 31
 @patch_to(GenomeGraph)
 def _processAnnotation(self, annotationFile, links, ATmap=None, seqFile=None, seqSuffix=None, doUS=False, isRef=False, accID=None):
     accessionID, genes, sequences = \
@@ -748,6 +748,7 @@ def _processAnnotation(self, annotationFile, links, ATmap=None, seqFile=None, se
                          ATmap=ATmap,
                          isRef=isRef,
                          accID=accID)
+    
     if seqSuffix is None:
         seqList = genes.sequenceID.unique().tolist()
         seqList.sort()
@@ -770,7 +771,7 @@ def _processAnnotation(self, annotationFile, links, ATmap=None, seqFile=None, se
 
     return links
 
-# %% ../01_graph.ipynb 31
+# %% ../01_graph.ipynb 32
 @patch_to(GenomeGraph)
 def _graphFromAnnotation(self,annotationFiles,sequenceFiles=None,**kwargs):
     self.nodeNameToID = {}
@@ -807,7 +808,7 @@ def _graphFromAnnotation(self,annotationFiles,sequenceFiles=None,**kwargs):
 
     self.forwardLinks = self._linksSetToDict(links)
 
-# %% ../01_graph.ipynb 34
+# %% ../01_graph.ipynb 35
 @patch_to(GenomeGraph)
 def loadAnnotations(self, annotationPath,seqSuffix):
     if len(self.nodesData[0])==0:
@@ -843,7 +844,7 @@ def loadAnnotations(self, annotationPath,seqSuffix):
                     for atName in atNameList:
                         nodeDict.setdefault(atName,[]).append((leftNodeBound,rightNodeBound))
 
-# %% ../01_graph.ipynb 36
+# %% ../01_graph.ipynb 37
 @patch_to(GenomeGraph)
 def updateAnnotationFromNodes(self,isSeq=True):
     '''
@@ -883,7 +884,7 @@ def generateTremauxTree(self,byPath=True):
 
     self.tremauxTree = TremauxTree(_nxGraph,self,byPath)
 
-# %% ../01_graph.ipynb 39
+# %% ../01_graph.ipynb 40
 @patch_to(GenomeGraph)
 def _getStartNode(self,bubbleNode):
 #         allPaths = list(nx.shortest_path(self.tremauxTree,None,bubbleNode).values())
@@ -907,7 +908,7 @@ def _getStartNode(self,bubbleNode):
 
     return None
 
-# %% ../01_graph.ipynb 40
+# %% ../01_graph.ipynb 41
 @patch_to(GenomeGraph)
 def _getEdgeValue(self,start,end,unique=False):
     '''
@@ -935,7 +936,7 @@ def _getEdgeValue(self,start,end,unique=False):
         else:
             return self.edgePaths.get((start,end),0)*startOutPathRatio*endInPathRatio
 
-# %% ../01_graph.ipynb 41
+# %% ../01_graph.ipynb 42
 @patch_to(GenomeGraph)
 def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
 
@@ -1126,7 +1127,7 @@ def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
                                                 processed,queue,stopNodes,stopNodesOrigin)
     print()
 
-# %% ../01_graph.ipynb 42
+# %% ../01_graph.ipynb 43
 @patch_to(GenomeGraph)
 def _addNextEdgesToQueue(self,startNode,endNode,processed,queue,stopNodes,stopNodesOrigin):
     endNodeAdded = False
@@ -1156,7 +1157,7 @@ def _addNextEdgesToQueue(self,startNode,endNode,processed,queue,stopNodes,stopNo
 
     return endNodeAdded
 
-# %% ../01_graph.ipynb 44
+# %% ../01_graph.ipynb 45
 @patch_to(GenomeGraph)
 def toGFA(self,gfaFile,doSeq=True):
     '''
@@ -1236,7 +1237,7 @@ def addAccessionAnnotation(self,annotationFile,sequenceFile=None):
     '''
     pass
 
-# %% ../01_graph.ipynb 48
+# %% ../01_graph.ipynb 49
 @patch_to(GenomeGraph)
 def addLink(self,fromNode,fromStrand,toNode,toStrand):
     # Need testing
@@ -1264,7 +1265,7 @@ def addLink(self,fromNode,fromStrand,toNode,toStrand):
 
         self.backLinks[toNode][toStrand].append([fromNode,fromStrand])
 
-# %% ../01_graph.ipynb 49
+# %% ../01_graph.ipynb 50
 @patch_to(GenomeGraph)
 def addNode(self,nodeID,data=None):
     # Need testing
@@ -1275,7 +1276,7 @@ def addNode(self,nodeID,data=None):
         warnings.warn(f'You attempted to add node with {nodeID}, but it already exists in the graph. The addition was ignored.')
     pass
 
-# %% ../01_graph.ipynb 51
+# %% ../01_graph.ipynb 52
 # Node inversion functionality
 @patch_to(GenomeGraph)
 def invertNodes(self):
@@ -1290,7 +1291,7 @@ def invertNodes(self):
     self._pathCount()
     print()
 
-# %% ../01_graph.ipynb 52
+# %% ../01_graph.ipynb 53
 @patch_to(GenomeGraph)
 def _invertNode(self,nodeID,pathNodeArray):
 
@@ -1340,7 +1341,7 @@ def _invertNode(self,nodeID,pathNodeArray):
 
 # End of node inversion functionality
 
-# %% ../01_graph.ipynb 54
+# %% ../01_graph.ipynb 55
 # node removal functionality
 @patch_to(GenomeGraph)
 def _removePositionsFromPaths(self,pathIDs,positions):
@@ -1355,7 +1356,7 @@ def _removePositionsFromPaths(self,pathIDs,positions):
             del self.paths[pathID][pos-offset]
             offset += 1
 
-# %% ../01_graph.ipynb 55
+# %% ../01_graph.ipynb 56
 @patch_to(GenomeGraph)
 def _updateLinkList(self,strandList,offsetDict):
     newStrand = []
@@ -1363,7 +1364,7 @@ def _updateLinkList(self,strandList,offsetDict):
         newStrand.append((offsetDict[toNode-1]+1,toStrand))
     return newStrand
 
-# %% ../01_graph.ipynb 56
+# %% ../01_graph.ipynb 57
 @patch_to(GenomeGraph)
 def _clearNodes(self,nodeIDs):
     print('nodeIDs')
@@ -1408,7 +1409,7 @@ def _clearNodes(self,nodeIDs):
         if len(inverseStrand)>0:
             self.forwardLinks.setdefault(newNode,{})['-'] = inverseStrand
 
-# %% ../01_graph.ipynb 57
+# %% ../01_graph.ipynb 58
 @patch_to(GenomeGraph)
 def _removeNode(self,nodeID,revertLinks,pathNodeArray):
     pathIDs,positions = np.where(pathNodeArray==nodeID+1)
@@ -1452,7 +1453,7 @@ def _removeNode(self,nodeID,revertLinks,pathNodeArray):
 
     return pathIDs,positions
 
-# %% ../01_graph.ipynb 58
+# %% ../01_graph.ipynb 59
 @patch_to(GenomeGraph)
 def removeNodes(self,nodeIDsToRemove):
     revertLinks = self._revertLinks()
@@ -1473,12 +1474,12 @@ def removeNodes(self,nodeIDsToRemove):
 
 #end of node removal functionality
 
-# %% ../01_graph.ipynb 60
+# %% ../01_graph.ipynb 61
 # Node substitution functionality
 
 # End of node substitution functionality
 
-# %% ../01_graph.ipynb 62
+# %% ../01_graph.ipynb 63
 # Overlap removal functionality
 @patch_to(GenomeGraph)
 def _linkBounce(self,fromNodeStart,fromStrandStart,revertLinks,nodeLengths,kmerOverlap,cutOffsetRight,leftCut,rightCut):
@@ -1517,7 +1518,7 @@ def _linkBounce(self,fromNodeStart,fromStrandStart,revertLinks,nodeLengths,kmerO
 
     return leftToCut,rightToCut,cutOffsetLeft,cutOffsetRight
 
-# %% ../01_graph.ipynb 63
+# %% ../01_graph.ipynb 64
 @patch_to(GenomeGraph)
 def _processBouncedLink(self,leftToCut,rightToCut,kmerOverlap,cutOffsetLeft,cutOffsetRight,nodeLengths,leftCut,rightCut,leftForbidden,rightForbidden):
     toCut = kmerOverlap - cutOffsetLeft - cutOffsetRight
@@ -1578,7 +1579,7 @@ def _processBouncedLink(self,leftToCut,rightToCut,kmerOverlap,cutOffsetLeft,cutO
     for nodeStrand in leftToCut:
         del self.overlaps[nodeStrand]
 
-# %% ../01_graph.ipynb 64
+# %% ../01_graph.ipynb 65
 @patch_to(GenomeGraph)
 def removeOverlaps(self):
     nodeIDsToRemove = []
@@ -1675,7 +1676,7 @@ def removeOverlaps(self):
         self.removeNodes(nodeIDsToRemove)
 # End of overlap removal functionality
 
-# %% ../01_graph.ipynb 67
+# %% ../01_graph.ipynb 68
 @patch_to(GenomeGraph)
 def _linksDictToSet(self,dictLinks):
     setLinks = {}
@@ -1689,7 +1690,7 @@ def _linksDictToSet(self,dictLinks):
                 setLinks[fromNodeStrand].add(toNodeStrand)
     return setLinks
 
-# %% ../01_graph.ipynb 68
+# %% ../01_graph.ipynb 69
 @patch_to(GenomeGraph)
 def _linksSetToDict(self,setLinks):
     dictLinks = {}
@@ -1710,14 +1711,14 @@ def _linksSetToDict(self,setLinks):
             dictLinks[fromNode][fromStrand].append((toNode,toStrand))
     return dictLinks
 
-# %% ../01_graph.ipynb 70
+# %% ../01_graph.ipynb 71
 @patch_to(GenomeGraph)
 def __iter__(self,forward=True):
     # print(forward)
     for i in range(len(self.nodes)):
         yield i+1,self.forwardLinks.get(i+1,{})
 
-# %% ../01_graph.ipynb 71
+# %% ../01_graph.ipynb 72
 @patch_to(GenomeGraph)
 def __getitem__(self,ind):
     if isinstance(ind,tuple):

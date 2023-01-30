@@ -252,8 +252,8 @@ class bidict(dict):
         self[key] = list(valKey)
 
 # %% ../04_utils.ipynb 22
-def resetDB(pathToDictFile,redisServer='redis',port=6379):
-    os.remove(pathToDictFile)
+def resetDB(redisServer='redis',port=6379):
+    # os.remove(pathToDictFile)
     conn = Redis(host=redisServer,port=port,db=0)
     conn.flushall()
     return 0
