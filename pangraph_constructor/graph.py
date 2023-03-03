@@ -26,7 +26,7 @@ from skbio.sequence import DNA
 from dnasim.IO import writeFASTA
 from dnasim.simulation import inverseSequence
 
-from pangraph_constructor.synteny import processAccession,generatePathsLinks
+from pangraph_constructor.synteny import processAccessions,generatePathsLinks
 from pangraph_constructor.utils import bidict,NpEncoder,pathFileToPathDict
 from pangraph_constructor.tree import TremauxTree
 
@@ -400,7 +400,7 @@ class GenomeGraph:
                  paths=None,
                  nodes=None,nodesData=None,links=None,
                  pathsDict=None,
-                 sequenceFiles=None,annotationFiles=None,
+                 sequenceFiles=None,annotationFiles=None,pangenomeFiles=None,
                  doBack=False,**kwargs):
 
         '''
@@ -433,6 +433,8 @@ class GenomeGraph:
         self.nodesData = []
         # self.node = []
         self.nodesMetadata = []
+        self.hasPangenome = False
+        
         '''
         
         '''
@@ -458,7 +460,7 @@ class GenomeGraph:
         elif pathsDict is not None:
             self._graphFromPaths(pathsDict,**kwargs) # sequenceFiles can be None
         elif annotationFiles is not None:
-            self._graphFromAnnotation(annotationFiles,sequenceFiles,**kwargs)
+            self._graphFromAnnotation(annotationFiles,pangenomeFiles,sequenceFiles,**kwargs)
 
         self.order = list(range(1,len(self.nodes)+1))
 
@@ -678,7 +680,7 @@ def _getNodeID(self,node,pathID,nodeNameLengths=None):
             nodeLength = nodeNameLengths[nodeID]
         else:
             nodeLength = 1
-        self.nodesMetadata[nodeID-1].setdefault(pathID, {}).setdefault('annotation').setdefault(node, []).append((0, nodeLength - 1))
+        self.nodesMetadata[nodeID-1].setdefault(pathID, {}).setdefault('annotation',{}).setdefault(node, []).append((0, nodeLength - 1))
     except ValueError:
         self.nodes.append(node)
         nodeID = len(self.nodes)
@@ -686,7 +688,7 @@ def _getNodeID(self,node,pathID,nodeNameLengths=None):
             nodeLength = nodeNameLengths[nodeID]
         else:
             nodeLength = 1
-        self.nodesMetadat.append({pathID:{'annotation':{node:[(0,nodeLength - 1)]}}})
+        self.nodesMetadata.append({pathID:{'annotation':{node:[(0,nodeLength - 1)]}}})
 
         self.nodeNameToID[str(nodeID)] = nodeID
 
@@ -741,74 +743,124 @@ def _graphFromPaths(self,paths,sequenceFiles=None,nodeNameLengths=None):
 
 # %% ../01_graph.ipynb 31
 @patch_to(GenomeGraph)
-def _processAnnotation(self, annotationFile, links, ATmap=None, seqFile=None, seqSuffix=None, doUS=False, isRef=False, accID=None):
-    accessionID, genes, sequences = \
-        processAccession(annotationFile,
-                         seqFile,
-                         ATmap=ATmap,
-                         isRef=isRef,
-                         accID=accID)
+def _processAnnotations(self, annotationFiles, links, 
+                        annotationType='standard', 
+                        pangenomeFiles = None, seqFilesDict = None, 
+                        chromosome = None, doUS = False,
+                        accOrder  = None):
     
-    if seqSuffix is None:
-        seqList = genes.sequenceID.unique().tolist()
+    if annotationType=='standard':
+        simID = 'OG'
+        simAssignment = 'gene'
+    elif annotationType=='pangenome':
+        simID = 'OG'
+        simAssignment = 'mrna'
+    else:
+        raise ValueError(f'`annotationType` can be either "standard" or "pangenome", but {annotationType} was given.')
+    
+    genes, chromosomes, ATmap, pangenomeDict, sequences = \
+        processAccessions(annotationFiles, 
+                          similarityIDKey = simID, 
+                          similarityIDAssignment = simAssignment, 
+                          pangenomeFiles = pangenomeFiles, 
+                          sequenceFilesDict = seqFilesDict, 
+                          seqidJoinSym = '_', ATsplitSym = ',')
+    
+    if chromosome is None:
+        seqList = list(chromosomes)
         seqList.sort()
     else:
-        seqList = [f'{accessionID}{seqSuffix}']
-
-    path = []
-    for seqID in seqList:
-
-        p, cigar, usCounter = generatePathsLinks(genes, seqID, accessionID, sequences, self.OGList,
-                                                 self.nodes, self.nodesMetadata, self.nodeNameToID, links,
-                                                 self.usCounter, doUS=doUS, segmentData=self.nodesData)
-        path = path + p
-    if isRef:
-        self.paths.insert(0,path)
-        self.accessions.insert(0,accessionID)
+        seqList = [chromosome]
+    
+    accessions = list(genes.keys())
+    
+    if accOrder is None:
+        accessionOrder = sorted(accessions)
     else:
+        accessionOrder = [accessions[ind] for ind in accOrder]
+    
+    path = []
+    for accessionID in accessionOrder:
+        geneAcc = genes[accessionID]
+        for seqID in seqList:
+
+            p, cigar, usCounter = generatePathsLinks(geneAcc, ATmap, seqID, accessionID, sequences, self.OGList,
+                                                     self.nodes, self.nodesMetadata, self.nodeNameToID, links,
+                                                     self.usCounter, doUS=doUS, segmentData=self.nodesData)
+            path = path + p
+
         self.paths.append(path)
         self.accessions.append(accessionID)
 
-    return links
+    return links, ATmap, pangenomeDict
 
 # %% ../01_graph.ipynb 32
 @patch_to(GenomeGraph)
-def _graphFromAnnotation(self,annotationFiles,sequenceFiles=None,**kwargs):
+def _processRefAnnotation(self, annotationFile, links, ATmap, pangenomeDict, accID, 
+                        seqFile = None, 
+                        chromosome = None, doUS = False):
+    
+    genes, chromosomes, _, sequences = \
+        processAccessions(annotationFiles, 
+                          ATmap = ATmap,
+                          pangenomeDict = pangenomeDict,
+                          sequenceFilesDict = seqFilesDict, 
+                          seqidJoinSym = '_', ATsplitSym = ',')
+    
+    if chromosome is None:
+        seqList = list(chromosomes)
+        seqList.sort()
+    else:
+        seqList = [chromosome]
+    
+    if accID not in genes:
+        raise ValueError(f'Accession {accID} not found in provided annotation file')
+    
+    for seqID in seqList:
+
+        p, cigar, usCounter = generatePathsLinks(genes[accID], ATmap, seqID, accessionID, sequences, self.OGList,
+                                                     self.nodes, self.nodesMetadata, self.nodeNameToID, links,
+                                                     self.usCounter, doUS=doUS, segmentData=self.nodesData)
+        path = path + p
+
+    self.paths.insert(0,path)
+    self.accessions.insert(0,accessionID)
+
+
+# %% ../01_graph.ipynb 33
+@patch_to(GenomeGraph)
+def _graphFromAnnotation(self,annotationFiles,pangenomeFiles=None, sequenceFilesDict=None,**kwargs):
     self.nodeNameToID = {}
-
-    fileOrder = kwargs.get('fileOrder',list(range(len(annotationFiles))))
-
+    
+    if pangenomeFiles is not None:
+        annotationType = 'pangenome'
+        self.hasPangenome = True
+    else:
+        annotationType = 'standard'    
+    
     doUS = kwargs.get('doUS',False)
     self.usCounter = 0
     self.OGList = []
     links = self._linksDictToSet(self.forwardLinks)
 
+    links,ATmap,pangenomeDict = self._processAnnotations(annotationFiles, links, 
+                                      annotationType = annotationType, 
+                                      pangenomeFiles = pangenomeFiles, 
+                                      seqFilesDict = sequenceFilesDict, 
+                                      chromosome = kwargs.get('chromosome', None),
+                                      accOrder = kwargs.get('accessionOrder',None),
+                                      doUS = doUS)
+    
     if 'refAnnotationFile' in kwargs:
-        links = self._processAnnotation(kwargs['refAnnotationFile'], links,
-                                        ATmap=kwargs.get('transMap', None),
-                                        seqFile=kwargs.get('refSequenceFile',None),
-                                        seqSuffix=kwargs.get('seqSuffix', None),
-                                        doUS=doUS,
-                                        isRef=True,
-                                        accID=kwargs.get('refAccession',None))
-
-    for fileNum in fileOrder:
-        if sequenceFiles is not None:
-            seqFile = sequenceFiles[fileNum]
-        else:
-            seqFile = None
-         # annotationFile
-         # transMap
-        links = self._processAnnotation(annotationFiles[fileNum], links,
-                                        ATmap=kwargs.get('transMap', None),
-                                        seqFile=seqFile,
-                                        seqSuffix=kwargs.get('seqSuffix', None),
-                                        doUS=doUS)
-
+        links = self._processRefAnnotation([kwargs['refAnnotationFile']], links,
+                                        ATmap=ATmap,pangenomeDict=pangenomeDict,
+                                        seqFile = kwargs.get('refSequenceFile',None), 
+                                        chromosome = kwargs.get('chromosome', None), doUS = doUS,
+                                        accID = kwargs.get('refAccession',None))
 
     self.forwardLinks = self._linksSetToDict(links)
 
-# %% ../01_graph.ipynb 35
+# %% ../01_graph.ipynb 36
 @patch_to(GenomeGraph)
 def loadAnnotations(self, annotationPath,seqSuffix):
     if len(self.nodesData[0])==0:
@@ -844,7 +896,7 @@ def loadAnnotations(self, annotationPath,seqSuffix):
                     for atName in atNameList:
                         nodeDict.setdefault(atName,[]).append((leftNodeBound,rightNodeBound))
 
-# %% ../01_graph.ipynb 37
+# %% ../01_graph.ipynb 38
 @patch_to(GenomeGraph)
 def updateAnnotationFromNodes(self,isSeq=True):
     '''
@@ -872,7 +924,7 @@ def updateAnnotationFromNodes(self,isSeq=True):
             updatedAnnEl[pathName] = {'annotation':{nodeSeq:[(0,len(nodeSeq)-1)]}}
         self.nodesMetadata[annID] = updatedAnnEl
 
-# %% ../01_graph.ipynb 39
+# %% ../01_graph.ipynb 40
 @patch_to(GenomeGraph)
 def generateTremauxTree(self,byPath=True):
     _nxGraph = nx.DiGraph()
@@ -884,7 +936,7 @@ def generateTremauxTree(self,byPath=True):
 
     self.tremauxTree = TremauxTree(_nxGraph,self,byPath)
 
-# %% ../01_graph.ipynb 40
+# %% ../01_graph.ipynb 41
 @patch_to(GenomeGraph)
 def _getStartNode(self,bubbleNode):
 #         allPaths = list(nx.shortest_path(self.tremauxTree,None,bubbleNode).values())
@@ -908,7 +960,7 @@ def _getStartNode(self,bubbleNode):
 
     return None
 
-# %% ../01_graph.ipynb 41
+# %% ../01_graph.ipynb 42
 @patch_to(GenomeGraph)
 def _getEdgeValue(self,start,end,unique=False):
     '''
@@ -936,7 +988,7 @@ def _getEdgeValue(self,start,end,unique=False):
         else:
             return self.edgePaths.get((start,end),0)*startOutPathRatio*endInPathRatio
 
-# %% ../01_graph.ipynb 42
+# %% ../01_graph.ipynb 43
 @patch_to(GenomeGraph)
 def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
 
@@ -1127,7 +1179,7 @@ def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
                                                 processed,queue,stopNodes,stopNodesOrigin)
     print()
 
-# %% ../01_graph.ipynb 43
+# %% ../01_graph.ipynb 44
 @patch_to(GenomeGraph)
 def _addNextEdgesToQueue(self,startNode,endNode,processed,queue,stopNodes,stopNodesOrigin):
     endNodeAdded = False
@@ -1157,7 +1209,7 @@ def _addNextEdgesToQueue(self,startNode,endNode,processed,queue,stopNodes,stopNo
 
     return endNodeAdded
 
-# %% ../01_graph.ipynb 45
+# %% ../01_graph.ipynb 46
 @patch_to(GenomeGraph)
 def toGFA(self,gfaFile,doSeq=True):
     '''
@@ -1227,7 +1279,7 @@ def toGFA(self,gfaFile,doSeq=True):
     if len(nodesMetadata)==len(self.nodes):
         joblib.dump(nodesMetadata,annotationFile)
 
-# %% ../01_graph.ipynb 48
+# %% ../01_graph.ipynb 49
 @patch_to(GenomeGraph)
 def addAccessionAnnotation(self,annotationFile,sequenceFile=None):
     '''
@@ -1237,7 +1289,7 @@ def addAccessionAnnotation(self,annotationFile,sequenceFile=None):
     '''
     pass
 
-# %% ../01_graph.ipynb 49
+# %% ../01_graph.ipynb 50
 @patch_to(GenomeGraph)
 def addLink(self,fromNode,fromStrand,toNode,toStrand):
     # Need testing
@@ -1265,7 +1317,7 @@ def addLink(self,fromNode,fromStrand,toNode,toStrand):
 
         self.backLinks[toNode][toStrand].append([fromNode,fromStrand])
 
-# %% ../01_graph.ipynb 50
+# %% ../01_graph.ipynb 51
 @patch_to(GenomeGraph)
 def addNode(self,nodeID,data=None):
     # Need testing
@@ -1276,7 +1328,7 @@ def addNode(self,nodeID,data=None):
         warnings.warn(f'You attempted to add node with {nodeID}, but it already exists in the graph. The addition was ignored.')
     pass
 
-# %% ../01_graph.ipynb 52
+# %% ../01_graph.ipynb 53
 # Node inversion functionality
 @patch_to(GenomeGraph)
 def invertNodes(self):
@@ -1291,7 +1343,7 @@ def invertNodes(self):
     self._pathCount()
     print()
 
-# %% ../01_graph.ipynb 53
+# %% ../01_graph.ipynb 54
 @patch_to(GenomeGraph)
 def _invertNode(self,nodeID,pathNodeArray):
 
@@ -1341,7 +1393,7 @@ def _invertNode(self,nodeID,pathNodeArray):
 
 # End of node inversion functionality
 
-# %% ../01_graph.ipynb 55
+# %% ../01_graph.ipynb 56
 # node removal functionality
 @patch_to(GenomeGraph)
 def _removePositionsFromPaths(self,pathIDs,positions):
@@ -1356,7 +1408,7 @@ def _removePositionsFromPaths(self,pathIDs,positions):
             del self.paths[pathID][pos-offset]
             offset += 1
 
-# %% ../01_graph.ipynb 56
+# %% ../01_graph.ipynb 57
 @patch_to(GenomeGraph)
 def _updateLinkList(self,strandList,offsetDict):
     newStrand = []
@@ -1364,7 +1416,7 @@ def _updateLinkList(self,strandList,offsetDict):
         newStrand.append((offsetDict[toNode-1]+1,toStrand))
     return newStrand
 
-# %% ../01_graph.ipynb 57
+# %% ../01_graph.ipynb 58
 @patch_to(GenomeGraph)
 def _clearNodes(self,nodeIDs):
     print('nodeIDs')
@@ -1409,7 +1461,7 @@ def _clearNodes(self,nodeIDs):
         if len(inverseStrand)>0:
             self.forwardLinks.setdefault(newNode,{})['-'] = inverseStrand
 
-# %% ../01_graph.ipynb 58
+# %% ../01_graph.ipynb 59
 @patch_to(GenomeGraph)
 def _removeNode(self,nodeID,revertLinks,pathNodeArray):
     pathIDs,positions = np.where(pathNodeArray==nodeID+1)
@@ -1453,7 +1505,7 @@ def _removeNode(self,nodeID,revertLinks,pathNodeArray):
 
     return pathIDs,positions
 
-# %% ../01_graph.ipynb 59
+# %% ../01_graph.ipynb 60
 @patch_to(GenomeGraph)
 def removeNodes(self,nodeIDsToRemove):
     revertLinks = self._revertLinks()
@@ -1474,12 +1526,12 @@ def removeNodes(self,nodeIDsToRemove):
 
 #end of node removal functionality
 
-# %% ../01_graph.ipynb 61
+# %% ../01_graph.ipynb 62
 # Node substitution functionality
 
 # End of node substitution functionality
 
-# %% ../01_graph.ipynb 63
+# %% ../01_graph.ipynb 64
 # Overlap removal functionality
 @patch_to(GenomeGraph)
 def _linkBounce(self,fromNodeStart,fromStrandStart,revertLinks,nodeLengths,kmerOverlap,cutOffsetRight,leftCut,rightCut):
@@ -1518,7 +1570,7 @@ def _linkBounce(self,fromNodeStart,fromStrandStart,revertLinks,nodeLengths,kmerO
 
     return leftToCut,rightToCut,cutOffsetLeft,cutOffsetRight
 
-# %% ../01_graph.ipynb 64
+# %% ../01_graph.ipynb 65
 @patch_to(GenomeGraph)
 def _processBouncedLink(self,leftToCut,rightToCut,kmerOverlap,cutOffsetLeft,cutOffsetRight,nodeLengths,leftCut,rightCut,leftForbidden,rightForbidden):
     toCut = kmerOverlap - cutOffsetLeft - cutOffsetRight
@@ -1579,7 +1631,7 @@ def _processBouncedLink(self,leftToCut,rightToCut,kmerOverlap,cutOffsetLeft,cutO
     for nodeStrand in leftToCut:
         del self.overlaps[nodeStrand]
 
-# %% ../01_graph.ipynb 65
+# %% ../01_graph.ipynb 66
 @patch_to(GenomeGraph)
 def removeOverlaps(self):
     nodeIDsToRemove = []
@@ -1676,7 +1728,7 @@ def removeOverlaps(self):
         self.removeNodes(nodeIDsToRemove)
 # End of overlap removal functionality
 
-# %% ../01_graph.ipynb 68
+# %% ../01_graph.ipynb 69
 @patch_to(GenomeGraph)
 def _linksDictToSet(self,dictLinks):
     setLinks = {}
@@ -1690,7 +1742,7 @@ def _linksDictToSet(self,dictLinks):
                 setLinks[fromNodeStrand].add(toNodeStrand)
     return setLinks
 
-# %% ../01_graph.ipynb 69
+# %% ../01_graph.ipynb 70
 @patch_to(GenomeGraph)
 def _linksSetToDict(self,setLinks):
     dictLinks = {}
@@ -1711,14 +1763,14 @@ def _linksSetToDict(self,setLinks):
             dictLinks[fromNode][fromStrand].append((toNode,toStrand))
     return dictLinks
 
-# %% ../01_graph.ipynb 71
+# %% ../01_graph.ipynb 72
 @patch_to(GenomeGraph)
 def __iter__(self,forward=True):
     # print(forward)
     for i in range(len(self.nodes)):
         yield i+1,self.forwardLinks.get(i+1,{})
 
-# %% ../01_graph.ipynb 72
+# %% ../01_graph.ipynb 73
 @patch_to(GenomeGraph)
 def __getitem__(self,ind):
     if isinstance(ind,tuple):

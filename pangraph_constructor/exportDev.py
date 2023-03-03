@@ -72,7 +72,8 @@ chunkTemplate = {
     "last_bin": 1,
     "last_col": 1,
     "includes_connectors": True,
-    "components": []
+    "components": [],
+    "compVisCol": {}
 }
 
 rootStructTemplate = {
@@ -644,7 +645,7 @@ def baseLayerZoom(graph,
                     append((interval[0]+annFirstBin,interval[1]+annFirstBin))
             for genPos in accNodeAnn.get('genPos',[]):
                 combGenPos.setdefault(accID,{})[f'{genPos["chr"]}:{"..".join(map(str,genPos["genomePosition"]))}']=[(annFirstBin,annFirstBin+nodeLengths[nodeIdx-1]-1)]
-                combGenPosSearch.setdefault(accID,{})[annFirstBin] = [genPos["genomePosition"]]
+                combGenPosSearch.setdefault(accID,{}).setdefault(annFirstBin,[]).append(genPos["genomePosition"])
             for altGenPos in accNodeAnn.get('altChrGenPos',[]):
                 combAltChrGenPos.setdefault(accID,{})[f'{altGenPos["chr"]}:{"..".join(map(str,altGenPos["genomePosition"]))}']=[(annFirstBin,annFirstBin+nodeLengths[nodeIdx-1]-1)]
         annFirstBin +=nodeLengths[nodeIdx-1]
@@ -3438,13 +3439,15 @@ def finaliseChunk(rootStruct,zoomLevel,chunk,nucleotides,nBins,chunkNum,curCompC
     
     with open(f'{localPath}{fileName}','w') as f:
         json.dump(chunk,f,cls=NpEncoder)
-    
+        
     rootStruct['zoom_levels'][zoomLevel]['files'].append({
         'file': fileName,
         'first_bin':chunk['first_bin'],
         'first_col':chunk['first_col'],
         'last_bin':chunk['last_bin'],
         'last_col':chunk['last_col'],
+        'compVisCol': chunk['compVisCol'],
+        'chunkVisCol': sum(chunk['compVisCol'].values()), # Is it necessary?
 #         'x':prevTotalCols
     })
     
@@ -3464,6 +3467,7 @@ def finaliseChunk(rootStruct,zoomLevel,chunk,nucleotides,nBins,chunkNum,curCompC
 # %% ../05_exportDev.ipynb 113
 def addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks):
     component = deepcopy(components[compNum])
+    numLinks = 0
     
     toCompDict = toComponentLinks.get(compNum+1,{}) # !!! Check that in fromComponentLinks component numbering is 1-based
     if '+' in toCompDict:
@@ -3484,6 +3488,8 @@ def addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks):
                 else:
                     raise ValueError(f'Unrecognised direction of node link {fromStrand}')
                 if doAddArrival:
+                    if upstreamBin + 1 != component['first_bin']:
+                        numLinks += 1
                     component['larrivals'].append({
                             'upstream': upstreamBin,
                             'downstream': component['first_bin'],
@@ -3507,6 +3513,8 @@ def addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks):
                     fromRight = False
                 else:
                     raise ValueError(f'Unrecognised direction of node link {fromStrand}')
+                if upstreamBin - 1 != component['last_bin']:
+                    numLinks += 1
                 component['rarrivals'].append({
                         'upstream': upstreamBin,
                         'downstream': component['last_bin'],
@@ -3531,6 +3539,8 @@ def addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks):
                     toRight = True
                 else:
                     raise ValueError(f'Unrecognised direction of node link {toStrand}')
+                if component['last_bin'] + 1 != downstreamBin: 
+                    numLinks += 1
                 component['rdepartures'].append({
                         'upstream': component['last_bin'],
                         'downstream': downstreamBin,
@@ -3557,6 +3567,8 @@ def addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks):
                 else:
                     raise ValueError(f'Unrecognised direction of node link {toStrand}')
                 if doAddDeparture:
+                    if component['first_bin'] -1 != downstreamBin:
+                        numLinks += 1
                     component['ldepartures'].append({
                             'upstream': component['first_bin'],
                             'downstream': downstreamBin,
@@ -3566,7 +3578,7 @@ def addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks):
                             'participants': participants
                         })
         
-    return component
+    return component, numLinks
 
 # %% ../05_exportDev.ipynb 114
 def checkLinks(leftComp,rightComp):
@@ -3630,7 +3642,7 @@ def exportLayer(zoomLevel,components,componentNucleotides,
             print(f'Recording component {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}')
         else:
             print(f'\rRecording component {compNum+1:0{numCompsDigits}}/{numComps:0{numCompsDigits}}',end='')
-        component = addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks)
+        component,numLinks = addLinksToComp(compNum,components,fromComponentLinks,toComponentLinks)
 #         print(f'Component Length is {component["last_bin"]-component["first_bin"]+1}')
 #         redisStartTime = time.time()
         if redisConn is not None:
@@ -3657,7 +3669,8 @@ def exportLayer(zoomLevel,components,componentNucleotides,
         
 #         print(f'Joining component {compNum}')
 #         joinStartTime = time.time()
-        nBins += component["last_bin"]-component["first_bin"]+1
+        compNBins = component["last_bin"]-component["first_bin"]+1
+        nBins += compNBins
 #         if len(chunk['components'])>0:
 #             if checkLinks(chunk["components"][-1],component):
 #                 newComp = joinComponents(chunk["components"].pop(),component,maxLengthComponent,inversionThreshold)
@@ -3669,7 +3682,7 @@ def exportLayer(zoomLevel,components,componentNucleotides,
         if len(componentNucleotides)>0:
             nucleotides += componentNucleotides[compNum]
         chunk["components"].append(component)
-        
+        chunk['compVisCol'][component['first_bin']] = compNBins + numLinks
 #         print(f'Joining took {time.time() - joinStartTime}')
         
         # End of chunk
