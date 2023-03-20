@@ -114,11 +114,17 @@ def processAccessions(annotationFiles, ATmap = None, pangenomeDict = None,
     
     genes = {}
     unmatchedID = 0
-    def generateUID():
+    anngrTosimgr = {}
+    def generateUID(anngr):
         nonlocal unmatchedID
-        UID = f'UID{unmatchedID:010d}'
-        unmatchedID += 1
-        return UID
+        nonlocal anngrTosimgr
+        if anngr in anngrTosimgr:
+            return anngrTosimgr[anngr]
+        else:
+            UID = f'UID{unmatchedID:010d}'
+            anngrTosimgr[anngr] = UID
+            unmatchedID += 1
+            return UID
     # id generator f'UID{q:010d}'
     
     sequenceDict = None
@@ -169,31 +175,38 @@ def processAccessions(annotationFiles, ATmap = None, pangenomeDict = None,
             genenum = len(geneInts)
 
             for gi,gene in enumerate(geneInts):
-                print(f'\rProcessing gene {gi+1}/{genenum}',end='')
                 geneID = gene.metadata['ID']
                 
-                if ATmap is None:
-                    if gene.metadata['source'] == 'Consensus_tair10':
-                        orthogroup = geneID
-                        atNameList = geneID
-                    else:
-                        if similarityIDAssignment=='gene':
-                            orthogroup = gene.metadata[similarityIDKey]
+                if gene.metadata['source'] == 'Consensus_tair10':
+                    orthogroup = geneID
+                    atNameList = geneID
+                else:
+                    if similarityIDAssignment=='gene':
+                        orthogroup = gene.metadata[similarityIDKey]
+                    elif similarityIDAssignment=='mRNA':
+                        mrna = list(annotation.query(metadata={'type': 'mRNA', 'Parent': geneID}))
+                        # FIX! If no mRNA, do not record gene?
+                        if len(mrna)>0:
+                            orthogroup = mrna[0].metadata.get('simgr',generateUID(geneID))
                         else:
-                            mrna = annotation.query(metadata={'type': 'mRNA', 'Parent': geneID})
-                            orthogroup = gene.metadata.get('simgr',generateUID())
+                            orthogroup = generateUID(geneID)
+                    elif ATmap is not None:
+                        orthogroup = ATmap.inverse.get(geneID,generateUID(geneID))
+                    else:
+                        raise ValueError(f'`similarityIDAssignment` supports only "gene" or "mRNA", but {similarityIDAssignment} was given and ATmap is not available.')
 
-                        if orthogroup is None:
-                            continue
+                    if orthogroup is None:
+                        continue
 
+                
+                if ATmap is None:
+                    
                         if 'AT' in gene.metadata:
                             atNameList = gene.metadata['AT'].split(ATsplitSym)
                         elif 'Name' in gene.metadata:
                             atNameList = gene.metadata['Name'].split(ATsplitSym)
                         else:
                             atNameList = ['']
-                else:
-                    orthogroup = ATmap.inverse[geneID]
                 
                 forward = gene.metadata['strand']=='+'
                 start,end = gene.bounds[0]
@@ -243,10 +256,8 @@ def recordSegment(name,segmentIDs,segmentIDToNumDict,sequence=None,gfaFile=None,
             gfaFile.write(f'S\t{segID}\t{name}\n')
     return segID
 
-# %% ../03_synteny.ipynb 14
+# %% ../03_synteny.ipynb 12
 def recordAnnotation(nodeID,accessionID,sequenceID,chrID,start,end,og,atList,sequence,nodesMetadata,pstart=-1,pend=-1):
-    # if len(nodesAnnotation)==nodeID-1:
-    #     nodesAnnotation.append({})
 
     if len(nodesMetadata)==nodeID-1:
         nodesMetadata.append({})
@@ -255,23 +266,19 @@ def recordAnnotation(nodeID,accessionID,sequenceID,chrID,start,end,og,atList,seq
     if len(sequence)>0:
         geneLen = len(sequence)
 
-    # nodesAnnotation[nodeID-1].setdefault(accessionID,{})[og] = [(0,geneLen-1)]#[(0,len(og)-1)]
-    # for at in atList:
-    #     nodesAnnotation[nodeID-1].setdefault(accessionID,{})[at] = [(0,geneLen-1)]#[(0,len(at)-1)]
-
-    nodesMetadata[nodeID-1].setdefault(accessionID, {}).setdefault('genPos',[]).append({'chr':chrID, 'genomePosition':[start,end]})
+    nodesMetadata[nodeID-1].setdefault(accessionID, {}).setdefault('posisions',[]).append({'gen':{'chr':chrID, 'genomePosition':[start,end]}})
     
     if pstart != -1 and pend != -1:
-        nodesMetadata[nodeID-1].setdefault(accessionID, {}).setdefault('pangenPos',[]).append({'chr':chrID, 'genomePosition':[pstart,pend]})
+        nodesMetadata[nodeID-1][accessionID]['positions'][-1]['pangen'] = {'chr':chrID, 'genomePosition':[pstart,pend]}
     
     nodesMetadata[nodeID-1][accessionID].setdefault('annotation',{}).update({og: [(0,geneLen-1)]})
     nodesMetadata[nodeID-1][accessionID]['annotation'].update({at:[(0,geneLen-1)] for at in atList})
 
-# %% ../03_synteny.ipynb 15
+# %% ../03_synteny.ipynb 13
 def recordAltChr(nodeID,accessionID,chrID,start,end,nodesMetadata):
     nodesMetadata[nodeID-1][accessionID].setdefault('altChrGenPos',[]).append({'chr':chrID, 'genomePosition':[start,end]})
 
-# %% ../03_synteny.ipynb 16
+# %% ../03_synteny.ipynb 14
 def addLink(links,prevPathSegment,name,forward):
     '''
     `links`: mutable
@@ -281,13 +288,17 @@ def addLink(links,prevPathSegment,name,forward):
         links[prevPathSegment].add(f'{name}\t{"+" if forward else "-"}')
     return f'{name}\t{"+" if forward else "-"}'
 
-# %% ../03_synteny.ipynb 17
-def generatePathsLinks(genesAll,ATmap,chromosomeID,accessionID,
+# %% ../03_synteny.ipynb 15
+def generatePathsLinks(genesAll,ATmap,accessionID,
                        sequences,OGList,segmentIDs,
                        nodesMetadata,
                        segmentIDToNumDict,links,usCounter,
+                       chromosomeID = None,
                        doUS=True,segmentData=None,gfaFile=None):
     '''
+    This function takes a list of genes in specific format (`genesAll`) and some extra data and pretty much generates a graph 
+    (gene graph from annotations).
+    
     `gfaFile`: file handle to write segments to GFA file
     `OGList`: mutable
     `links`: mutable
@@ -312,7 +323,7 @@ def generatePathsLinks(genesAll,ATmap,chromosomeID,accessionID,
         if curSeqID != geneSeqID:
             curSeqID = geneSeqID
         
-        atStr = ATmap[og]
+        atStr = ATmap.get(og,[''])
         if len(atStr[0])>0:
             atList = atStr
         else:
@@ -358,9 +369,10 @@ def generatePathsLinks(genesAll,ATmap,chromosomeID,accessionID,
             ogID = segmentIDs.index(og)+1
         
         recordAnnotation(ogID,accessionID,geneSeqID,geneChr,geneStart,geneEnd,og,atList,geneSeq,nodesMetadata)
-        altPos = genesAll.loc[(genesAll.orthogroup == og) & (genesAll.chromosome != chromosomeID)]
-        for altrow,altChrOG in altPos.iterrows():
-            recordAltChr(ogID,accessionID,altChrOG.chromosome,altChrOG.start,altChrOG.end,nodesMetadata)
+        if chromosomeID is not None:
+            altPos = genesAll.loc[(genesAll.orthogroup == og) & (genesAll.chromosome != chromosomeID)]
+            for altrow,altChrOG in altPos.iterrows():
+                recordAltChr(ogID,accessionID,altChrOG.chromosome,altChrOG.start,altChrOG.end,nodesMetadata)
         
         pathAdd = [f'{ogID}{"+" if geneForward else "-"}']
         if doUS and isUS:
