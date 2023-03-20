@@ -16,6 +16,64 @@ import joblib
 from redis import Redis
 
 # %% ../04_utils.ipynb 6
+def generateComplementDict(seqType='DNA',isDict=True):
+    '''
+    The function `generateComplementDict` generates a dictionary
+    for complementing the DNA sequence. It can be applied to RNA to identify inverted sequences.
+
+    `seqType`: str, Can be either 'DNA' or 'RNA' at the moment. If 'DNA', then the complement
+    to four known nucleotide (A, C, G, T) will be provided. All other letters (B, D, H, U, N and
+    all others) will be translated to N.
+    '''
+    fromstr = 'ACGTURYKMSWBDHVN-'
+    tostr = 'TGCAAYRMKSWVHDBN-'
+    if seqType.upper()=='DNA':
+        fromLetters = list(fromstr)
+        toLetters = list(tostr)
+    elif seqType.upper()=='RNA':
+        fromLetters = list(fromstr.lower())
+        toLetters = list(tostr.lower())
+    else:
+        raise ValueError(f"`seqType can be either 'DNA' or 'RNA', but '{seqType}' was given")
+
+
+    if isDict:
+        res = {}
+
+        for fl,tl in zip(fromLetters,toLetters):
+            res[fl] = tl
+    else:
+        res = str.maketrans(fromLetters,toLetters)
+    return res
+
+# %% ../04_utils.ipynb 8
+def complementSequence(seq,complementDict='DNA'):
+    if isinstance(complementDict,str):
+        compDict = generateComplementDict(seqType=complementDict)
+    elif isinstance(complementDict,dict):
+        compDict = complementDict
+    else:
+        raise ValueError(f'`complementDict` can be either string "DNA" or "RNA" or dict, but {type(complementDict)} is given.')
+    return seq.translate(str.maketrans(compDict))
+
+# %% ../04_utils.ipynb 9
+def reverseSequence(seq):
+    return seq[::-1]
+
+# %% ../04_utils.ipynb 10
+def inverseSequence(seq,complementDict='DNA'):
+    return complementSequence(reverseSequence(seq),complementDict=complementDict)
+
+# %% ../04_utils.ipynb 12
+def checkNodeLengthsFile(GFAPath):
+    directory = os.path.dirname(GFAPath)
+    filebase = os.path.splitext(os.path.basename(GFAPath))[0]
+    nodeLenPath = f'{directory}{os.path.sep}nodeLengths_{filebase}.dat'
+    
+    if os.path.exists(nodeLenPath):
+        return joblib.load(nodeLenPath)
+    else:
+        return None
 def sortAccessions(sort,_paths):
     paths = {}
     if isinstance(sort,bool):
