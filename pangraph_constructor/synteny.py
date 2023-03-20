@@ -6,14 +6,7 @@ __all__ = ['readTransMap', 'generateOrder', 'getIDs', 'readGFF', 'addPangenomePo
            'writeSegmentIDs', 'readSegmentIDs']
 
 # %% ../03_synteny.ipynb 4
-import os
-import glob
-import json
 import time
-import itertools
-import warnings
-
-import pdb
 
 import pandas as pd
 
@@ -21,19 +14,33 @@ from skbio.io import read as skbio_read
 from skbio.metadata import IntervalMetadata
 from skbio.sequence import DNA
 
-from dnasim.IO import writeFASTA
-from dnasim.simulation import inverseSequence
-from pangraph_constructor.utils import bidict
+from pangraph_constructor.utils import bidict,inverseSequence
 
 # %% ../03_synteny.ipynb 5
-def readTransMap(transMapFile,ATaccessionName='araport'):
+def readTransMap(transMapFile,ATaccessionName='araport',similarityGroupColName='Orthogroup'):
+    '''
+    Read trandmap file which is pretty much a tsv file with first column containing orthogroup, or similarity group ID,
+    and the rest of columns correspond to each accession with unique gene/interval IDs in each columns for the given orthogroup.
+    If one accession has several genes in the given orthogroup, then they will be in a comma separated list.
+    
+    Parameters
+    ==========
+    transMapFile: path to the file to read
+    
+    ATaccessionName: Which accession to read genes from? Usually used to read reference gene IDs, but can be any accession.
+                     If it is given a `bidict` object of two way relationship between similarity group IDs and this accession
+                     gene IDs is returned. Otherwise, a Pandas DataFrame read from the file is returned.
+    
+    similarityGroupColName: Column name with similarity group IDs (index column).
+    
+    '''
+    
     # reading and preparing transmap in pandas format
     transMap = pd.read_csv(transMapFile,delimiter='\t')
     transMap.fillna('',inplace=True)
-    transMap.rename(columns={'Orthogroup:':'orthogroup'},inplace=True)
+    transMap.rename(columns={similarityGroupColName:'orthogroup'},inplace=True)
     transMap['orthogroup'] = transMap.orthogroup.str.rstrip(':')
     transMap.set_index('orthogroup',inplace=True)
-#     transMap.fillna('',inplace=True)
     if ATaccessionName is not None:
         ATTransMap = transMap[ATaccessionName]
         return bidict({og:ATTransMap[og].split(', ') for og in ATTransMap.index})
@@ -42,6 +49,12 @@ def readTransMap(transMapFile,ATaccessionName='araport'):
 
 # %% ../03_synteny.ipynb 6
 def generateOrder(files, priorityAccession='TIAR10'):
+    '''
+    Genrate a list of files and float a file which contains specific priority accession name (or any given string)
+    on top of the list. 
+    
+    It is not used any more, but left if will be needed in the future.
+    '''
     idxList = list(range(len(files)))
     if priorityAccession is not None:
         ind = [idx for idx, file in enumerate(files) if priorityAccession in file][0]
@@ -57,8 +70,12 @@ def getIDs(iterator):
     
     return idList
 
-# %% ../03_synteny.ipynb 9
+# %% ../03_synteny.ipynb 8
 def readGFF(gffFile: str):
+    '''
+    Function which reads GFF3 file into a dict structure. For large GFF files random search is extremely slow and is impossible to use.
+    This greatly speed up the process (from hours to seconds).
+    '''
     annotation = skbio_read(gffFile,format='gff3')
     annDict = {}
 
@@ -67,7 +84,7 @@ def readGFF(gffFile: str):
         
     return annDict
 
-# %% ../03_synteny.ipynb 10
+# %% ../03_synteny.ipynb 9
 def addPangenomePositions(pangenomeFiles):
     if pangenomeFiles is None:
         return {}
@@ -95,7 +112,7 @@ def addPangenomePositions(pangenomeFiles):
 
     return pangenGeneDict
 
-# %% ../03_synteny.ipynb 11
+# %% ../03_synteny.ipynb 10
 def processAccessions(annotationFiles, ATmap = None, pangenomeDict = None,
                       similarityIDKey = None, similarityIDAssignment = None, 
                       pangenomeFiles=None, sequenceFilesDict=None, 
@@ -152,7 +169,6 @@ def processAccessions(annotationFiles, ATmap = None, pangenomeDict = None,
         for seqID,annotation in sorted(annotationDict.items()):
             
             seqtime = time.time()
-            print(f'Processing sequence {seqID}...')
             
             proposedAccID,chromosome = seqID.split(seqidJoinSym)
             
@@ -223,7 +239,6 @@ def processAccessions(annotationFiles, ATmap = None, pangenomeDict = None,
                 if ATmap is None:
                     if len(atNameList[0])>0:
                         _ATmap.add(orthogroup,atNameList)
-            print(f'\nProcessing sequence {seqID} done in {time.time() - seqtime} seconds.')
         print(f'Processing file {annotationFile} finished in {time.time() - filetime} seconds.')
     
     print('Converting gene tables into pandas DataFrames.')
@@ -239,7 +254,7 @@ def processAccessions(annotationFiles, ATmap = None, pangenomeDict = None,
     else:
         return genes,chromosomes,pangenomeDict,sequenceDict
 
-# %% ../03_synteny.ipynb 13
+# %% ../03_synteny.ipynb 11
 def recordSegment(name,segmentIDs,segmentIDToNumDict,sequence=None,gfaFile=None,segmentData=None):
     segmentIDs.append(name)
     
@@ -309,6 +324,7 @@ def generatePathsLinks(genesAll,ATmap,accessionID,
     overalltime = time.time()
     
     genes = genesAll.loc[genesAll.chromosome == chromosomeID]
+    
     path = []
     cigar = []
     prevEnd = 0
@@ -416,7 +432,7 @@ def generatePathsLinks(genesAll,ATmap,accessionID,
     
     return path,cigar,usCounter
 
-# %% ../03_synteny.ipynb 18
+# %% ../03_synteny.ipynb 16
 def writeLinks(gfaFile,links,doCigars=True):
     for linkLeft,linksRight in links.items():
         for linkRight in linksRight:

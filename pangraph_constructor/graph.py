@@ -5,10 +5,7 @@ __all__ = ['calcNodeLengths', 'initialPathAnalysis', 'getNodesStructurePathNodeI
            'getPathNodeInversionRate', 'pathNodeDirToCombinedArray', 'getNextNodePath', 'LinkGetter', 'GenomeGraph']
 
 # %% ../01_graph.ipynb 5
-import pdb
-
 import os
-import glob
 import json
 import itertools
 import warnings
@@ -16,24 +13,27 @@ import joblib
 
 import networkx as nx
 
-import pandas as pd
 import numpy as np
 
 from skbio.io import read as skbio_read
 from skbio.metadata import IntervalMetadata
 from skbio.sequence import DNA
 
-from dnasim.IO import writeFASTA
-from dnasim.simulation import inverseSequence
-
-from pangraph_constructor.synteny import processAccessions,generatePathsLinks
-from pangraph_constructor.utils import bidict,NpEncoder,pathFileToPathDict
+from pangraph_constructor.synteny import processAccessions,generatePathsLinks,readTransMap
+from pangraph_constructor.utils import bidict,pathFileToPathDict,inverseSequence
 from pangraph_constructor.tree import TremauxTree
 
 from fastcore.all import patch_to
 
 # %% ../01_graph.ipynb 8
 def calcNodeLengths(graph):
+    '''
+    Simple function that calculates node lengths (in visual columns).
+    
+    If it is nucleotide graph, it will actually calculate a number of nucleotides in each node,
+    but if it is non-nucleotide graph, then it will return 1 for each node.
+    '''
+    
     print('Calculating nodes length...')
     
     numNodes = len(graph.nodes)
@@ -54,16 +54,18 @@ def calcNodeLengths(graph):
 def initialPathAnalysis(graph,nodeLengths):
     '''
     
+    This function creates auxiliary data structures to make it easier to work with paths and their relationships with nodes.
+    
     Return
     ======
-    `pathLengths`: TBD
+    `pathLengths`: a list of number of nodes in each path
 
     `pathNodeArray`: numpy.array[int]. An array of the size number_of_paths x max_length_of_path, 
                     containing sequence of nodes in the order as they are passed by the given 
                     path. If the length of the path is less than the number of columns of the
                     array, then the unused columns are padded with zeros (node numbers are 1-based).
     
-    `pathNodeLengths`: TBD
+    `pathNodeLengths`: length of each node in each path
     
     `pathDirArray`: numpy.array[bool]. An array of the size number_of_paths x max_length_of_path, 
                     containing direction (normal or inversed) in which the given path passes each node. 
@@ -71,7 +73,7 @@ def initialPathAnalysis(graph,nodeLengths):
                     is less than the number of columns of the array, then the unused columns 
                     are padded with `False`.
     
-    `pathNodeLengthsCum`: TBD
+    `pathNodeLengthsCum`: Cumulative length of each paths (in terms of node lengths).
     
     
     Example
@@ -86,7 +88,7 @@ def initialPathAnalysis(graph,nodeLengths):
     seq10: 1+, 4-, 3+, 2-, 4-, 3+, 2-, 5+
     
     The result is:
-    `pathLengths`: TBD
+    `pathLengths`: [5, 5, 5, 5, 5, 5, 5, 8, 5, 8]
     
     `pathNodeArray`:
     array([[1, 2, 3, 4, 5, 0, 0, 0],
@@ -96,7 +98,7 @@ def initialPathAnalysis(graph,nodeLengths):
            [1, 4, 3, 2, 5, 0, 0, 0],
            [1, 4, 3, 2, 4, 3, 2, 5]]),
     
-    `pathNodeLengths`: TBD
+    `pathNodeLengths`: Cannot be defined without node lengths.
     
     `pathDirArray`:
     array([[False, False, False, False, False, False, False, False],
@@ -106,7 +108,7 @@ def initialPathAnalysis(graph,nodeLengths):
            [False,  True, False,  True, False, False, False, False],
            [False,  True, False,  True,  True, False,  True, False]]))
     
-    `pathNodeLengthsCum`: TBD
+    `pathNodeLengthsCum`: Cannot be defined without node lengths.
     
     '''
     
@@ -364,6 +366,11 @@ def getNextNodePath(pathNodeArray,pathLengths):
 
 # %% ../01_graph.ipynb 16
 class LinkGetter:
+    '''
+    This auxiliary class allows creating virtual subscribable structure inside the main `GenomeGraph` class
+    to access links as Iterable and Subscribable object. Full links (with directionality) are available in the main class.
+    This class provides simplified view on the links without directionality (the fact that a link goes from node A to node B).
+    '''
     def __init__(self,nodes,links):
         self.links = links
         self.nodes = nodes
@@ -400,44 +407,80 @@ class GenomeGraph:
                  paths=None,
                  nodes=None,nodesData=None,links=None,
                  pathsDict=None,
-                 sequenceFiles=None,annotationFiles=None,pangenomeFiles=None,
-                 doBack=False,**kwargs):
+                 sequenceFilesDict=None,annotationFiles=None,pangenomeFiles=None,
+                 doBack=False, verbose = True,**kwargs):
 
         '''
-        Priority 1: If you pass gfaPath as actual path to gfa file, then it will be loaded ignoring other options
-        accessionsToRemove: list or None (default). If not None, a list of strings, if any of the string contains 
-        in pathname, the path will be ignored.
-        In this case, the following options are available:
+        This is a constructor of a class `GenomeGraph`. This class allows to hold not only vanila genome graph, but
+        also a lot of extra information and also manipulate graphs in multiple ways, including sorting graphs, adding
+        and deleting nodes and links, and manipulating metadata etc.
+        
+        At the moment, there are four ways an instance can be created. It depends on what parameters are passed to the 
+        constructor. If parameters for more than 1 option is passed, there is a priority queue which constructor follows.
+        Each option and its priorities are provided below.
+        
+        Priority 1: If you pass gfaPath as actual path to gfa file, then it will be loaded as is. In this case, the 
+        following options are available: 
+            `accessionsToRemove`: list or None (default). If not None, a list of strings, if any of the string contains 
+                                  in pathname, the path will be ignored while loading.
             `isGFASeq`: boolean (default: True). Whether the graph should be considered as sequence graph (True)
                         or as gene/block graph (False).
-
+        
+        Priority 2: If nodes, links and paths are provided (not None), they should be as following:
+            `nodes`: list[str]: a list of strings with node IDs (unique)
+            
+            `links`: dict{int:dict{str:list[tuple(int,str)]}}: a dict with keys integers with 1-basednode numbers 
+            (in the order as in self.nodes) from which the link starts. Value is a dict with key of directionality of
+            the from node ('+' for normal direction or '-' for inverse). Value is a list of tuples with two values:
+            first integer is 1-based node number of node to which the link is going and second string is '+' or '-'
+            representing the directionality in which this node is represented in this link.
+            
+            'paths': list[list[str]]: List, which contains a list for each accession/path, which is represented by
+            a list of strings, each of which has a format '{1-based node number}{directionality}', where 
+            {1-based node number} is an integer 1-based number of node using the order as in `nodes`, 
+            {directionality} is either '+' for normal direction, or '-' for inverted.
+            
+        Priority 3: if pathsDict is provided then the graph is created from the paths for multiple accessions.
+            `pathsDict` is a dict{int:list[str]}; keys are names of accessions, and values are lists of strings
+            of the following format '{node name}{directionality}', where {node name} is identifiable unique name
+            which identifies the node, {directionality} is either '+' for normal direction, or '-' for inverted.
+            Note, that this can create no-sequence graph only (e.g. gene graph). Sequences can be added later on
+            through adding sequences to GenomeGraph.nodesData list.
+            An extra optional parameter is:
+            `nodeNameLengths`: list[int] or None, a list of alternative node lengths. By default, each node will be 
+                               represented as a single cell/column, but if provided, variable length can be provided.
         Priority 4: If annotationFiles is not None, but is a list of paths to annotation (gff3) files, 
         then the following extra options are available:
-            `fileOrder`: list or None (default) Order in which each accession should be loaded into the 
-                         graph (and order in which paths will be represented)
+            'sequenceFilesDict': a dict{str:str}, where keys are IDs of accessions used in annotation files and value
+                                is a path to FASTA file (relative to gff files). Assumption is that FASTA sequence names
+                                are the same as GFF3 sequence names.
+            `pangenomeFiles`: a list[str], a list of GFF3 files for the same intervals as in `annotationFiles`, 
+                            ID fields in GFF2 metadata should be the same.
+            `accOrder`: list or None (default), Order of accessions in the graph. If None, accessions will be sorted in 
+                        alphabetical order.
+            `chromosome`: str or None, if None, create one graph for all chromosomes (not fully implemented, see manual), 
+                        otherwise, create only one graph for given chromosome.
             `doUS`: boolean (default: False) Add unrelated sequence blocks between annotated genes/blocks.
             `refAnnotationFile`: str. If given, it has to be a path to gff3 file with reference annotation 
-                                 with AT notation for gene names. For this, `transMap` has to be provided.
+                                 with reference notation for gene names. In main annotations reference gene names should be identified 
+                                 either in "gene" records under "AT" key (prioritised), 
+                                 or in "mRNA" records under "Name" key (fallback). If ATMap is provided, then 
             `refSequenceFile`: str or None (default). If provided with path, then it will be used to obtain 
                                sequences of each block/gene.
-            `transMap`: a bidict object (`util` module) or None (default). A dictionary ontaining bidirectional 
-                        relation between OG notation of genes and AT notation of genes. 
-                        It is required if refAnnotationFile is provided.
-            `seqSuffix`: str or None (default). Which sequence suffix within each annotation to use. 
-                         If None, it will run all sequences in each annotation in lexicographic order
-                         and join them together (e.g. end of chr1 will be joined to start of chr2).
-            `refAccession`: str or None (default). Optional accession ID for reference annotation (if not the same as the file name).
+            `transmapFile`: a tab delimited file with column "Orthogroup", which contains similarity ID for genes and a column with name
+                            given by `transmapFileRefCol` which contains reference annotation gene names.
+            `transmapFileRefCol`: str or None, a name of column for reference gene names in `transmapFile`
+            `refAccession`: str or None (default). Accession ID for reference annotation (should be provided if `refAnnotationFile`
+                            if provided).
 
         '''
         self.nodes = []
         self.nodesData = []
-        # self.node = []
+        self.chromosomes = set()
         self.nodesMetadata = []
         self.hasPangenome = False
+        self.quiet = not verbose
         
-        '''
-        
-        '''
         self.forwardLinks = {}
         self.overlaps = {}
         self.paths = []
@@ -460,7 +503,7 @@ class GenomeGraph:
         elif pathsDict is not None:
             self._graphFromPaths(pathsDict,**kwargs) # sequenceFiles can be None
         elif annotationFiles is not None:
-            self._graphFromAnnotation(annotationFiles,pangenomeFiles,sequenceFiles,**kwargs)
+            self._graphFromAnnotation(annotationFiles,pangenomeFiles,sequenceFilesDict,**kwargs)
 
         self.order = list(range(1,len(self.nodes)+1))
 
@@ -475,12 +518,17 @@ class GenomeGraph:
 
         if len(self.overlaps)>0 and doOverlapCleaning:
             self.treeSort()
-            pdb.set_trace()
             self.removeOverlaps()
 
 # %% ../01_graph.ipynb 20
 @patch_to(GenomeGraph)
 def _revertLinks(self):
+    '''
+    Function creates backlinks if necessary:
+    By default, the links stored and can be accessed in forward direction (by starts).
+    In some situations, one need to access links by ends. This function creates a separate structure to search links
+    in backward direction. This structure is stored in attribute `backlinks` and `pureBackLinks`.
+    '''
     backLinks = {}
     for fromNode,links in self.forwardLinks.items():
         for fromStrand,strandLinks in links.items():
@@ -500,8 +548,11 @@ def _revertLinks(self):
 # (one too many in one of group of incoming edges to each node)
 @patch_to(GenomeGraph)
 def _pathCount(self):
-    # self.inPath = []
-    # self.outPath = []
+    '''
+    Function calculates relationships between paths and nodes, e.g. how many paths pass each node in specific direction
+    and how many times.
+    '''
+    
     self.nodePass = [0]*len(self.nodes)
 
     self.nodeStrandPaths = [[0,0] for _ in range(len(self.nodes))]
@@ -550,6 +601,13 @@ def _pathCount(self):
 # %% ../01_graph.ipynb 24
 @patch_to(GenomeGraph)
 def _loadGFA(self, gfaFile, isGFASeq=True, accessionsToRemove=None):
+    '''
+    Loading GFA file and instantiating the object from it.
+    
+    At the moment only GFA v1 is supported.
+    
+    '''
+    
     baseName = os.path.splitext(os.path.basename(gfaFile))[0]
     dirPath = os.path.dirname(gfaFile)
     jsonFile = f'{dirPath}{os.path.sep}nodeNames_{baseName}.json'
@@ -594,7 +652,8 @@ def _loadGFA(self, gfaFile, isGFASeq=True, accessionsToRemove=None):
         raise ValueError('Incorrect GFA file format. No segments were found')
 
     for nodeID,node in enumerate(segmentList):
-        print(f'\rLoading segment {nodeID+1:0{numSegmentDigits}}/{numSegments:0{numSegmentDigits}}',end='')
+        if not self.quiet:
+            print(f'\rLoading segment {nodeID+1:0{numSegmentDigits}}/{numSegments:0{numSegmentDigits}}',end='')
         segmentArray = node.rstrip().split(sep='\t')
         segID,segGFAData = segmentArray[1:3]
         if isGFASeq:
@@ -626,7 +685,8 @@ def _loadGFA(self, gfaFile, isGFASeq=True, accessionsToRemove=None):
         numLinkDigits = 1
 
     for linkID,link in enumerate(linkList):
-        print(f'\rLoading link {linkID+1:0{numLinkDigits}}/{numLinks:0{numLinkDigits}}',end='')
+        if not self.quiet:
+            print(f'\rLoading link {linkID+1:0{numLinkDigits}}/{numLinks:0{numLinkDigits}}',end='')
         linkArray = link.rstrip().split(sep='\t')
         fromNodeID,fromStrand,toNodeID,toStrand = linkArray[1:5]
         overlap = linkArray[5]
@@ -650,7 +710,8 @@ def _loadGFA(self, gfaFile, isGFASeq=True, accessionsToRemove=None):
     addedPaths = 0
     ignoredPaths = 0
     for pathID,pathString in enumerate(pathStringsList):
-        print(f'\rLoading path {pathID+1:0{numPathDigits}}/{numPaths:0{numPathDigits}}',end='')
+        if not self.quiet:
+            print(f'\rLoading path {pathID+1:0{numPathDigits}}/{numPaths:0{numPathDigits}}',end='')
         pathArray = pathString.rstrip().split(sep='\t')
         seqID,path = pathArray[1:3]
         useAccession = True
@@ -668,12 +729,11 @@ def _loadGFA(self, gfaFile, isGFASeq=True, accessionsToRemove=None):
 
 # %% ../01_graph.ipynb 26
 @patch_to(GenomeGraph)
-def _graphFromNodesLinks(self,nodes,links):
-    raise NotImplementedError('Generating graph from nodes and links is not yet implemented.')
-
-# %% ../01_graph.ipynb 28
-@patch_to(GenomeGraph)
 def _getNodeID(self,node,pathID,nodeNameLengths=None):
+    '''
+    Function to either find already created node or create a new one and return its ID.
+    
+    '''
     try:
         nodeID = self.nodes.index(node)+1
         if nodeNameLengths is not None:
@@ -694,9 +754,13 @@ def _getNodeID(self,node,pathID,nodeNameLengths=None):
 
     return nodeID
 
-# %% ../01_graph.ipynb 29
+# %% ../01_graph.ipynb 27
 @patch_to(GenomeGraph)
 def _graphFromPaths(self,paths,sequenceFiles=None,nodeNameLengths=None):
+    '''
+    This function creates a graph from a set of paths (non-nucleotide graphs) and instantiate an object.
+    '''
+    
     if sequenceFiles is not None:
         warnings.warn("sequenceFiles reading with path is not yet implemented.")
 
@@ -741,30 +805,42 @@ def _graphFromPaths(self,paths,sequenceFiles=None,nodeNameLengths=None):
     self.forwardLinks = dict([(fromNode,dict([(fromStrand,list(toSet)) for fromStrand,toSet in strandDict.items()])) for fromNode,strandDict in links.items()])
     self.nodesData = ['']*len(self.nodes)
 
-# %% ../01_graph.ipynb 31
+# %% ../01_graph.ipynb 29
 @patch_to(GenomeGraph)
 def _processAnnotations(self, annotationFiles, links, 
                         annotationType='standard', 
-                        pangenomeFiles = None, seqFilesDict = None, 
+                        pangenomeFiles = None, seqFilesDict = None, ATmap = None,
                         chromosome = None, doUS = False,
                         accOrder  = None):
-    
+    '''
+    Processing all annotations (normally non-reference ones). It assumes that these annotations refer to gene IDs in reference annotation.
+    '''
     if annotationType=='standard':
         simID = 'OG'
         simAssignment = 'gene'
     elif annotationType=='pangenome':
-        simID = 'OG'
+        simID = 'simgr'
         simAssignment = 'mrna'
     else:
         raise ValueError(f'`annotationType` can be either "standard" or "pangenome", but {annotationType} was given.')
     
-    genes, chromosomes, ATmap, pangenomeDict, sequences = \
-        processAccessions(annotationFiles, 
-                          similarityIDKey = simID, 
-                          similarityIDAssignment = simAssignment, 
-                          pangenomeFiles = pangenomeFiles, 
-                          sequenceFilesDict = seqFilesDict, 
-                          seqidJoinSym = '_', ATsplitSym = ',')
+    if ATmap is None:
+        genes, chromosomes, ATmap, pangenomeDict, sequences = \
+            processAccessions(annotationFiles, 
+                              similarityIDKey = simID, 
+                              similarityIDAssignment = simAssignment, 
+                              pangenomeFiles = pangenomeFiles, 
+                              sequenceFilesDict = seqFilesDict, 
+                              seqidJoinSym = '_', ATsplitSym = ',')
+    else:
+        genes, chromosomes, pangenomeDict, sequences = \
+            processAccessions(annotationFiles, 
+                              similarityIDKey = simID, 
+                              ATMap = ATmap,
+                              similarityIDAssignment = simAssignment, 
+                              pangenomeFiles = pangenomeFiles, 
+                              sequenceFilesDict = seqFilesDict, 
+                              seqidJoinSym = '_', ATsplitSym = ',')
     
     if chromosome is None:
         seqList = list(chromosomes)
@@ -787,21 +863,32 @@ def _processAnnotations(self, annotationFiles, links,
             p, cigar, usCounter = generatePathsLinks(geneAcc, ATmap, seqID, accessionID, sequences, self.OGList,
                                                      self.nodes, self.nodesMetadata, self.nodeNameToID, links,
                                                      self.usCounter, doUS=doUS, segmentData=self.nodesData)
-            path = path + p
+            path = path + p + [',<sep>,']
 
+        path.pop()
+        
         self.paths.append(path)
         self.accessions.append(accessionID)
+    
+    self.chromosomes.update(seqList)
 
     return links, ATmap, pangenomeDict
 
-# %% ../01_graph.ipynb 32
+# %% ../01_graph.ipynb 30
 @patch_to(GenomeGraph)
 def _processRefAnnotation(self, annotationFile, links, ATmap, pangenomeDict, accID, 
                         seqFile = None, 
                         chromosome = None, doUS = False):
+    '''
+    Processing reference annotation.
+    '''
+    if seqFile is not None:
+        seqFilesDict = {accID: seqFile}
+    else:
+        seqFilesDict = None
     
     genes, chromosomes, _, sequences = \
-        processAccessions(annotationFiles, 
+        processAccessions([annotationFile], 
                           ATmap = ATmap,
                           pangenomeDict = pangenomeDict,
                           sequenceFilesDict = seqFilesDict, 
@@ -816,20 +903,31 @@ def _processRefAnnotation(self, annotationFile, links, ATmap, pangenomeDict, acc
     if accID not in genes:
         raise ValueError(f'Accession {accID} not found in provided annotation file')
     
+    path = []
     for seqID in seqList:
 
-        p, cigar, usCounter = generatePathsLinks(genes[accID], ATmap, seqID, accessionID, sequences, self.OGList,
+        p, cigar, usCounter = generatePathsLinks(genes[accID], ATmap, seqID, accID, sequences, self.OGList,
                                                      self.nodes, self.nodesMetadata, self.nodeNameToID, links,
                                                      self.usCounter, doUS=doUS, segmentData=self.nodesData)
         path = path + p
-
+        
     self.paths.insert(0,path)
-    self.accessions.insert(0,accessionID)
+    self.accessions.insert(0,accID)
 
 
-# %% ../01_graph.ipynb 33
+# %% ../01_graph.ipynb 31
 @patch_to(GenomeGraph)
 def _graphFromAnnotation(self,annotationFiles,pangenomeFiles=None, sequenceFilesDict=None,**kwargs):
+    '''
+    This function creates a gene/annotation graph (non-nucleotide) from a set of annotations for multiple accessions
+    and instantiate an object.
+    
+    It allows FASTA files and provide nucleotide sequences to each node, but will take nucleotide sequence from the first
+    accession where this gene (of the given similarity ID) is encountered. So, if similarity is not defined as 100% identical sequence
+    (not possible), then it will give invalid results. Not recommended to use.
+    
+    '''
+    
     self.nodeNameToID = {}
     
     if pangenomeFiles is not None:
@@ -837,6 +935,14 @@ def _graphFromAnnotation(self,annotationFiles,pangenomeFiles=None, sequenceFiles
         self.hasPangenome = True
     else:
         annotationType = 'standard'    
+    
+    ATMapfile = kwargs.get('transMapFile',None)
+    ATMapSimGrColName = kwargs.get('transmapFileRefCol',None)
+    
+    if ATMapfile is not None and ATMapSimGrColName is not None:
+        ATmap = readTransMap(ATMapfile,ATMapSimGrColName)
+    else:
+        ATmap = None
     
     doUS = kwargs.get('doUS',False)
     self.usCounter = 0
@@ -846,13 +952,14 @@ def _graphFromAnnotation(self,annotationFiles,pangenomeFiles=None, sequenceFiles
     links,ATmap,pangenomeDict = self._processAnnotations(annotationFiles, links, 
                                       annotationType = annotationType, 
                                       pangenomeFiles = pangenomeFiles, 
-                                      seqFilesDict = sequenceFilesDict, 
+                                      seqFilesDict = sequenceFilesDict,
+                                      ATmap = ATmap,
                                       chromosome = kwargs.get('chromosome', None),
                                       accOrder = kwargs.get('accessionOrder',None),
                                       doUS = doUS)
     
     if 'refAnnotationFile' in kwargs:
-        links = self._processRefAnnotation([kwargs['refAnnotationFile']], links,
+        links = self._processRefAnnotation(kwargs['refAnnotationFile'], links,
                                         ATmap=ATmap,pangenomeDict=pangenomeDict,
                                         seqFile = kwargs.get('refSequenceFile',None), 
                                         chromosome = kwargs.get('chromosome', None), doUS = doUS,
@@ -860,9 +967,12 @@ def _graphFromAnnotation(self,annotationFiles,pangenomeFiles=None, sequenceFiles
 
     self.forwardLinks = self._linksSetToDict(links)
 
-# %% ../01_graph.ipynb 36
+# %% ../01_graph.ipynb 34
 @patch_to(GenomeGraph)
 def loadAnnotations(self, annotationPath,seqSuffix):
+    '''
+    This function should allow adding interval metadata (annotations) to sequence (nucleotide) graph. It has never been properly tested.
+    '''
     if len(self.nodesData[0])==0:
         warnings.warn('Annotation can be applied only to sequence graph, but no sequence associated with nodes was found. Aborted.')
         return
@@ -896,7 +1006,7 @@ def loadAnnotations(self, annotationPath,seqSuffix):
                     for atName in atNameList:
                         nodeDict.setdefault(atName,[]).append((leftNodeBound,rightNodeBound))
 
-# %% ../01_graph.ipynb 38
+# %% ../01_graph.ipynb 36
 @patch_to(GenomeGraph)
 def updateAnnotationFromNodes(self,isSeq=True):
     '''
@@ -924,9 +1034,14 @@ def updateAnnotationFromNodes(self,isSeq=True):
             updatedAnnEl[pathName] = {'annotation':{nodeSeq:[(0,len(nodeSeq)-1)]}}
         self.nodesMetadata[annID] = updatedAnnEl
 
-# %% ../01_graph.ipynb 40
+# %% ../01_graph.ipynb 38
 @patch_to(GenomeGraph)
 def generateTremauxTree(self,byPath=True):
+    '''
+    This function generates Tremaux tree for our graph. It is not a simple Tremaux tree and requires an adjustment process, which happens inside
+    the `TremauxTree` class constructor.
+    '''
+    
     _nxGraph = nx.DiGraph()
 
     for nodeID,toList in self.pureForwardlinks:
@@ -936,22 +1051,10 @@ def generateTremauxTree(self,byPath=True):
 
     self.tremauxTree = TremauxTree(_nxGraph,self,byPath)
 
-# %% ../01_graph.ipynb 41
+# %% ../01_graph.ipynb 39
 @patch_to(GenomeGraph)
 def _getStartNode(self,bubbleNode):
-#         allPaths = list(nx.shortest_path(self.tremauxTree,None,bubbleNode).values())
-#         startList = []
-#         for path in allPaths:
-#             if len(startList)>0:
-#                 for node in startList.copy():
-#                     if nx.has_path(self.tremauxTree,node,path[0]):
-#                         continue
-#                     if nx.has_path(self.tremauxTree,path[0],node):
-#                         startList.remove(node)
 
-#             startList.append(path[0])
-
-#         return startList
     rootNodes = self.tremauxTree.getRootNodes()
 
     for root in rootNodes:
@@ -960,7 +1063,7 @@ def _getStartNode(self,bubbleNode):
 
     return None
 
-# %% ../01_graph.ipynb 42
+# %% ../01_graph.ipynb 40
 @patch_to(GenomeGraph)
 def _getEdgeValue(self,start,end,unique=False):
     '''
@@ -988,10 +1091,18 @@ def _getEdgeValue(self,start,end,unique=False):
         else:
             return self.edgePaths.get((start,end),0)*startOutPathRatio*endInPathRatio
 
-# %% ../01_graph.ipynb 43
+# %% ../01_graph.ipynb 41
 @patch_to(GenomeGraph)
 def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
-
+    '''
+    This is the main function for sorting graph. It requires some further work, but works relatively well as is.
+    
+    Parameters
+    ==========
+    `byPath`: bool. If False, then simple topological sort will be done. This needs further testing as after implementation a lot
+                    of things changed!
+                    If True, then more complex Consensus sort is used which tries to preserve consensus "linearity" amonth paths.
+    '''
     print('Constructing Tremaux tree')
     self.generateTremauxTree(byPath)
     print('Done!')
@@ -1001,44 +1112,34 @@ def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
     processed = []
     self.order = []
 
-#         pdb.set_trace()
-
     print('Getting root nodes')
     rootNodes = self.tremauxTree.getRootNodes()
-#         self.order.append(rootNode)
 
     # The first root node won't be added to the order automatically,
     # but will be processed as all other nodes.
     startNode = rootNodes.pop()
-#         self.order.append(startNode)
-#         descendantsToAdd = list(self.tremauxTree.edges(startNode))
-#         descendantsToAdd.sort(key=lambda edge: self.edgePathsUnique.get(edge,0))
-#         queue.extend(descendantsToAdd)
     queue.append((None,startNode))
 
+    if self.quiet:
+        p1num = int(len(self.nodes)//100)
+    
     print('Start Loop...')
     while len(queue)>0 or len(rootNodes)>0:
         if len(queue)==0:
             try:
                 while len(queue)==0:
                     startNode = rootNodes.pop()
-#                         descendantsToAdd = list(self.tremauxTree.edges(startNode))
-#                         if len(descendantsToAdd)>0:
-#                             descendantsToAdd.sort(key=lambda edge: self.edgePathsUnique.get(edge,0))
-#                             queue.extend([edge for edge in descendantsToAdd if edge not in processed])
-#                         if startNode not in self.order:
-#                             self.order.append(startNode)
                     queue.append((None,startNode))
             except IndexError:
                 break
 
         startNode,endNode = queue.pop()
 
-#             if endNode==840:
-#                 pdb.set_trace()
-
-#             print(f'Queue: {len(queue)} - Processed: {len(processed)} - Order: {len(self.order)} - Start: {startNode} - End: {endNode}')
-        print(f'\rNodes in order: {len(self.order)}/{len(self.nodes)}',end='')
+        if not quiet:
+            print(f'\rNodes in order: {len(self.order)}/{len(self.nodes)}',end='')
+        else:
+            if len(self.order) % p1num == 0:
+                print(f'\rNodes in order: {len(self.order)}/{len(self.nodes)}',end='')
 
         if (startNode,endNode) in processed:
             continue
@@ -1088,7 +1189,6 @@ def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
                             bubblePriority = True
                     else:
                         bubblePriority = True
-#                         bubblePriority = True
 
                 if bubbleNode!=startNode:
                     # We are not on the main (original) edge
@@ -1096,19 +1196,9 @@ def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
                     if byPath:
                         if lca is None:
                             _lca = self._getStartNode(bubbleNode)
-#                             startBubbleNodes.sort(key=lambda node: self.nodePassUnique[node-1])
-#                             lcaDescendantsToProcess = []
-#                             for startBubbleNode in startBubbleNodes: 
-#                                 snDescendantsToProcess = [(startBubbleNode,node) for node in list(self.tremauxTree[startBubbleNode])\
-#                                                           if node not in self.order and nx.has_path(self.tremauxTree,node,bubbleNode)]
-#                                 snDescendantsToProcess.sort(key=lambda node: self.edgePathsUnique.get((startBubbleNode,node),0))
-#                                 lcaDescendantsToProcess.extend(snDescendantsToProcess)
 
                         else: 
                             _lca = lca
-            #                             lcaDescendantsToProcess = [(lca,node) for node in list(self.tremauxTree[lca]) \
-#                                                        if node not in self.order and nx.has_path(self.tremauxTree,node,bubbleNode)]
-#                             lcaDescendantsToProcess.sort(key=lambda node: self.edgePathsUnique.get((lca,node),0))
                         if _lca==bubbleNode:
                             # BubbleNode is the top of another tree
                             lcaDescendantsToProcess = [(None,bubbleNode)]
@@ -1152,9 +1242,6 @@ def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
 
         bubblePriorityQueue.sort(key=lambda b: self._getEdgeValue(b[0],endNode))
         if len(bubblePriorityQueue)>=1:
-#             or \
-#                 (len(bubblePriorityQueue)==1 and bubblePriorityQueue[-1][1]!=(startNode,endNode)):
-#                 queue.append((startNode,endNode))#Why would I add the processed block again? Should I add descendant edges of the end node here? 
             # It should save a lot of wasted time and speed up the process.
             queueLen = len(queue)
             curEdgePassed = False
@@ -1179,7 +1266,7 @@ def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
                                                 processed,queue,stopNodes,stopNodesOrigin)
     print()
 
-# %% ../01_graph.ipynb 44
+# %% ../01_graph.ipynb 42
 @patch_to(GenomeGraph)
 def _addNextEdgesToQueue(self,startNode,endNode,processed,queue,stopNodes,stopNodesOrigin):
     endNodeAdded = False
@@ -1201,7 +1288,6 @@ def _addNextEdgesToQueue(self,startNode,endNode,processed,queue,stopNodes,stopNo
             bubbleEndEdgeInd = len(queue)
 
         queue[bubbleEndEdgeInd:bubbleEndEdgeInd] = edgesToAdd
-#             queue.append(bubbleEndEdge)
         stopNodes.remove(endNode)
         del stopNodesOrigin[endNode]
     else:
@@ -1209,11 +1295,11 @@ def _addNextEdgesToQueue(self,startNode,endNode,processed,queue,stopNodes,stopNo
 
     return endNodeAdded
 
-# %% ../01_graph.ipynb 46
+# %% ../01_graph.ipynb 44
 @patch_to(GenomeGraph)
 def toGFA(self,gfaFile,doSeq=True):
     '''
-        Recording existing graph structures to GFA v1 file.
+        Recording existing graph structures to GFA v1 file + some json and joblib files to preserve extra metadata.
     '''
     baseName = os.path.splitext(os.path.basename(gfaFile))[0]
     dirPath = os.path.dirname(gfaFile)
@@ -1240,31 +1326,16 @@ def toGFA(self,gfaFile,doSeq=True):
 
         translator[nodeID] = i+1
 
-#         isInversionDict = self._generateIsInversionDict()
-#         strandInversionDict = {'+':'-','-':'+'}
-
     for fromNode,strandLinks in self.forwardLinks.items():
         for fromStrand,toLinkStrands in strandLinks.items():
             for toNode,toStrand in toLinkStrands:
 
-#                     if isInversionDict.get(fromNode,False):
-#                         _fromStrand = strandInversionDict[fromStrand]
-#                     else:
-#                         _fromStrand = fromStrand
-
-#                     if isInversionDict.get(toNode,False):
-#                         _toStrand = strandInversionDict[toStrand]
-#                     else:
-#                         _toStrand = toStrand
                 gfaWriter.write(f'L\t{translator[fromNode]}\t{fromStrand}\t{translator[toNode]}\t{toStrand}\t*\n')
 
     for path,accessionID in zip(self.paths,self.accessions):
         newPath = []
         for nodeStrand in path:
-            node = int(nodeStrand[:-1])#self.nodeNameToID.get(nodeStrand[:-1],nodeStrand[:-1])
-#                 if isInversionDict.get(node,False):
-#                     strand = strandInversionDict[nodeStrand[-1]]
-#                 else:
+            node = int(nodeStrand[:-1])
             strand = nodeStrand[-1]
             newPath.append(f'{translator[node]}{strand}')
         gfaWriter.write(f'P\t{accessionID}\t{",".join(newPath)}\t*\n')
@@ -1279,7 +1350,7 @@ def toGFA(self,gfaFile,doSeq=True):
     if len(nodesMetadata)==len(self.nodes):
         joblib.dump(nodesMetadata,annotationFile)
 
-# %% ../01_graph.ipynb 49
+# %% ../01_graph.ipynb 48
 @patch_to(GenomeGraph)
 def addAccessionAnnotation(self,annotationFile,sequenceFile=None):
     '''
@@ -1289,10 +1360,14 @@ def addAccessionAnnotation(self,annotationFile,sequenceFile=None):
     '''
     pass
 
-# %% ../01_graph.ipynb 50
+# %% ../01_graph.ipynb 49
 @patch_to(GenomeGraph)
 def addLink(self,fromNode,fromStrand,toNode,toStrand):
-    # Need testing
+    '''
+    Need testing. Not sure if it actually makes sense as links not present in any of the paths does not play any role.
+    
+    '''
+    
     if fromNode not in self.nodes:
         raise IndexError(f'Node {fromNode} is not in nodes list')
     if toNode not in self.nodes:
@@ -1317,10 +1392,13 @@ def addLink(self,fromNode,fromStrand,toNode,toStrand):
 
         self.backLinks[toNode][toStrand].append([fromNode,fromStrand])
 
-# %% ../01_graph.ipynb 51
+# %% ../01_graph.ipynb 50
 @patch_to(GenomeGraph)
 def addNode(self,nodeID,data=None):
-    # Need testing
+    '''
+    Need testing. Again, there is no point of adding a node to a graph if this node will not be present in any of the paths.
+    '''
+    
     if nodeID not in self.nodes:
         self.nodes.append(nodeID)
         self.nodesData[nodeID] = data
@@ -1328,22 +1406,34 @@ def addNode(self,nodeID,data=None):
         warnings.warn(f'You attempted to add node with {nodeID}, but it already exists in the graph. The addition was ignored.')
     pass
 
-# %% ../01_graph.ipynb 53
+# %% ../01_graph.ipynb 52
 # Node inversion functionality
 @patch_to(GenomeGraph)
 def invertNodes(self):
+    '''
+    This function look at inversion/strand of each node in each path. If more than half of paths passing node in "inverted"
+    direction, then inverstion should be switched over (currently inverted passes should become normal and normal passes should become inverted.) 
+    It is done every time a graph is loaded. Possibly, it should be possible to not doing it as it will take a lot of time for larger graphs.
+    '''
+    
     nodeLengths = calcNodeLengths(self)
     pathLengths,pathNodeArray,pathNodeLengths,pathDirArray,pathNodeLengthsCum = initialPathAnalysis(self,nodeLengths)
 
+    p1num = int(len(self.nodes) // 100)
+    
     for nodeID in range(len(self.nodes)):
         if self.nodeStrandPaths[nodeID][1]>self.nodeStrandPaths[nodeID][0]:
-            print(f'\rNode {nodeID+1} inverted',end='')
+            if not self.quiet:
+                print(f'\rNode {nodeID+1} inverted',end='')
+            else:
+                if (nodeID % p1num == 0):
+                    print(f'\rNode {nodeID+1}/{len(self.nodes)} processed for inversion', end='')
             self._invertNode(nodeID,pathNodeArray)
 
     self._pathCount()
     print()
 
-# %% ../01_graph.ipynb 54
+# %% ../01_graph.ipynb 53
 @patch_to(GenomeGraph)
 def _invertNode(self,nodeID,pathNodeArray):
 
@@ -1393,7 +1483,7 @@ def _invertNode(self,nodeID,pathNodeArray):
 
 # End of node inversion functionality
 
-# %% ../01_graph.ipynb 56
+# %% ../01_graph.ipynb 55
 # node removal functionality
 @patch_to(GenomeGraph)
 def _removePositionsFromPaths(self,pathIDs,positions):
@@ -1408,7 +1498,7 @@ def _removePositionsFromPaths(self,pathIDs,positions):
             del self.paths[pathID][pos-offset]
             offset += 1
 
-# %% ../01_graph.ipynb 57
+# %% ../01_graph.ipynb 56
 @patch_to(GenomeGraph)
 def _updateLinkList(self,strandList,offsetDict):
     newStrand = []
@@ -1416,7 +1506,7 @@ def _updateLinkList(self,strandList,offsetDict):
         newStrand.append((offsetDict[toNode-1]+1,toStrand))
     return newStrand
 
-# %% ../01_graph.ipynb 58
+# %% ../01_graph.ipynb 57
 @patch_to(GenomeGraph)
 def _clearNodes(self,nodeIDs):
     print('nodeIDs')
@@ -1461,7 +1551,7 @@ def _clearNodes(self,nodeIDs):
         if len(inverseStrand)>0:
             self.forwardLinks.setdefault(newNode,{})['-'] = inverseStrand
 
-# %% ../01_graph.ipynb 59
+# %% ../01_graph.ipynb 58
 @patch_to(GenomeGraph)
 def _removeNode(self,nodeID,revertLinks,pathNodeArray):
     pathIDs,positions = np.where(pathNodeArray==nodeID+1)
@@ -1505,9 +1595,13 @@ def _removeNode(self,nodeID,revertLinks,pathNodeArray):
 
     return pathIDs,positions
 
-# %% ../01_graph.ipynb 60
+# %% ../01_graph.ipynb 59
 @patch_to(GenomeGraph)
 def removeNodes(self,nodeIDsToRemove):
+    '''
+    This (and related to it) function allows removal of a node from a graph. In normal situation, it should not be done to a graph
+    as it will make it invalid in most cases, it is very important functionality for removal of overlaps (see below).
+    '''
     revertLinks = self._revertLinks()
     nodeLengths = calcNodeLengths(self)
     _,pathNodeArray,_,_,_ = initialPathAnalysis(self,nodeLengths)
@@ -1526,12 +1620,12 @@ def removeNodes(self,nodeIDsToRemove):
 
 #end of node removal functionality
 
-# %% ../01_graph.ipynb 62
+# %% ../01_graph.ipynb 61
 # Node substitution functionality
 
 # End of node substitution functionality
 
-# %% ../01_graph.ipynb 64
+# %% ../01_graph.ipynb 63
 # Overlap removal functionality
 @patch_to(GenomeGraph)
 def _linkBounce(self,fromNodeStart,fromStrandStart,revertLinks,nodeLengths,kmerOverlap,cutOffsetRight,leftCut,rightCut):
@@ -1540,7 +1634,6 @@ def _linkBounce(self,fromNodeStart,fromStrandStart,revertLinks,nodeLengths,kmerO
     rightToCut = []
     leftToProcess = [(fromNodeStart,fromStrandStart)]
     rightToProcess = []
-#     pdb.set_trace()
     while (len(leftToProcess)>0 or len(rightToProcess)>0):
         for node,strand in leftToProcess:
             rightSide = self.forwardLinks.get(node,{}).get(strand,[])
@@ -1570,7 +1663,7 @@ def _linkBounce(self,fromNodeStart,fromStrandStart,revertLinks,nodeLengths,kmerO
 
     return leftToCut,rightToCut,cutOffsetLeft,cutOffsetRight
 
-# %% ../01_graph.ipynb 65
+# %% ../01_graph.ipynb 64
 @patch_to(GenomeGraph)
 def _processBouncedLink(self,leftToCut,rightToCut,kmerOverlap,cutOffsetLeft,cutOffsetRight,nodeLengths,leftCut,rightCut,leftForbidden,rightForbidden):
     toCut = kmerOverlap - cutOffsetLeft - cutOffsetRight
@@ -1631,9 +1724,17 @@ def _processBouncedLink(self,leftToCut,rightToCut,kmerOverlap,cutOffsetLeft,cutO
     for nodeStrand in leftToCut:
         del self.overlaps[nodeStrand]
 
-# %% ../01_graph.ipynb 66
+# %% ../01_graph.ipynb 65
 @patch_to(GenomeGraph)
 def removeOverlaps(self):
+    '''
+    When the graph (nucleotide only) is loaded, overlaps are allowed and can be provided using CIGAR strings (it will not be checked).
+    Such overlaps can appear for instance when a compacted de bruijn graph is used (e.g. generated by CUTTLEFISH). They should be removed 
+    in order to make the graph not artificially overcomplicated.
+    
+    Unfortunately, this current implementation is not working properly and needs to be looked at in details. It is most probably
+    overcomplicated and overthought. It should be relatively easy to do.
+    '''
     nodeIDsToRemove = []
     leftCut = {}
     rightCut = {}
@@ -1766,7 +1867,6 @@ def _linksSetToDict(self,setLinks):
 # %% ../01_graph.ipynb 72
 @patch_to(GenomeGraph)
 def __iter__(self,forward=True):
-    # print(forward)
     for i in range(len(self.nodes)):
         yield i+1,self.forwardLinks.get(i+1,{})
 

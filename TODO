@@ -1,48 +1,56 @@
-## Segmentation rules
-
-Pangenome - db number
-<zoom level>.<accessionID>Pos
-<zoom level>.<accessionID>Gene
-
-zoomLevel - maximum (ant target) number of positions in a single bin (can be smaller and still deserve a full bin)
-compMax - maximum length of component
-chunkMax - maximum length of chunk (in bins).
-
-nBins - number of bins added to a current component
-
-Rules for inside of node:
-- If nBins==compMax - break a component inside a node. Add direct links from this component to the next component (need to be added only to the current component)
-
-Rules for node start (before going to adding bins to matrix) (should not work for the first node):
-- Analyse nodes incoming connections. If they are coming from other than consecutive nodes, check for pass continuity, if failed, close current component and start new one (should not work for first node).
-- If this node is a start of any path, then old component should be broken and new one is created. 
-
-Rules for node end:
-- If nBins + next node length > compMax then break component at current node and start a new component.
-- If the current node is the end of any path, then component should break and new component created.
-- If outgoing link from current node goes not to consecutive node, or forward jump over nodes that are used in the path, then break the component and start a new one.
-
-If zoom level is bigger than a single node and the next node also fits inside the same bin, then do the checks, but do not break the component until reaching the end of the bin. Then apply all the end node rules together from all included nodes.
-
-During the process keep arrival and departure links as separate dictionary to node (not to component or bin) in each component. Intra node links should be added directly to the components.
-Keep the dictionary node id to component id
-Keep an array of component lengths
-
-
 ## Features
 
-- ChunkIndex should include length of each path along with names of paths. This can be used for marking the end of the path.
+- Zoom levels generation, i.e. removal of non-linear links that "describe" too small elements to show is still non-existent in desirable state.
+    - It should work in the way that instead of non-linear links, linear links are established for consistency of the view.
+    - Some links should remain if it describes both small and large elements. 
+    - Ideally, links that describe only smaller elements should disappear when moving to less detailed zoom levels, but links describing larger
+      rearrangements should persist (or even established). E.g. if we have larger inversion and smaller transposition or another inversion inside, then
+      links describing this smaller rearrangement should disappear and the components/columns of these smaller rearrangements should be collapsed into 
+      components/blocks on the next zoom level (when zoom level allows the size of each part of this rearrangement to be smaller than a single column), but 
+      larger rearrangement should persist and now be visible clean and nice.
+    - One possible way to do it correctly is to identify all (of all possible types) rearrangements/SVs with theit hierarchy (the shortest
+      path or changes by steps like indel, transpositions, inversion, repeat (tandem or non-tandem) from current graph sequence of nodes in a path to linear sequence
+      of nodes. It seems the best option so far is to convert each path of nodes to a path of edges and operate on it comparing it to a path of all linear nodes (in the given
+      order of the graph). There are a few options possible in edge paths and seems nicely identify hierarchy, but more thought is needed there.
+    - SEE NOTE in export.ipynb notebook about identification of link-size associations.
 
-- Names of sequences and/or nodes should be part of the optional input into the segmentation and should be included into the data passed to front-endnext
-- Notion of order of links needs to be added here (e.g. from genomic position and to genomic position.
-- MAX_COMPONENT_SIZE should not be fixed, but should be a guidance (actually 100 is a bit too long anyway, something about 50 would be much better). It should never break graph node under any circumstances. It can break sequence (e.g. gene) if sequence consists of several nodes.
-- Component connector column should be filled even if there are arrows (far links) coming out of the node for a particular accession.
-- Component connector should appear between between components even if the second one is not present in the accession, but one of the subsequent one is and there is no non-linearity between two present blocks/nodes.
+- Command line tool `pantograph` should get more functionality. Some examples are:
+    - Adding gene/smaller blocks data to graphs, e.g. if a graph is made of large blocks (e.g. conserved blocks of genes), one would like to see the size of these
+      blocks. To do it, instead of a single column node per this block, there should be a node with number of columnts corresponding to the number of elements making 
+      up this block (for the example of conserved block of genes, we want column per gene in each conserved block). Example of the usage is available, but it is not 
+      that trivial to move it to script.
+
+- Add support for GFA v2.
+
+- Add functionality to attach nucleotides to existing non-nucleotide (e.g. gene) graphs.
+
+- Add a possibility to add extra accession to a graph. It should automatically add extra nodes private to the new accession and new links.
+
+- Allow turning off node inversion either in manual or automatic way (e.g. after doing node inversion once, this should be marked as done on the graph and 
+  not do it again.
+
+- Another branch is generating nucleotide graphs using CUTTLEFISH compacted de Bruijn graphs. THe unresolved issue is removal of overlaps between neighbouring nodes 
+  (due to generation by k-mers). It worked on very simple example, but did not work on a bit more complex example. Possibly, it was overthought and need to be a bit
+  simplified. I believe, it can become relatively robust way of graph construction from a set of assembles (or even not assembled) sequences.
+  
+
 
 ## issues
 
-- Sometimes zoom levels are inconsistent between each other. For example, on zoom level "1" component for bins 451-468 (last in chunk001) has some parts in the left and some in the right (in some genomes one gene is present, in others another gene is present). In zoom level "9" the same component occupies bins 51-52, but in the file (chunk000) all occupied columns are on the left and none on the right. This inconsistency needs to be tackled!
-- Some components can have 3 repeats and only two links coming and going. E.g. component 50905-50913 (zoom level "1") for accession 4 (0-based) called "1741".
-- Some of the components can have links with zero participants (???). E.g. 50896-50904 (zoom level "1") has one departure without participants.
+- Graph sorting generally works OK, and does not generate complete nonsense, but it still leave nodes with multiple in/out connections in several places of the graph 
+  in the middle. Even if it is linearly connected at one place it does not mean it should be there. It should be prioritised the lowest and be thrown as far back as 
+  possible (or not?). This needs to be investigated further.
+  
+- There is almost no unit/integration tests for the code. This probably needs to be added at some point
 
-- Need to deal with continuous links where there is no "meat" for particular accession (or at least test it for both directions).
+- In creation of gene graphs from annotations, at the moment attaching sequences is not working correctly. It should be removed from it as it is now and
+  new way of e.g. using reference to do it (or some kind of consensus) is needed to be used. Ideally, each gene should be "graph constructed" separately
+  and presented as nucleotide rearrangements inside gene and then on top of it gene relationships shown as larger structures.
+  
+- `LoadAnnotation` method of `GenomeGraph` class needs to be tested and fixed if neccessary.
+
+- Topological sort for the graph needs to be tested.
+
+## Documentation/tutorials
+
+- No path file v2 is available as an example. This is needed and would benefit the documentation.
