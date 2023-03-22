@@ -178,13 +178,13 @@ def pathFileToPathDict(filePath,directional=True,sort=True,v2=True):
     
     return paths
 
-# %% ../04_utils.ipynb 18
+# %% ../04_utils.ipynb 17
 def pathConvert(inputPath, suffix=''):
     outputPath = os.path.dirname(inputPath)
     outputName = '.'.join(os.path.splitext(os.path.basename(inputPath))[:-1])+suffix
     return outputPath,outputName
 
-# %% ../04_utils.ipynb 19
+# %% ../04_utils.ipynb 18
 def checkZoomLevels(zoomLevels):
     '''
     Check that each previous zoom level is factor of next one
@@ -193,7 +193,7 @@ def checkZoomLevels(zoomLevels):
     div = _zoomLevels[1:]/_zoomLevels[:-1]
     return not np.any(div - div.astype(np.int))
 
-# %% ../04_utils.ipynb 20
+# %% ../04_utils.ipynb 19
 def adjustZoomLevels(zoomLevels):
     '''
     If there is no zoom level 1, adds it to the list.
@@ -205,7 +205,7 @@ def adjustZoomLevels(zoomLevels):
         zoomLevels = [1] + zoomLevels
     return zoomLevels
 
-# %% ../04_utils.ipynb 23
+# %% ../04_utils.ipynb 22
 # https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable
 # Class for encoding np types to JSON
 class NpEncoder(json.JSONEncoder):
@@ -221,7 +221,7 @@ class NpEncoder(json.JSONEncoder):
         else:
             return super(NpEncoder, self).default(obj)
 
-# %% ../04_utils.ipynb 25
+# %% ../04_utils.ipynb 24
 class bidict(dict):
     '''
     Here is a class for a bidirectional dict, inspired by Finding key from
@@ -311,7 +311,7 @@ class bidict(dict):
         
         self[key] = list(valKey)
 
-# %% ../04_utils.ipynb 28
+# %% ../04_utils.ipynb 27
 def resetDB(redisServer='redis',port=6379):
     '''
     Reset the whole database. Be careful, it is impossible re restore DB once it was flushed.
@@ -320,7 +320,7 @@ def resetDB(redisServer='redis',port=6379):
     conn.flushall()
     return 0
 
-# %% ../04_utils.ipynb 30
+# %% ../04_utils.ipynb 29
 def iset_add(r,name,intervalMapping):
     '''
         Add members with intervals to interval set. If interval set does not exist, it will be created. 
@@ -345,7 +345,7 @@ def iset_add(r,name,intervalMapping):
         raise DataError(f'Not equal number of starts and ends were added to DB. For consistency, the sorted sets {name}Start and {name}End should be checked and/or recreated')
     return numAddedStarts
 
-# %% ../04_utils.ipynb 31
+# %% ../04_utils.ipynb 30
 def iset_get(r,name,member=None):
     '''
         Return either the whole interval set or specific name(s) with its interval.
@@ -375,7 +375,7 @@ def iset_get(r,name,member=None):
             res[mm] = (intStart, intEnd)
         return res
 
-# %% ../04_utils.ipynb 32
+# %% ../04_utils.ipynb 31
 def iset_score(r,name,start,end=None):
     '''
         Returns all member names whose interval contains a given value or intersects with the given interval
@@ -404,7 +404,7 @@ def iset_score(r,name,start,end=None):
     r.delete(f'startSetTemp_{tid}',f'endSetTemp_{tid}')
     return res
 
-# %% ../04_utils.ipynb 33
+# %% ../04_utils.ipynb 32
 def iset_not_score(r,name,start,end=None):
     '''
         Returns all intervals (member names only) where query value is not contained or query interval is not intersecting.
@@ -437,7 +437,7 @@ def iset_not_score(r,name,start,end=None):
     
     return res
 
-# %% ../04_utils.ipynb 34
+# %% ../04_utils.ipynb 33
 def iset_del(r,name,member=None):
     '''
         Return either the whole interval set or specific name(s) with its interval.

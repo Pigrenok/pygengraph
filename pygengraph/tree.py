@@ -10,7 +10,7 @@ from copy import deepcopy
 import networkx as nx
 from networkx import NetworkXNoPath
 
-from pangraph_constructor.utils import bidict
+from pygengraph.utils import bidict
 
 import warnings
 

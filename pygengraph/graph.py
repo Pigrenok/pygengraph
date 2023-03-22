@@ -19,9 +19,9 @@ from skbio.io import read as skbio_read
 from skbio.metadata import IntervalMetadata
 from skbio.sequence import DNA
 
-from pangraph_constructor.synteny import processAccessions,generatePathsLinks,readTransMap
-from pangraph_constructor.utils import bidict,pathFileToPathDict,inverseSequence
-from pangraph_constructor.tree import TremauxTree
+from pygengraph.synteny import processAccessions,generatePathsLinks,readTransMap
+from pygengraph.utils import bidict,pathFileToPathDict,inverseSequence
+from pygengraph.tree import TremauxTree
 
 from fastcore.all import patch_to
 
@@ -860,9 +860,10 @@ def _processAnnotations(self, annotationFiles, links,
         geneAcc = genes[accessionID]
         for seqID in seqList:
 
-            p, cigar, usCounter = generatePathsLinks(geneAcc, ATmap, seqID, accessionID, sequences, self.OGList,
+            p, cigar, usCounter = generatePathsLinks(geneAcc, ATmap, accessionID, sequences, self.OGList,
                                                      self.nodes, self.nodesMetadata, self.nodeNameToID, links,
-                                                     self.usCounter, doUS=doUS, segmentData=self.nodesData)
+                                                     self.usCounter, chromosomeID = seqID, doUS=doUS, segmentData=self.nodesData)
+            
             path = path + p + [',<sep>,']
 
         path.pop()
@@ -906,14 +907,15 @@ def _processRefAnnotation(self, annotationFile, links, ATmap, pangenomeDict, acc
     path = []
     for seqID in seqList:
 
-        p, cigar, usCounter = generatePathsLinks(genes[accID], ATmap, seqID, accID, sequences, self.OGList,
+        p, cigar, usCounter = generatePathsLinks(genes[accID], ATmap, accID, sequences, self.OGList,
                                                      self.nodes, self.nodesMetadata, self.nodeNameToID, links,
-                                                     self.usCounter, doUS=doUS, segmentData=self.nodesData)
+                                                     self.usCounter, chromosomeID = seqID, doUS=doUS, segmentData=self.nodesData)
         path = path + p
         
     self.paths.insert(0,path)
     self.accessions.insert(0,accID)
-
+    
+    return links
 
 # %% ../01_graph.ipynb 31
 @patch_to(GenomeGraph)

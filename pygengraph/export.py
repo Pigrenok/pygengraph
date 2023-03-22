@@ -38,11 +38,11 @@ from functools import partial
 
 from redis import ResponseError, Redis
 
-from pangraph_constructor.utils import pathConvert,NpEncoder,adjustZoomLevels
-from pangraph_constructor.utils import iset_add
-from pangraph_constructor.graph import GenomeGraph
-from pangraph_constructor.graph import initialPathAnalysis,calcNodeLengths
-from pangraph_constructor.graph import getNodesStructurePathNodeInversionRate,getNextNodePath
+from pygengraph.utils import pathConvert,NpEncoder,adjustZoomLevels
+from pygengraph.utils import iset_add
+from pygengraph.graph import GenomeGraph
+from pygengraph.graph import initialPathAnalysis,calcNodeLengths
+from pygengraph.graph import getNodesStructurePathNodeInversionRate,getNextNodePath
 
 # %% ../05_export.ipynb 7
 # Here are three templates: for component, chunk and main case data structure. It is not a full possible structure, some extra attributes

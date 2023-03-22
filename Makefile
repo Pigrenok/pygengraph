@@ -2,11 +2,11 @@
 SHELL := /bin/bash
 SRC = $(wildcard ./*.ipynb)
 
-all: pangraph_constructor docs
+all: pygengraph docs
 
-pangraph_constructor: $(SRC)
+pygengraph: $(SRC)
 	nbdev_build_lib
-	touch pangraph_constructor
+	touch pygengraph
 
 sync:
 	nbdev_update_lib

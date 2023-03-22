@@ -14,7 +14,7 @@ from skbio.io import read as skbio_read
 from skbio.metadata import IntervalMetadata
 from skbio.sequence import DNA
 
-from pangraph_constructor.utils import bidict,inverseSequence
+from pygengraph.utils import bidict,inverseSequence
 
 # %% ../03_synteny.ipynb 5
 def readTransMap(transMapFile,ATaccessionName='araport',similarityGroupColName='Orthogroup'):
@@ -207,7 +207,7 @@ def processAccessions(annotationFiles, ATmap = None, pangenomeDict = None,
                         else:
                             orthogroup = generateUID(geneID)
                     elif ATmap is not None:
-                        orthogroup = ATmap.inverse.get(geneID,generateUID(geneID))
+                        orthogroup = ATmap.inverse.get(geneID,[generateUID(geneID)])[0]
                     else:
                         raise ValueError(f'`similarityIDAssignment` supports only "gene" or "mRNA", but {similarityIDAssignment} was given and ATmap is not available.')
 
@@ -235,6 +235,7 @@ def processAccessions(annotationFiles, ATmap = None, pangenomeDict = None,
                     geneSeq = ''
                 
                 overlaps = getIDs(annotation.query(bounds=[(start,end)],metadata={'type':'gene'}))
+                overlaps = overlaps.remove(geneID)
                 genes.setdefault(accessionID,[]).append([geneID,orthogroup,seqID,accessionID,chromosome,forward,start+1,end,pStart+1,pEnd,geneSeq,overlaps])
                 if ATmap is None:
                     if len(atNameList[0])>0:

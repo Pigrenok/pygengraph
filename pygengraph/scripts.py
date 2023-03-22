@@ -9,8 +9,8 @@ import yaml
 import os
 import time
 
-from pangraph_constructor.graph import GenomeGraph
-from pangraph_constructor.export import exportProject
+from pygengraph.graph import GenomeGraph
+from pygengraph.export import exportProject
 
 # %% ../06_scripts.ipynb 5
 def pantograph_script():
