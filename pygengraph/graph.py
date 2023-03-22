@@ -419,14 +419,17 @@ class GenomeGraph:
         constructor. If parameters for more than 1 option is passed, there is a priority queue which constructor follows.
         Each option and its priorities are provided below.
         
-        Priority 1: If you pass gfaPath as actual path to gfa file, then it will be loaded as is. In this case, the 
+        - Priority 1: If you pass gfaPath as actual path to gfa file, then it will be loaded as is. In this case, the 
         following options are available: 
+            
             `accessionsToRemove`: list or None (default). If not None, a list of strings, if any of the string contains 
                                   in pathname, the path will be ignored while loading.
+            
             `isGFASeq`: boolean (default: True). Whether the graph should be considered as sequence graph (True)
                         or as gene/block graph (False).
         
-        Priority 2: If nodes, links and paths are provided (not None), they should be as following:
+        - Priority 2: If nodes, links and paths are provided (not None), they should be as following:
+            
             `nodes`: list[str]: a list of strings with node IDs (unique)
             
             `links`: dict{int:dict{str:list[tuple(int,str)]}}: a dict with keys integers with 1-basednode numbers 
@@ -440,36 +443,49 @@ class GenomeGraph:
             {1-based node number} is an integer 1-based number of node using the order as in `nodes`, 
             {directionality} is either '+' for normal direction, or '-' for inverted.
             
-        Priority 3: if pathsDict is provided then the graph is created from the paths for multiple accessions.
+        - Priority 3: if pathsDict is provided then the graph is created from the paths for multiple accessions.
             `pathsDict` is a dict{int:list[str]}; keys are names of accessions, and values are lists of strings
             of the following format '{node name}{directionality}', where {node name} is identifiable unique name
             which identifies the node, {directionality} is either '+' for normal direction, or '-' for inverted.
             Note, that this can create no-sequence graph only (e.g. gene graph). Sequences can be added later on
             through adding sequences to GenomeGraph.nodesData list.
+            
             An extra optional parameter is:
+            
             `nodeNameLengths`: list[int] or None, a list of alternative node lengths. By default, each node will be 
                                represented as a single cell/column, but if provided, variable length can be provided.
-        Priority 4: If annotationFiles is not None, but is a list of paths to annotation (gff3) files, 
+        
+        - Priority 4: If annotationFiles is not None, but is a list of paths to annotation (gff3) files, 
         then the following extra options are available:
+            
             'sequenceFilesDict': a dict{str:str}, where keys are IDs of accessions used in annotation files and value
                                 is a path to FASTA file (relative to gff files). Assumption is that FASTA sequence names
                                 are the same as GFF3 sequence names.
+            
             `pangenomeFiles`: a list[str], a list of GFF3 files for the same intervals as in `annotationFiles`, 
                             ID fields in GFF2 metadata should be the same.
+            
             `accOrder`: list or None (default), Order of accessions in the graph. If None, accessions will be sorted in 
                         alphabetical order.
+            
             `chromosome`: str or None, if None, create one graph for all chromosomes (not fully implemented, see manual), 
                         otherwise, create only one graph for given chromosome.
+            
             `doUS`: boolean (default: False) Add unrelated sequence blocks between annotated genes/blocks.
+            
             `refAnnotationFile`: str. If given, it has to be a path to gff3 file with reference annotation 
                                  with reference notation for gene names. In main annotations reference gene names should be identified 
                                  either in "gene" records under "AT" key (prioritised), 
                                  or in "mRNA" records under "Name" key (fallback). If ATMap is provided, then 
+            
             `refSequenceFile`: str or None (default). If provided with path, then it will be used to obtain 
                                sequences of each block/gene.
+            
             `transmapFile`: a tab delimited file with column "Orthogroup", which contains similarity ID for genes and a column with name
                             given by `transmapFileRefCol` which contains reference annotation gene names.
+            
             `transmapFileRefCol`: str or None, a name of column for reference gene names in `transmapFile`
+            
             `refAccession`: str or None (default). Accession ID for reference annotation (should be provided if `refAnnotationFile`
                             if provided).
 

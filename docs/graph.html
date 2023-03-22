@@ -101,16 +101,6 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link">pygengraph</a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./init.html" class="sidebar-item-text sidebar-link">Synteny module</a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
   <a href="./graph.html" class="sidebar-item-text sidebar-link active">Graph module</a>
   </div>
 </li>
@@ -154,19 +144,10 @@ ul.task-list li input[type="checkbox"] {
   docs/CONTRIBUTING.html
   </li>
           <li class="sidebar-item">
-  docs/debruijngraphprocessing.html
-  </li>
-          <li class="sidebar-item">
-  docs/dev.html
-  </li>
-          <li class="sidebar-item">
   docs/export.html
   </li>
           <li class="sidebar-item">
   docs/graph.html
-  </li>
-          <li class="sidebar-item">
-  docs/init.html
   </li>
           <li class="sidebar-item">
   docs/scripts.html
@@ -229,7 +210,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#utility-methods" id="toc-utility-methods" class="nav-link" data-scroll-target="#utility-methods">Utility methods</a></li>
   </ul></li>
   </ul>
-<div class="toc-actions"><div><i class="bi bi-git"></i></div><div class="action-links"><p><a href="https://gitlab.com/pigrenok/pygengraph/tree/master/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/pigrenok/pygengraph/tree/master/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -359,19 +340,29 @@ ul.task-list li input[type="checkbox"] {
 </blockquote>
 <p>This is a constructor of a class <code>GenomeGraph</code>. This class allows to hold not only vanila genome graph, but also a lot of extra information and also manipulate graphs in multiple ways, including sorting graphs, adding and deleting nodes and links, and manipulating metadata etc.</p>
 <p>At the moment, there are four ways an instance can be created. It depends on what parameters are passed to the constructor. If parameters for more than 1 option is passed, there is a priority queue which constructor follows. Each option and its priorities are provided below.</p>
-<p>Priority 1: If you pass gfaPath as actual path to gfa file, then it will be loaded as is. In this case, the following options are available: <code>accessionsToRemove</code>: list or None (default). If not None, a list of strings, if any of the string contains in pathname, the path will be ignored while loading. <code>isGFASeq</code>: boolean (default: True). Whether the graph should be considered as sequence graph (True) or as gene/block graph (False).</p>
-<p>Priority 2: If nodes, links and paths are provided (not None), they should be as following: <code>nodes</code>: list[str]: a list of strings with node IDs (unique)</p>
-<pre><code>`links`: dict{int:dict{str:list[tuple(int,str)]}}: a dict with keys integers with 1-basednode numbers 
-(in the order as in self.nodes) from which the link starts. Value is a dict with key of directionality of
-the from node ('+' for normal direction or '-' for inverse). Value is a list of tuples with two values:
-first integer is 1-based node number of node to which the link is going and second string is '+' or '-'
-representing the directionality in which this node is represented in this link.
-
-'paths': list[list[str]]: List, which contains a list for each accession/path, which is represented by
-a list of strings, each of which has a format '{1-based node number}{directionality}', where 
-{1-based node number} is an integer 1-based number of node using the order as in `nodes`, 
-{directionality} is either '+' for normal direction, or '-' for inverted.</code></pre>
-<p>Priority 3: if pathsDict is provided then the graph is created from the paths for multiple accessions. <code>pathsDict</code> is a dict{int:list[str]}; keys are names of accessions, and values are lists of strings of the following format ‘{node name}{directionality}’, where {node name} is identifiable unique name which identifies the node, {directionality} is either ‘+’ for normal direction, or ‘-’ for inverted. Note, that this can create no-sequence graph only (e.g.&nbsp;gene graph). Sequences can be added later on through adding sequences to GenomeGraph.nodesData list. An extra optional parameter is: <code>nodeNameLengths</code>: list[int] or None, a list of alternative node lengths. By default, each node will be represented as a single cell/column, but if provided, variable length can be provided. Priority 4: If annotationFiles is not None, but is a list of paths to annotation (gff3) files, then the following extra options are available: ‘sequenceFilesDict’: a dict{str:str}, where keys are IDs of accessions used in annotation files and value is a path to FASTA file (relative to gff files). Assumption is that FASTA sequence names are the same as GFF3 sequence names. <code>pangenomeFiles</code>: a list[str], a list of GFF3 files for the same intervals as in <code>annotationFiles</code>, ID fields in GFF2 metadata should be the same. <code>accOrder</code>: list or None (default), Order of accessions in the graph. If None, accessions will be sorted in alphabetical order. <code>chromosome</code>: str or None, if None, create one graph for all chromosomes (not fully implemented, see manual), otherwise, create only one graph for given chromosome. <code>doUS</code>: boolean (default: False) Add unrelated sequence blocks between annotated genes/blocks. <code>refAnnotationFile</code>: str. If given, it has to be a path to gff3 file with reference annotation with reference notation for gene names. In main annotations reference gene names should be identified either in “gene” records under “AT” key (prioritised), or in “mRNA” records under “Name” key (fallback). If ATMap is provided, then <code>refSequenceFile</code>: str or None (default). If provided with path, then it will be used to obtain sequences of each block/gene. <code>transmapFile</code>: a tab delimited file with column “Orthogroup”, which contains similarity ID for genes and a column with name given by <code>transmapFileRefCol</code> which contains reference annotation gene names. <code>transmapFileRefCol</code>: str or None, a name of column for reference gene names in <code>transmapFile</code> <code>refAccession</code>: str or None (default). Accession ID for reference annotation (should be provided if <code>refAnnotationFile</code> if provided).</p>
+<ul>
+<li><p>Priority 1: If you pass gfaPath as actual path to gfa file, then it will be loaded as is. In this case, the following options are available:</p>
+<p><code>accessionsToRemove</code>: list or None (default). If not None, a list of strings, if any of the string contains in pathname, the path will be ignored while loading.</p>
+<p><code>isGFASeq</code>: boolean (default: True). Whether the graph should be considered as sequence graph (True) or as gene/block graph (False).</p></li>
+<li><p>Priority 2: If nodes, links and paths are provided (not None), they should be as following:</p>
+<p><code>nodes</code>: list[str]: a list of strings with node IDs (unique)</p>
+<p><code>links</code>: dict{int:dict{str:list[tuple(int,str)]}}: a dict with keys integers with 1-basednode numbers (in the order as in self.nodes) from which the link starts. Value is a dict with key of directionality of the from node (‘+’ for normal direction or ‘-’ for inverse). Value is a list of tuples with two values: first integer is 1-based node number of node to which the link is going and second string is ‘+’ or ‘-’ representing the directionality in which this node is represented in this link.</p>
+<p>‘paths’: list[list[str]]: List, which contains a list for each accession/path, which is represented by a list of strings, each of which has a format ‘{1-based node number}{directionality}’, where {1-based node number} is an integer 1-based number of node using the order as in <code>nodes</code>, {directionality} is either ‘+’ for normal direction, or ‘-’ for inverted.</p></li>
+<li><p>Priority 3: if pathsDict is provided then the graph is created from the paths for multiple accessions. <code>pathsDict</code> is a dict{int:list[str]}; keys are names of accessions, and values are lists of strings of the following format ‘{node name}{directionality}’, where {node name} is identifiable unique name which identifies the node, {directionality} is either ‘+’ for normal direction, or ‘-’ for inverted. Note, that this can create no-sequence graph only (e.g.&nbsp;gene graph). Sequences can be added later on through adding sequences to GenomeGraph.nodesData list.</p>
+<p>An extra optional parameter is:</p>
+<p><code>nodeNameLengths</code>: list[int] or None, a list of alternative node lengths. By default, each node will be represented as a single cell/column, but if provided, variable length can be provided.</p></li>
+<li><p>Priority 4: If annotationFiles is not None, but is a list of paths to annotation (gff3) files, then the following extra options are available:</p>
+<p>‘sequenceFilesDict’: a dict{str:str}, where keys are IDs of accessions used in annotation files and value is a path to FASTA file (relative to gff files). Assumption is that FASTA sequence names are the same as GFF3 sequence names.</p>
+<p><code>pangenomeFiles</code>: a list[str], a list of GFF3 files for the same intervals as in <code>annotationFiles</code>, ID fields in GFF2 metadata should be the same.</p>
+<p><code>accOrder</code>: list or None (default), Order of accessions in the graph. If None, accessions will be sorted in alphabetical order.</p>
+<p><code>chromosome</code>: str or None, if None, create one graph for all chromosomes (not fully implemented, see manual), otherwise, create only one graph for given chromosome.</p>
+<p><code>doUS</code>: boolean (default: False) Add unrelated sequence blocks between annotated genes/blocks.</p>
+<p><code>refAnnotationFile</code>: str. If given, it has to be a path to gff3 file with reference annotation with reference notation for gene names. In main annotations reference gene names should be identified either in “gene” records under “AT” key (prioritised), or in “mRNA” records under “Name” key (fallback). If ATMap is provided, then</p>
+<p><code>refSequenceFile</code>: str or None (default). If provided with path, then it will be used to obtain sequences of each block/gene.</p>
+<p><code>transmapFile</code>: a tab delimited file with column “Orthogroup”, which contains similarity ID for genes and a column with name given by <code>transmapFileRefCol</code> which contains reference annotation gene names.</p>
+<p><code>transmapFileRefCol</code>: str or None, a name of column for reference gene names in <code>transmapFile</code></p>
+<p><code>refAccession</code>: str or None (default). Accession ID for reference annotation (should be provided if <code>refAnnotationFile</code> if provided).</p></li>
+</ul>
 </section>
 <section id="import-graph-from-file" class="level3">
 <h3 class="anchored" data-anchor-id="import-graph-from-file">Import graph from file</h3>
