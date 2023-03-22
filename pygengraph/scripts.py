@@ -154,7 +154,7 @@ outputBasename: 'path_graph'
     
     outputpath = params["outputpath"].rstrip("/").rstrip("\\")
     
-    outputbase = f'{outputpath}{os.path.sep}{params[outputBasename]}'
+    outputbase = f'{outputpath}{os.path.sep}{params["outputBasename"]}'
     
     if pathFiles in params:
     
