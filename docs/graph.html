@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Provides main class and helpers classes and functions to handle pangenome graph and related data structures">
+
+<title>pygengraph - Graph module</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="pygengraph - Graph module">
+<meta property="og:description" content="Provides main class and helpers classes and functions to handle pangenome graph and related data structures">
+<meta property="og:site-name" content="pygengraph">
+<meta name="twitter:title" content="pygengraph - Graph module">
+<meta name="twitter:description" content="Provides main class and helpers classes and functions to handle pangenome graph and related data structures">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">pygengraph</span>
+    </a>
+  </div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">Graph module</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">pygengraph</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./init.html" class="sidebar-item-text sidebar-link">Synteny module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./graph.html" class="sidebar-item-text sidebar-link active">Graph module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tree.html" class="sidebar-item-text sidebar-link">Tree module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./synteny.html" class="sidebar-item-text sidebar-link">Synteny module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./utils.html" class="sidebar-item-text sidebar-link">Utils module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./export.html" class="sidebar-item-text sidebar-link">Export module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./scripts.html" class="sidebar-item-text sidebar-link">Script module</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">docs</a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  docs/index.html
+  </li>
+          <li class="sidebar-item">
+  docs/CONTRIBUTING.html
+  </li>
+          <li class="sidebar-item">
+  docs/debruijngraphprocessing.html
+  </li>
+          <li class="sidebar-item">
+  docs/dev.html
+  </li>
+          <li class="sidebar-item">
+  docs/export.html
+  </li>
+          <li class="sidebar-item">
+  docs/graph.html
+  </li>
+          <li class="sidebar-item">
+  docs/init.html
+  </li>
+          <li class="sidebar-item">
+  docs/scripts.html
+  </li>
+          <li class="sidebar-item">
+  docs/synteny.html
+  </li>
+          <li class="sidebar-item">
+  docs/tree.html
+  </li>
+          <li class="sidebar-item">
+  docs/utils.html
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#imports" id="toc-imports" class="nav-link active" data-scroll-target="#imports">Imports</a></li>
+  <li><a href="#path-conversion-utility-functions" id="toc-path-conversion-utility-functions" class="nav-link" data-scroll-target="#path-conversion-utility-functions">Path conversion utility functions</a>
+  <ul class="collapse">
+  <li><a href="#calcnodelengths" id="toc-calcnodelengths" class="nav-link" data-scroll-target="#calcnodelengths">calcNodeLengths</a></li>
+  <li><a href="#initialpathanalysis" id="toc-initialpathanalysis" class="nav-link" data-scroll-target="#initialpathanalysis">initialPathAnalysis</a></li>
+  <li><a href="#getnodesstructurepathnodeinversionrate" id="toc-getnodesstructurepathnodeinversionrate" class="nav-link" data-scroll-target="#getnodesstructurepathnodeinversionrate">getNodesStructurePathNodeInversionRate</a></li>
+  <li><a href="#convertpathstograph" id="toc-convertpathstograph" class="nav-link" data-scroll-target="#convertpathstograph">convertPathsToGraph</a></li>
+  <li><a href="#getpathnodeinversionrate" id="toc-getpathnodeinversionrate" class="nav-link" data-scroll-target="#getpathnodeinversionrate">getPathNodeInversionRate</a></li>
+  <li><a href="#pathnodedirtocombinedarray" id="toc-pathnodedirtocombinedarray" class="nav-link" data-scroll-target="#pathnodedirtocombinedarray">pathNodeDirToCombinedArray</a></li>
+  <li><a href="#getnextnodepath" id="toc-getnextnodepath" class="nav-link" data-scroll-target="#getnextnodepath">getNextNodePath</a></li>
+  </ul></li>
+  <li><a href="#assistant-class-implementing-link-getting-mechanism." id="toc-assistant-class-implementing-link-getting-mechanism." class="nav-link" data-scroll-target="#assistant-class-implementing-link-getting-mechanism.">Assistant class implementing link getting mechanism.</a>
+  <ul class="collapse">
+  <li><a href="#linkgetter" id="toc-linkgetter" class="nav-link" data-scroll-target="#linkgetter">LinkGetter</a></li>
+  </ul></li>
+  <li><a href="#main-class-holding-all-data-and-main-methods-operating-the-graph" id="toc-main-class-holding-all-data-and-main-methods-operating-the-graph" class="nav-link" data-scroll-target="#main-class-holding-all-data-and-main-methods-operating-the-graph">Main class holding all data and main methods operating the graph</a>
+  <ul class="collapse">
+  <li><a href="#graph-definition-constructor-and-some-utils-for-constructor" id="toc-graph-definition-constructor-and-some-utils-for-constructor" class="nav-link" data-scroll-target="#graph-definition-constructor-and-some-utils-for-constructor">Graph definition, constructor and some utils for constructor</a></li>
+  <li><a href="#genomegraph" id="toc-genomegraph" class="nav-link" data-scroll-target="#genomegraph">GenomeGraph</a></li>
+  <li><a href="#import-graph-from-file" id="toc-import-graph-from-file" class="nav-link" data-scroll-target="#import-graph-from-file">Import graph from file</a></li>
+  <li><a href="#import-or-create-annotation" id="toc-import-or-create-annotation" class="nav-link" data-scroll-target="#import-or-create-annotation">Import or create annotation</a></li>
+  <li><a href="#genomegraph.loadannotations" id="toc-genomegraph.loadannotations" class="nav-link" data-scroll-target="#genomegraph.loadannotations">GenomeGraph.loadAnnotations</a></li>
+  <li><a href="#genomegraph.updateannotationfromnodes" id="toc-genomegraph.updateannotationfromnodes" class="nav-link" data-scroll-target="#genomegraph.updateannotationfromnodes">GenomeGraph.updateAnnotationFromNodes</a></li>
+  <li><a href="#graph-sorting" id="toc-graph-sorting" class="nav-link" data-scroll-target="#graph-sorting">Graph sorting</a></li>
+  <li><a href="#genomegraph.generatetremauxtree" id="toc-genomegraph.generatetremauxtree" class="nav-link" data-scroll-target="#genomegraph.generatetremauxtree">GenomeGraph.generateTremauxTree</a></li>
+  <li><a href="#genomegraph.treesort" id="toc-genomegraph.treesort" class="nav-link" data-scroll-target="#genomegraph.treesort">GenomeGraph.treeSort</a></li>
+  <li><a href="#exportsave-to-gfa" id="toc-exportsave-to-gfa" class="nav-link" data-scroll-target="#exportsave-to-gfa">Export/Save (to GFA)</a></li>
+  <li><a href="#genomegraph.togfa" id="toc-genomegraph.togfa" class="nav-link" data-scroll-target="#genomegraph.togfa">GenomeGraph.toGFA</a></li>
+  <li><a href="#elements-operations-for-nodes-links-annotations-etc." id="toc-elements-operations-for-nodes-links-annotations-etc." class="nav-link" data-scroll-target="#elements-operations-for-nodes-links-annotations-etc.">Elements operations (for nodes, links, annotations, etc.)</a></li>
+  <li><a href="#genomegraph.addaccessionannotation" id="toc-genomegraph.addaccessionannotation" class="nav-link" data-scroll-target="#genomegraph.addaccessionannotation">GenomeGraph.addAccessionAnnotation</a></li>
+  <li><a href="#genomegraph.addlink" id="toc-genomegraph.addlink" class="nav-link" data-scroll-target="#genomegraph.addlink">GenomeGraph.addLink</a></li>
+  <li><a href="#genomegraph.addnode" id="toc-genomegraph.addnode" class="nav-link" data-scroll-target="#genomegraph.addnode">GenomeGraph.addNode</a></li>
+  <li><a href="#genomegraph.invertnodes" id="toc-genomegraph.invertnodes" class="nav-link" data-scroll-target="#genomegraph.invertnodes">GenomeGraph.invertNodes</a></li>
+  <li><a href="#genomegraph.removenodes" id="toc-genomegraph.removenodes" class="nav-link" data-scroll-target="#genomegraph.removenodes">GenomeGraph.removeNodes</a></li>
+  <li><a href="#genomegraph.removeoverlaps" id="toc-genomegraph.removeoverlaps" class="nav-link" data-scroll-target="#genomegraph.removeoverlaps">GenomeGraph.removeOverlaps</a></li>
+  <li><a href="#utility-methods" id="toc-utility-methods" class="nav-link" data-scroll-target="#utility-methods">Utility methods</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-git"></i></div><div class="action-links"><p><a href="https://gitlab.com/pigrenok/pygengraph/tree/master/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">Graph module</h1>
+</div>
+
+<div>
+  <div class="description">
+    Provides main class and helpers classes and functions to handle pangenome graph and related data structures
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<section id="imports" class="level2">
+<h2 class="anchored" data-anchor-id="imports">Imports</h2>
+</section>
+<section id="path-conversion-utility-functions" class="level2">
+<h2 class="anchored" data-anchor-id="path-conversion-utility-functions">Path conversion utility functions</h2>
+<p>These functions are utility, but because they are directly related to graph structures, they are places in this module and not in <code>Util</code> module</p>
+<hr>
+<section id="calcnodelengths" class="level3">
+<h3 class="anchored" data-anchor-id="calcnodelengths">calcNodeLengths</h3>
+<blockquote class="blockquote">
+<pre><code> calcNodeLengths (graph)</code></pre>
+</blockquote>
+<p>Simple function that calculates node lengths (in visual columns).</p>
+<p>If it is nucleotide graph, it will actually calculate a number of nucleotides in each node, but if it is non-nucleotide graph, then it will return 1 for each node.</p>
+<pre><code>/home/pigrenok/.pyenv/versions/3.10.9/lib/python3.10/site-packages/fastcore/docscrape.py:225: UserWarning: Unknown section Return
+  else: warn(msg)
+/home/pigrenok/.pyenv/versions/3.10.9/lib/python3.10/site-packages/fastcore/docscrape.py:225: UserWarning: Unknown section Example
+  else: warn(msg)</code></pre>
+<hr>
+</section>
+<section id="initialpathanalysis" class="level3">
+<h3 class="anchored" data-anchor-id="initialpathanalysis">initialPathAnalysis</h3>
+<blockquote class="blockquote">
+<pre><code> initialPathAnalysis (graph, nodeLengths)</code></pre>
+</blockquote>
+<p>This function creates auxiliary data structures to make it easier to work with paths and their relationships with nodes.</p>
+<hr>
+</section>
+<section id="getnodesstructurepathnodeinversionrate" class="level3">
+<h3 class="anchored" data-anchor-id="getnodesstructurepathnodeinversionrate">getNodesStructurePathNodeInversionRate</h3>
+<blockquote class="blockquote">
+<pre><code> getNodesStructurePathNodeInversionRate (pathNodeArray, pathDirArray,
+                                         pathLengths,
+                                         inversionThreshold=0.5)</code></pre>
+</blockquote>
+<p>Generate a dict of dicts which stores information about inversion rate of each node for each path.</p>
+<hr>
+</section>
+<section id="convertpathstograph" class="level3">
+<h3 class="anchored" data-anchor-id="convertpathstograph">convertPathsToGraph</h3>
+<blockquote class="blockquote">
+<pre><code> convertPathsToGraph (fullPath, doSorting=False, v2=False)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="getpathnodeinversionrate" class="level3">
+<h3 class="anchored" data-anchor-id="getpathnodeinversionrate">getPathNodeInversionRate</h3>
+<blockquote class="blockquote">
+<pre><code> getPathNodeInversionRate (pathNodeArray, pathDirArray, pathLengths,
+                           inversionThreshold=0.5)</code></pre>
+</blockquote>
+<p>deprecated Generate a dict of dicts which stores information about inversion rate of each node for each path.</p>
+<pre><code>/home/pigrenok/.pyenv/versions/3.10.9/lib/python3.10/site-packages/fastcore/docscrape.py:225: UserWarning: Unknown section Notes
+  else: warn(msg)</code></pre>
+<hr>
+</section>
+<section id="pathnodedirtocombinedarray" class="level3">
+<h3 class="anchored" data-anchor-id="pathnodedirtocombinedarray">pathNodeDirToCombinedArray</h3>
+<blockquote class="blockquote">
+<pre><code> pathNodeDirToCombinedArray (pathNodeArray, pathDirArray)</code></pre>
+</blockquote>
+<p>Combines path node and direction arrays (provided by <code>graph.initialPathAnalysis</code> function as <code>pathNodeArray</code> and <code>pathDirArray</code> (output indices <code>1</code> and <code>3</code>)).</p>
+<hr>
+</section>
+<section id="getnextnodepath" class="level3">
+<h3 class="anchored" data-anchor-id="getnextnodepath">getNextNodePath</h3>
+<blockquote class="blockquote">
+<pre><code> getNextNodePath (pathNodeArray, pathLengths)</code></pre>
+</blockquote>
+<p>When following path to find next in graph order, it will not necessarily be 𝑘+1 , it can be 𝑘+𝑝 if 𝑘+1,…,𝑘+𝑝−1 are not passed by the path.</p>
+<p>Create a list of all unique node numbers in each path by - Either set(path) - *** or np.unique(path) Preferable option would be selected according to the selection of the options for next step</p>
+<p>And then do one of the following - Just leave the list as it is and in a loop check if 𝑘+𝑝 (with 𝑝=1,… ) is in the path (k+p in pathUnique) Probably slow - Sort the list pathUnique and for every node where we need to find next in order just find its index and take the next one pathUnique[pathUnique.index(k)+1] - Create a dict for each node (except the last one) with key as 𝑘 and value as 𝑘+𝑝 . On break in path at position 𝑘 we get the next as dict[k] - *** Do np.diff(np.sort(pathUnique)) and create a dict for each node after which diff!=1 with key as 𝑘 and value as 𝑘+𝑝 . Then when we get to the break in path at position k. We check k in dict and if True, then the next is dict[k], otherwise it is k+1</p>
+<p>This function implements generating the dict as described in *** (triple starred) options, which are currently used options.</p>
+</section>
+</section>
+<section id="assistant-class-implementing-link-getting-mechanism." class="level2">
+<h2 class="anchored" data-anchor-id="assistant-class-implementing-link-getting-mechanism.">Assistant class implementing link getting mechanism.</h2>
+<hr>
+<section id="linkgetter" class="level3">
+<h3 class="anchored" data-anchor-id="linkgetter">LinkGetter</h3>
+<blockquote class="blockquote">
+<pre><code> LinkGetter (nodes, links)</code></pre>
+</blockquote>
+<p>This auxiliary class allows creating virtual subscribable structure inside the main <code>GenomeGraph</code> class to access links as Iterable and Subscribable object. Full links (with directionality) are available in the main class. This class provides simplified view on the links without directionality (the fact that a link goes from node A to node B).</p>
+</section>
+</section>
+<section id="main-class-holding-all-data-and-main-methods-operating-the-graph" class="level2">
+<h2 class="anchored" data-anchor-id="main-class-holding-all-data-and-main-methods-operating-the-graph">Main class holding all data and main methods operating the graph</h2>
+<section id="graph-definition-constructor-and-some-utils-for-constructor" class="level3">
+<h3 class="anchored" data-anchor-id="graph-definition-constructor-and-some-utils-for-constructor">Graph definition, constructor and some utils for constructor</h3>
+<hr>
+</section>
+<section id="genomegraph" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph">GenomeGraph</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph (gfaPath=None, doOverlapCleaning=True, paths=None,
+              nodes=None, nodesData=None, links=None, pathsDict=None,
+              sequenceFilesDict=None, annotationFiles=None,
+              pangenomeFiles=None, doBack=False, verbose=True, **kwargs)</code></pre>
+</blockquote>
+<p>This is a constructor of a class <code>GenomeGraph</code>. This class allows to hold not only vanila genome graph, but also a lot of extra information and also manipulate graphs in multiple ways, including sorting graphs, adding and deleting nodes and links, and manipulating metadata etc.</p>
+<p>At the moment, there are four ways an instance can be created. It depends on what parameters are passed to the constructor. If parameters for more than 1 option is passed, there is a priority queue which constructor follows. Each option and its priorities are provided below.</p>
+<p>Priority 1: If you pass gfaPath as actual path to gfa file, then it will be loaded as is. In this case, the following options are available: <code>accessionsToRemove</code>: list or None (default). If not None, a list of strings, if any of the string contains in pathname, the path will be ignored while loading. <code>isGFASeq</code>: boolean (default: True). Whether the graph should be considered as sequence graph (True) or as gene/block graph (False).</p>
+<p>Priority 2: If nodes, links and paths are provided (not None), they should be as following: <code>nodes</code>: list[str]: a list of strings with node IDs (unique)</p>
+<pre><code>`links`: dict{int:dict{str:list[tuple(int,str)]}}: a dict with keys integers with 1-basednode numbers 
+(in the order as in self.nodes) from which the link starts. Value is a dict with key of directionality of
+the from node ('+' for normal direction or '-' for inverse). Value is a list of tuples with two values:
+first integer is 1-based node number of node to which the link is going and second string is '+' or '-'
+representing the directionality in which this node is represented in this link.
+
+'paths': list[list[str]]: List, which contains a list for each accession/path, which is represented by
+a list of strings, each of which has a format '{1-based node number}{directionality}', where 
+{1-based node number} is an integer 1-based number of node using the order as in `nodes`, 
+{directionality} is either '+' for normal direction, or '-' for inverted.</code></pre>
+<p>Priority 3: if pathsDict is provided then the graph is created from the paths for multiple accessions. <code>pathsDict</code> is a dict{int:list[str]}; keys are names of accessions, and values are lists of strings of the following format ‘{node name}{directionality}’, where {node name} is identifiable unique name which identifies the node, {directionality} is either ‘+’ for normal direction, or ‘-’ for inverted. Note, that this can create no-sequence graph only (e.g.&nbsp;gene graph). Sequences can be added later on through adding sequences to GenomeGraph.nodesData list. An extra optional parameter is: <code>nodeNameLengths</code>: list[int] or None, a list of alternative node lengths. By default, each node will be represented as a single cell/column, but if provided, variable length can be provided. Priority 4: If annotationFiles is not None, but is a list of paths to annotation (gff3) files, then the following extra options are available: ‘sequenceFilesDict’: a dict{str:str}, where keys are IDs of accessions used in annotation files and value is a path to FASTA file (relative to gff files). Assumption is that FASTA sequence names are the same as GFF3 sequence names. <code>pangenomeFiles</code>: a list[str], a list of GFF3 files for the same intervals as in <code>annotationFiles</code>, ID fields in GFF2 metadata should be the same. <code>accOrder</code>: list or None (default), Order of accessions in the graph. If None, accessions will be sorted in alphabetical order. <code>chromosome</code>: str or None, if None, create one graph for all chromosomes (not fully implemented, see manual), otherwise, create only one graph for given chromosome. <code>doUS</code>: boolean (default: False) Add unrelated sequence blocks between annotated genes/blocks. <code>refAnnotationFile</code>: str. If given, it has to be a path to gff3 file with reference annotation with reference notation for gene names. In main annotations reference gene names should be identified either in “gene” records under “AT” key (prioritised), or in “mRNA” records under “Name” key (fallback). If ATMap is provided, then <code>refSequenceFile</code>: str or None (default). If provided with path, then it will be used to obtain sequences of each block/gene. <code>transmapFile</code>: a tab delimited file with column “Orthogroup”, which contains similarity ID for genes and a column with name given by <code>transmapFileRefCol</code> which contains reference annotation gene names. <code>transmapFileRefCol</code>: str or None, a name of column for reference gene names in <code>transmapFile</code> <code>refAccession</code>: str or None (default). Accession ID for reference annotation (should be provided if <code>refAnnotationFile</code> if provided).</p>
+</section>
+<section id="import-graph-from-file" class="level3">
+<h3 class="anchored" data-anchor-id="import-graph-from-file">Import graph from file</h3>
+<section id="from-gfa" class="level4">
+<h4 class="anchored" data-anchor-id="from-gfa">From GFA</h4>
+</section>
+<section id="from-paths" class="level4">
+<h4 class="anchored" data-anchor-id="from-paths">From Paths</h4>
+</section>
+<section id="from-annotations" class="level4">
+<h4 class="anchored" data-anchor-id="from-annotations">From annotations</h4>
+</section>
+</section>
+<section id="import-or-create-annotation" class="level3">
+<h3 class="anchored" data-anchor-id="import-or-create-annotation">Import or create annotation</h3>
+<section id="from-annotation-files" class="level4">
+<h4 class="anchored" data-anchor-id="from-annotation-files">From annotation files</h4>
+<hr>
+</section>
+</section>
+<section id="genomegraph.loadannotations" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.loadannotations">GenomeGraph.loadAnnotations</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.loadAnnotations (annotationPath, seqSuffix)</code></pre>
+</blockquote>
+<p>This function should allow adding interval metadata (annotations) to sequence (nucleotide) graph. It has never been properly tested.</p>
+<section id="create-annotation-from-nodes-artificial-annotation" class="level4">
+<h4 class="anchored" data-anchor-id="create-annotation-from-nodes-artificial-annotation">Create annotation from nodes (artificial annotation)</h4>
+<hr>
+</section>
+</section>
+<section id="genomegraph.updateannotationfromnodes" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.updateannotationfromnodes">GenomeGraph.updateAnnotationFromNodes</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.updateAnnotationFromNodes (isSeq=True)</code></pre>
+</blockquote>
+<p>This function is used only for primitive block graphs (e.g.&nbsp;gene and chain graphs) if there is no proper annotation available (e.g.&nbsp;graph was created from paths and some extra information about nodes is needed).</p>
+<p>It takes “name” of each node either from <code>graph.nodes</code> (if <code>isSeq</code> is False) or from <code>graph.nodesData</code> (if <code>isSeq</code> is True).</p>
+<p>Parameters ##########</p>
+<p><code>isSeq</code>: Whether it contains names as names or as seq.</p>
+</section>
+<section id="graph-sorting" class="level3">
+<h3 class="anchored" data-anchor-id="graph-sorting">Graph sorting</h3>
+<hr>
+</section>
+<section id="genomegraph.generatetremauxtree" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.generatetremauxtree">GenomeGraph.generateTremauxTree</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.generateTremauxTree (byPath=True)</code></pre>
+</blockquote>
+<p>This function generates Tremaux tree for our graph. It is not a simple Tremaux tree and requires an adjustment process, which happens inside the <code>TremauxTree</code> class constructor.</p>
+<hr>
+</section>
+<section id="genomegraph.treesort" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.treesort">GenomeGraph.treeSort</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.treeSort (byPath=True, bubblePriorityThreshold=0.5)</code></pre>
+</blockquote>
+<p>This is the main function for sorting graph. It requires some further work, but works relatively well as is.</p>
+</section>
+<section id="exportsave-to-gfa" class="level3">
+<h3 class="anchored" data-anchor-id="exportsave-to-gfa">Export/Save (to GFA)</h3>
+<hr>
+</section>
+<section id="genomegraph.togfa" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.togfa">GenomeGraph.toGFA</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.toGFA (gfaFile, doSeq=True)</code></pre>
+</blockquote>
+<p>Recording existing graph structures to GFA v1 file + some json and joblib files to preserve extra metadata.</p>
+</section>
+<section id="elements-operations-for-nodes-links-annotations-etc." class="level3">
+<h3 class="anchored" data-anchor-id="elements-operations-for-nodes-links-annotations-etc.">Elements operations (for nodes, links, annotations, etc.)</h3>
+<section id="add-node-link-and-accession-not-properly-implemented-or-not-tested" class="level4">
+<h4 class="anchored" data-anchor-id="add-node-link-and-accession-not-properly-implemented-or-not-tested">Add node, link and accession (not properly implemented or not tested)</h4>
+<p>Here another function is needed to add accession with relevant provate nodes and links. Then possibly the functions below will be used but as private function, not external API.</p>
+<hr>
+</section>
+</section>
+<section id="genomegraph.addaccessionannotation" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.addaccessionannotation">GenomeGraph.addAccessionAnnotation</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.addAccessionAnnotation (annotationFile, sequenceFile=None)</code></pre>
+</blockquote>
+<p>Ideally, a function should be able to add one accesstion to existing graph. When implemented, <code>_graphFromAnnotation</code> should be using this function.</p>
+<hr>
+</section>
+<section id="genomegraph.addlink" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.addlink">GenomeGraph.addLink</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.addLink (fromNode, fromStrand, toNode, toStrand)</code></pre>
+</blockquote>
+<p>Need testing. Not sure if it actually makes sense as links not present in any of the paths does not play any role.</p>
+<hr>
+</section>
+<section id="genomegraph.addnode" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.addnode">GenomeGraph.addNode</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.addNode (nodeID, data=None)</code></pre>
+</blockquote>
+<p>Need testing. Again, there is no point of adding a node to a graph if this node will not be present in any of the paths.</p>
+<section id="node-inversion" class="level4">
+<h4 class="anchored" data-anchor-id="node-inversion">Node Inversion</h4>
+<hr>
+</section>
+</section>
+<section id="genomegraph.invertnodes" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.invertnodes">GenomeGraph.invertNodes</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.invertNodes ()</code></pre>
+</blockquote>
+<p>This function look at inversion/strand of each node in each path. If more than half of paths passing node in “inverted” direction, then inverstion should be switched over (currently inverted passes should become normal and normal passes should become inverted.) It is done every time a graph is loaded. Possibly, it should be possible to not doing it as it will take a lot of time for larger graphs.</p>
+<section id="node-removal-methods" class="level4">
+<h4 class="anchored" data-anchor-id="node-removal-methods">Node removal methods</h4>
+<hr>
+</section>
+</section>
+<section id="genomegraph.removenodes" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.removenodes">GenomeGraph.removeNodes</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.removeNodes (nodeIDsToRemove)</code></pre>
+</blockquote>
+<p>This (and related to it) function allows removal of a node from a graph. In normal situation, it should not be done to a graph as it will make it invalid in most cases, it is very important functionality for removal of overlaps (see below).</p>
+<section id="node-substitution-not-implemented" class="level4">
+<h4 class="anchored" data-anchor-id="node-substitution-not-implemented">Node Substitution (not implemented)</h4>
+</section>
+<section id="node-overlap-removal" class="level4">
+<h4 class="anchored" data-anchor-id="node-overlap-removal">Node overlap removal</h4>
+<hr>
+</section>
+</section>
+<section id="genomegraph.removeoverlaps" class="level3">
+<h3 class="anchored" data-anchor-id="genomegraph.removeoverlaps">GenomeGraph.removeOverlaps</h3>
+<blockquote class="blockquote">
+<pre><code> GenomeGraph.removeOverlaps ()</code></pre>
+</blockquote>
+<p>When the graph (nucleotide only) is loaded, overlaps are allowed and can be provided using CIGAR strings (it will not be checked). Such overlaps can appear for instance when a compacted de bruijn graph is used (e.g.&nbsp;generated by CUTTLEFISH). They should be removed in order to make the graph not artificially overcomplicated.</p>
+<p>Unfortunately, this current implementation is not working properly and needs to be looked at in details. It is most probably overcomplicated and overthought. It should be relatively easy to do.</p>
+</section>
+<section id="utility-methods" class="level3">
+<h3 class="anchored" data-anchor-id="utility-methods">Utility methods</h3>
+<section id="link-conversion-methods" class="level4">
+<h4 class="anchored" data-anchor-id="link-conversion-methods">Link conversion methods</h4>
+<p>There are two different types of data sructure for links: based on sets and dicts. Normally, dict type is used, but for some specific operation sets type is needed. The following two function does the convertion between the two.</p>
+</section>
+<section id="class-enumerator-nodes-and-subscription-links" class="level4">
+<h4 class="anchored" data-anchor-id="class-enumerator-nodes-and-subscription-links">Class enumerator (nodes) and subscription (links)</h4>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

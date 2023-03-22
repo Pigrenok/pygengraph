@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Provides functionality to export graph to Pantograph data storage.">
+
+<title>pygengraph - Export module</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="pygengraph - Export module">
+<meta property="og:description" content="Provides functionality to export graph to Pantograph data storage.">
+<meta property="og:site-name" content="pygengraph">
+<meta name="twitter:title" content="pygengraph - Export module">
+<meta name="twitter:description" content="Provides functionality to export graph to Pantograph data storage.">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">pygengraph</span>
+    </a>
+  </div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">Export module</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">pygengraph</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./init.html" class="sidebar-item-text sidebar-link">Synteny module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./graph.html" class="sidebar-item-text sidebar-link">Graph module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tree.html" class="sidebar-item-text sidebar-link">Tree module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./synteny.html" class="sidebar-item-text sidebar-link">Synteny module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./utils.html" class="sidebar-item-text sidebar-link">Utils module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./export.html" class="sidebar-item-text sidebar-link active">Export module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./scripts.html" class="sidebar-item-text sidebar-link">Script module</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">docs</a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  docs/index.html
+  </li>
+          <li class="sidebar-item">
+  docs/CONTRIBUTING.html
+  </li>
+          <li class="sidebar-item">
+  docs/debruijngraphprocessing.html
+  </li>
+          <li class="sidebar-item">
+  docs/dev.html
+  </li>
+          <li class="sidebar-item">
+  docs/export.html
+  </li>
+          <li class="sidebar-item">
+  docs/graph.html
+  </li>
+          <li class="sidebar-item">
+  docs/init.html
+  </li>
+          <li class="sidebar-item">
+  docs/scripts.html
+  </li>
+          <li class="sidebar-item">
+  docs/synteny.html
+  </li>
+          <li class="sidebar-item">
+  docs/tree.html
+  </li>
+          <li class="sidebar-item">
+  docs/utils.html
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#imports-and-templates" id="toc-imports-and-templates" class="nav-link active" data-scroll-target="#imports-and-templates">Imports and templates</a></li>
+  <li><a href="#functions-intro" id="toc-functions-intro" class="nav-link" data-scroll-target="#functions-intro">Functions intro</a></li>
+  <li><a href="#generating-base-layer" id="toc-generating-base-layer" class="nav-link" data-scroll-target="#generating-base-layer">Generating base layer</a>
+  <ul class="collapse">
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#outleftright" id="toc-outleftright" class="nav-link" data-scroll-target="#outleftright">outLeftRight</a></li>
+  <li><a href="#recordlinks" id="toc-recordlinks" class="nav-link" data-scroll-target="#recordlinks">recordLinks</a></li>
+  <li><a href="#checkforbreak" id="toc-checkforbreak" class="nav-link" data-scroll-target="#checkforbreak">checkForBreak</a></li>
+  <li><a href="#nodestat" id="toc-nodestat" class="nav-link" data-scroll-target="#nodestat">nodeStat</a></li>
+  <li><a href="#finalisecomponentbase" id="toc-finalisecomponentbase" class="nav-link" data-scroll-target="#finalisecomponentbase">finaliseComponentBase</a></li>
+  <li><a href="#processannotationinterval" id="toc-processannotationinterval" class="nav-link" data-scroll-target="#processannotationinterval">processAnnotationInterval</a></li>
+  <li><a href="#combineannotation" id="toc-combineannotation" class="nav-link" data-scroll-target="#combineannotation">combineAnnotation</a></li>
+  <li><a href="#updateedges" id="toc-updateedges" class="nav-link" data-scroll-target="#updateedges">updateEdges</a></li>
+  <li><a href="#wrapper" id="toc-wrapper" class="nav-link" data-scroll-target="#wrapper">Wrapper</a></li>
+  <li><a href="#baselayerzoom" id="toc-baselayerzoom" class="nav-link" data-scroll-target="#baselayerzoom">baseLayerZoom</a></li>
+  </ul></li>
+  <li><a href="#transfer-from-nodes-to-components-links-and-other-structures" id="toc-transfer-from-nodes-to-components-links-and-other-structures" class="nav-link" data-scroll-target="#transfer-from-nodes-to-components-links-and-other-structures">Transfer from nodes to components (links and other structures)</a>
+  <ul class="collapse">
+  <li><a href="#splitforwardinversednodecomp" id="toc-splitforwardinversednodecomp" class="nav-link" data-scroll-target="#splitforwardinversednodecomp">splitforwardInversedNodeComp</a></li>
+  <li><a href="#filllinksbase" id="toc-filllinksbase" class="nav-link" data-scroll-target="#filllinksbase">fillLinksBase</a></li>
+  <li><a href="#convertlink" id="toc-convertlink" class="nav-link" data-scroll-target="#convertlink">convertLink</a></li>
+  <li><a href="#recordupdatedpairedlink" id="toc-recordupdatedpairedlink" class="nav-link" data-scroll-target="#recordupdatedpairedlink">recordUpdatedPairedLink</a></li>
+  <li><a href="#convertremovablecomponents" id="toc-convertremovablecomponents" class="nav-link" data-scroll-target="#convertremovablecomponents">convertRemovableComponents</a></li>
+  <li><a href="#nodetocomponentlinks" id="toc-nodetocomponentlinks" class="nav-link" data-scroll-target="#nodetocomponentlinks">nodeToComponentLinks</a></li>
+  </ul></li>
+  <li><a href="#identifying-collapsible-links-and-rearrangement-blocks-works-incorrectly-left-now-for-compatibility." id="toc-identifying-collapsible-links-and-rearrangement-blocks-works-incorrectly-left-now-for-compatibility." class="nav-link" data-scroll-target="#identifying-collapsible-links-and-rearrangement-blocks-works-incorrectly-left-now-for-compatibility.">Identifying collapsible links and rearrangement blocks (works incorrectly, left now for compatibility).</a>
+  <ul class="collapse">
+  <li><a href="#identifying-path-breaks" id="toc-identifying-path-breaks" class="nav-link" data-scroll-target="#identifying-path-breaks">Identifying path breaks</a></li>
+  <li><a href="#findbreaksinpath" id="toc-findbreaksinpath" class="nav-link" data-scroll-target="#findbreaksinpath">findBreaksInPath</a></li>
+  <li><a href="#identifypathbreaks" id="toc-identifypathbreaks" class="nav-link" data-scroll-target="#identifypathbreaks">identifyPathBreaks</a></li>
+  <li><a href="#block-processing" id="toc-block-processing" class="nav-link" data-scroll-target="#block-processing">Block processing</a></li>
+  <li><a href="#interweavearrays" id="toc-interweavearrays" class="nav-link" data-scroll-target="#interweavearrays">interweaveArrays</a></li>
+  <li><a href="#extractgapsblocks" id="toc-extractgapsblocks" class="nav-link" data-scroll-target="#extractgapsblocks">extractGapsBlocks</a></li>
+  <li><a href="#checksplitblock" id="toc-checksplitblock" class="nav-link" data-scroll-target="#checksplitblock">checkSplitBlock</a></li>
+  <li><a href="#blocklisttolengths" id="toc-blocklisttolengths" class="nav-link" data-scroll-target="#blocklisttolengths">blockListToLengths</a></li>
+  <li><a href="#convertblockstolengths" id="toc-convertblockstolengths" class="nav-link" data-scroll-target="#convertblockstolengths">convertBlocksToLengths</a></li>
+  <li><a href="#link-processing" id="toc-link-processing" class="nav-link" data-scroll-target="#link-processing">Link processing</a></li>
+  <li><a href="#addtolinkpool" id="toc-addtolinkpool" class="nav-link" data-scroll-target="#addtolinkpool">addToLinkPool</a></li>
+  <li><a href="#blockfromsinglelink" id="toc-blockfromsinglelink" class="nav-link" data-scroll-target="#blockfromsinglelink">blockFromSingleLink</a></li>
+  <li><a href="#checkindividuallink" id="toc-checkindividuallink" class="nav-link" data-scroll-target="#checkindividuallink">checkIndividualLink</a></li>
+  <li><a href="#processdoublepairedlinks" id="toc-processdoublepairedlinks" class="nav-link" data-scroll-target="#processdoublepairedlinks">processDoublePairedLinks</a></li>
+  <li><a href="#processindividuallink" id="toc-processindividuallink" class="nav-link" data-scroll-target="#processindividuallink">processIndividualLink</a></li>
+  <li><a href="#recordlinkblockassociation" id="toc-recordlinkblockassociation" class="nav-link" data-scroll-target="#recordlinkblockassociation">recordLinkBlockAssociation</a></li>
+  <li><a href="#findnextnode" id="toc-findnextnode" class="nav-link" data-scroll-target="#findnextnode">findNextNode</a></li>
+  <li><a href="#processpseudopair" id="toc-processpseudopair" class="nav-link" data-scroll-target="#processpseudopair">processPseudoPair</a></li>
+  <li><a href="#processstartsends" id="toc-processstartsends" class="nav-link" data-scroll-target="#processstartsends">processStartsEnds</a></li>
+  <li><a href="#postprocesslinksblocks" id="toc-postprocesslinksblocks" class="nav-link" data-scroll-target="#postprocesslinksblocks">postprocessLinksBlocks</a></li>
+  <li><a href="#processpathbreaks" id="toc-processpathbreaks" class="nav-link" data-scroll-target="#processpathbreaks">processPathBreaks</a></li>
+  <li><a href="#rearrangement-blocks" id="toc-rearrangement-blocks" class="nav-link" data-scroll-target="#rearrangement-blocks">Rearrangement blocks</a></li>
+  <li><a href="#addblockedge" id="toc-addblockedge" class="nav-link" data-scroll-target="#addblockedge">addBlockEdge</a></li>
+  <li><a href="#identifyrearrangementblocks" id="toc-identifyrearrangementblocks" class="nav-link" data-scroll-target="#identifyrearrangementblocks">identifyRearrangementBlocks</a></li>
+  <li><a href="#wrapper-1" id="toc-wrapper-1" class="nav-link" data-scroll-target="#wrapper-1">Wrapper</a></li>
+  <li><a href="#getremovablestructures" id="toc-getremovablestructures" class="nav-link" data-scroll-target="#getremovablestructures">getRemovableStructures</a></li>
+  <li><a href="#getblockedges" id="toc-getblockedges" class="nav-link" data-scroll-target="#getblockedges">getBlockEdges</a></li>
+  </ul></li>
+  <li><a href="#generating-zoom-layer" id="toc-generating-zoom-layer" class="nav-link" data-scroll-target="#generating-zoom-layer">Generating zoom layer</a>
+  <ul class="collapse">
+  <li><a href="#finalising-bin-and-component" id="toc-finalising-bin-and-component" class="nav-link" data-scroll-target="#finalising-bin-and-component">Finalising bin and component</a></li>
+  <li><a href="#addlink" id="toc-addlink" class="nav-link" data-scroll-target="#addlink">addLink</a></li>
+  <li><a href="#getoccinv" id="toc-getoccinv" class="nav-link" data-scroll-target="#getoccinv">getOccInv</a></li>
+  <li><a href="#combineintervals" id="toc-combineintervals" class="nav-link" data-scroll-target="#combineintervals">combineIntervals</a></li>
+  <li><a href="#recordbinzoom" id="toc-recordbinzoom" class="nav-link" data-scroll-target="#recordbinzoom">recordBinZoom</a></li>
+  <li><a href="#getaverageinv" id="toc-getaverageinv" class="nav-link" data-scroll-target="#getaverageinv">getAverageInv</a></li>
+  <li><a href="#finalisecomponentzoom" id="toc-finalisecomponentzoom" class="nav-link" data-scroll-target="#finalisecomponentzoom">finaliseComponentZoom</a></li>
+  <li><a href="#finalisebinzoom" id="toc-finalisebinzoom" class="nav-link" data-scroll-target="#finalisebinzoom">finaliseBinZoom</a></li>
+  <li><a href="#break-component" id="toc-break-component" class="nav-link" data-scroll-target="#break-component">Break component?</a></li>
+  <li><a href="#getmatrixpathelement" id="toc-getmatrixpathelement" class="nav-link" data-scroll-target="#getmatrixpathelement">getMatrixPathElement</a></li>
+  <li><a href="#checkchange" id="toc-checkchange" class="nav-link" data-scroll-target="#checkchange">checkChange</a></li>
+  <li><a href="#joincomponents" id="toc-joincomponents" class="nav-link" data-scroll-target="#joincomponents">joinComponents</a></li>
+  <li><a href="#checklinkszoom" id="toc-checklinkszoom" class="nav-link" data-scroll-target="#checklinkszoom">checkLinksZoom</a></li>
+  <li><a href="#checkforbreakszoom" id="toc-checkforbreakszoom" class="nav-link" data-scroll-target="#checkforbreakszoom">checkForBreaksZoom</a></li>
+  <li><a href="#update-links" id="toc-update-links" class="nav-link" data-scroll-target="#update-links">Update links</a></li>
+  <li><a href="#splitpositivenegative" id="toc-splitpositivenegative" class="nav-link" data-scroll-target="#splitpositivenegative">splitPositiveNegative</a></li>
+  <li><a href="#intersectacclists" id="toc-intersectacclists" class="nav-link" data-scroll-target="#intersectacclists">intersectAccLists</a></li>
+  <li><a href="#updatelinks" id="toc-updatelinks" class="nav-link" data-scroll-target="#updatelinks">updateLinks</a></li>
+  <li><a href="#main-layer-generation-function-assistant-function" id="toc-main-layer-generation-function-assistant-function" class="nav-link" data-scroll-target="#main-layer-generation-function-assistant-function">Main layer generation function + assistant function</a></li>
+  <li><a href="#isstartend" id="toc-isstartend" class="nav-link" data-scroll-target="#isstartend">isStartEnd</a></li>
+  <li><a href="#nextlayerzoom" id="toc-nextlayerzoom" class="nav-link" data-scroll-target="#nextlayerzoom">nextLayerZoom</a></li>
+  </ul></li>
+  <li><a href="#clear-elements-too-small-to-show" id="toc-clear-elements-too-small-to-show" class="nav-link" data-scroll-target="#clear-elements-too-small-to-show">Clear elements too small to show</a>
+  <ul class="collapse">
+  <li><a href="#removing-links-and-rearrangement-blocks-associated-to-too-small-blocks" id="toc-removing-links-and-rearrangement-blocks-associated-to-too-small-blocks" class="nav-link" data-scroll-target="#removing-links-and-rearrangement-blocks-associated-to-too-small-blocks">Removing links and rearrangement blocks associated to too small blocks</a></li>
+  <li><a href="#removelink" id="toc-removelink" class="nav-link" data-scroll-target="#removelink">removeLink</a></li>
+  <li><a href="#processcollapsibleblocks" id="toc-processcollapsibleblocks" class="nav-link" data-scroll-target="#processcollapsibleblocks">processCollapsibleBlocks</a></li>
+  <li><a href="#clearrearrangementblocks" id="toc-clearrearrangementblocks" class="nav-link" data-scroll-target="#clearrearrangementblocks">clearRearrangementBlocks</a></li>
+  <li><a href="#find-isolated-blocks" id="toc-find-isolated-blocks" class="nav-link" data-scroll-target="#find-isolated-blocks">Find isolated blocks</a></li>
+  <li><a href="#teststartend" id="toc-teststartend" class="nav-link" data-scroll-target="#teststartend">testStartEnd</a></li>
+  <li><a href="#findemptyedges" id="toc-findemptyedges" class="nav-link" data-scroll-target="#findemptyedges">findEmptyEdges</a></li>
+  <li><a href="#checkexternallinks" id="toc-checkexternallinks" class="nav-link" data-scroll-target="#checkexternallinks">checkExternalLinks</a></li>
+  <li><a href="#createnewboundaries" id="toc-createnewboundaries" class="nav-link" data-scroll-target="#createnewboundaries">createNewBoundaries</a></li>
+  <li><a href="#identifyisolatedblocks" id="toc-identifyisolatedblocks" class="nav-link" data-scroll-target="#identifyisolatedblocks">identifyIsolatedBlocks</a></li>
+  <li><a href="#removing-isolated-blocks" id="toc-removing-isolated-blocks" class="nav-link" data-scroll-target="#removing-isolated-blocks">Removing Isolated Blocks</a></li>
+  <li><a href="#updatelinksremovecomp" id="toc-updatelinksremovecomp" class="nav-link" data-scroll-target="#updatelinksremovecomp">updateLinksRemoveComp</a></li>
+  <li><a href="#removeisolatedblocks" id="toc-removeisolatedblocks" class="nav-link" data-scroll-target="#removeisolatedblocks">removeIsolatedBlocks</a></li>
+  <li><a href="#clearing-small-element-wrapping-function" id="toc-clearing-small-element-wrapping-function" class="nav-link" data-scroll-target="#clearing-small-element-wrapping-function">Clearing small element wrapping function</a></li>
+  <li><a href="#clearinvisible" id="toc-clearinvisible" class="nav-link" data-scroll-target="#clearinvisible">clearInvisible</a></li>
+  </ul></li>
+  <li><a href="#exporting-layer" id="toc-exporting-layer" class="nav-link" data-scroll-target="#exporting-layer">Exporting layer</a>
+  <ul class="collapse">
+  <li><a href="#createzoomleveldir" id="toc-createzoomleveldir" class="nav-link" data-scroll-target="#createzoomleveldir">createZoomLevelDir</a></li>
+  <li><a href="#finalisechunk" id="toc-finalisechunk" class="nav-link" data-scroll-target="#finalisechunk">finaliseChunk</a></li>
+  <li><a href="#addlinkstocomp" id="toc-addlinkstocomp" class="nav-link" data-scroll-target="#addlinkstocomp">addLinksToComp</a></li>
+  <li><a href="#checklinks" id="toc-checklinks" class="nav-link" data-scroll-target="#checklinks">checkLinks</a></li>
+  <li><a href="#searchindicesposrecord" id="toc-searchindicesposrecord" class="nav-link" data-scroll-target="#searchindicesposrecord">searchIndicesPosRecord</a></li>
+  <li><a href="#exportlayer" id="toc-exportlayer" class="nav-link" data-scroll-target="#exportlayer">exportLayer</a></li>
+  </ul></li>
+  <li><a href="#main-exporter-wrapper-with-its-helper-functions" id="toc-main-exporter-wrapper-with-its-helper-functions" class="nav-link" data-scroll-target="#main-exporter-wrapper-with-its-helper-functions">Main exporter wrapper with its helper functions</a>
+  <ul class="collapse">
+  <li><a href="#complinkstoacccomplinks" id="toc-complinkstoacccomplinks" class="nav-link" data-scroll-target="#complinkstoacccomplinks">compLinksToAccCompLinks</a></li>
+  <li><a href="#recordzoomlevelfordebug" id="toc-recordzoomlevelfordebug" class="nav-link" data-scroll-target="#recordzoomlevelfordebug">recordZoomLevelForDebug</a></li>
+  <li><a href="#searchindicesgenerecord" id="toc-searchindicesgenerecord" class="nav-link" data-scroll-target="#searchindicesgenerecord">searchIndicesGeneRecord</a></li>
+  <li><a href="#exporttopantograph" id="toc-exporttopantograph" class="nav-link" data-scroll-target="#exporttopantograph">exportToPantograph</a></li>
+  </ul></li>
+  <li><a href="#project-generation" id="toc-project-generation" class="nav-link" data-scroll-target="#project-generation">Project generation</a>
+  <ul class="collapse">
+  <li><a href="#exportproject" id="toc-exportproject" class="nav-link" data-scroll-target="#exportproject">exportProject</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-git"></i></div><div class="action-links"><p><a href="https://gitlab.com/pigrenok/pygengraph/tree/master/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">Export module</h1>
+</div>
+
+<div>
+  <div class="description">
+    Provides functionality to export graph to Pantograph data storage.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<section id="imports-and-templates" class="level2">
+<h2 class="anchored" data-anchor-id="imports-and-templates">Imports and templates</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>warnings.filterwarnings(<span class="st">"ignore"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="functions-intro" class="level2">
+<h2 class="anchored" data-anchor-id="functions-intro">Functions intro</h2>
+<p><strong>Notation and terminology</strong></p>
+<p>In documentation, we refer to graph nucleotides, columns and components. Components contain columns and columns contain nucleotides.</p>
+<p>In the code variable names and comments use slightly different notation. Columns in documentation are bins in code and comments, whereas graph nucleotides in documentation are called columns in the code and comments. This happened for the legacy reasons, i.e.&nbsp;originally there was no nucleotide numbers (columns) in the visualised graph structure and components were split into bins (literally, equal sized bins). It is not true anymore, but old terminology left here.</p>
+<p>Ideally all variable names and comments should be changes in line with documentation notation, but I have no idea when this can happen.</p>
+<p>For various operational or legacy reasons, some of the data structures (usually, lists/array) use 0-based indexing, whereas some others (usually dicts) can be 0-based or 1-based. Here are the main structures with numerical indexing and their index bases:</p>
+<ul>
+<li>components: keys: 0-based, values: occupants: 0-based, binNumbers: 0-based<br>
+</li>
+<li>componentToNode: keys: 0-based, values: 1-based<br>
+</li>
+<li>nodeToComponent: keys: 0-based, values: 1-based<br>
+</li>
+<li>newToOldInd and oldToNewInd: both index and values are 0-based numbers of components in previous and current zoomlayer.<br>
+</li>
+<li>fromLinks: top level keys (from nodes): 1-based, bottom level keys (to nodes): 1-based, values (list of participants): 0-based<br>
+</li>
+<li>toLinks: top level keys (to nodes): 1-based, bottom level keys (from nodes): 1-based, values (list of participants): 0-based<br>
+</li>
+<li>fromComponentLinks: top level keys (from components): 1-based, bottom level keys (to components): 1-based, values (set of participants): 0-based<br>
+</li>
+<li>toComponentLinks: top level keys (to components): 1-based, bottom level keys (from components): 1-based, values (set of participants): 0-based</li>
+</ul>
+</section>
+<section id="generating-base-layer" class="level2">
+<h2 class="anchored" data-anchor-id="generating-base-layer">Generating base layer</h2>
+<p>This set of functions generate the data structures for initial, lowest level zoom (nucleotide or minimum unit resolution). The main orchestration function is <code>baseLayerZoom</code>.</p>
+<section id="functions" class="level3">
+<h3 class="anchored" data-anchor-id="functions">Functions</h3>
+<hr>
+</section>
+<section id="outleftright" class="level3">
+<h3 class="anchored" data-anchor-id="outleftright">outLeftRight</h3>
+<blockquote class="blockquote">
+<pre><code> outLeftRight (nodeInversionInPath, leftFarLink, rightFarLink, reason,
+               debug=False, inversionThreshold=0.5)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="recordlinks" class="level3">
+<h3 class="anchored" data-anchor-id="recordlinks">recordLinks</h3>
+<blockquote class="blockquote">
+<pre><code> recordLinks (nodeIdx, nextNode, pathID, step, nodeInversionInPath,
+              nonLinearCond, pathNodeArray, fromLinks, toLinks,
+              debug=False, inversionThreshold=0.5)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="checkforbreak" class="level3">
+<h3 class="anchored" data-anchor-id="checkforbreak">checkForBreak</h3>
+<blockquote class="blockquote">
+<pre><code> checkForBreak (nodeIdx, nodeLen, nodePathsIdx, nodeSeqInPath,
+                uniqueNodePathsIDs, pathNodeCount, pathLengths,
+                pathNodeArray, pathDirArray, occupancy, inversion,
+                fromLinks, toLinks, nBins, maxLengthComponent, blockEdges,
+                inversionThreshold=0.5, debug=False)</code></pre>
+</blockquote>
+<p>Function to check whether the component should be broken before (left) and/or after (right) it.</p>
+<table class="table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 25%">
+<col style="width: 34%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>nodeIdx</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>nodeLen</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>nodePathsIdx</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>nodeSeqInPath</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>uniqueNodePathsIDs</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>pathNodeCount</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>pathLengths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>pathNodeArray</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>pathDirArray</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>occupancy</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>inversion</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>fromLinks</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>toLinks</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>nBins</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>maxLengthComponent</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>blockEdges</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>inversionThreshold</td>
+<td>float</td>
+<td>0.5</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>debug</td>
+<td>bool</td>
+<td>False</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Returns</strong></td>
+<td><strong><code>leftFarLink</code>: bool. Shows whether there is a far link on the left that will require component break.</strong></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<pre><code>/home/pigrenok/.pyenv/versions/3.10.9/lib/python3.10/site-packages/fastcore/docscrape.py:225: UserWarning: Unknown section Return
+  else: warn(msg)</code></pre>
+<hr>
+</section>
+<section id="nodestat" class="level3">
+<h3 class="anchored" data-anchor-id="nodestat">nodeStat</h3>
+<blockquote class="blockquote">
+<pre><code> nodeStat (nodeIdx, pathNodeArray, nodeLengths)</code></pre>
+</blockquote>
+<p>Function calculate information about node as part of the overall graph.</p>
+<hr>
+</section>
+<section id="finalisecomponentbase" class="level3">
+<h3 class="anchored" data-anchor-id="finalisecomponentbase">finaliseComponentBase</h3>
+<blockquote class="blockquote">
+<pre><code> finaliseComponentBase (component, components, componentNucleotides,
+                        matrix, occupants, nBins, componentLengths,
+                        nucleotides, zoomLevel, accessions,
+                        inversionThreshold=0.5)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="processannotationinterval" class="level3">
+<h3 class="anchored" data-anchor-id="processannotationinterval">processAnnotationInterval</h3>
+<blockquote class="blockquote">
+<pre><code> processAnnotationInterval (posStart, posEnd, annotation, res)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="combineannotation" class="level3">
+<h3 class="anchored" data-anchor-id="combineannotation">combineAnnotation</h3>
+<blockquote class="blockquote">
+<pre><code> combineAnnotation (combAnnotation)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="updateedges" class="level3">
+<h3 class="anchored" data-anchor-id="updateedges">updateEdges</h3>
+<blockquote class="blockquote">
+<pre><code> updateEdges (accEdge, edgeAccessions, compNum)</code></pre>
+</blockquote>
+<p>Function fills up either accStarts or accEnds (on which component each accession starts and on which ends). <code>compNum</code> is assumed to be 1-based.</p>
+</section>
+<section id="wrapper" class="level3">
+<h3 class="anchored" data-anchor-id="wrapper">Wrapper</h3>
+<p>Now ‘positions’ key in metadata contains either one position (chr:posStart..posEnd) or two comma separated positions where one is genomic position, and another one is pangenomic position.</p>
+<hr>
+</section>
+<section id="baselayerzoom" class="level3">
+<h3 class="anchored" data-anchor-id="baselayerzoom">baseLayerZoom</h3>
+<blockquote class="blockquote">
+<pre><code> baseLayerZoom (graph, outputPath, outputName, pathNodeArray,
+                pathDirArray, pathLengths, nodeLengths,
+                pathNodeLengthsCum, maxLengthComponent, blockEdges,
+                CPUS=32, inversionThreshold=0.5, isSeq=True, debug=False,
+                debugTime=False)</code></pre>
+</blockquote>
+</section>
+</section>
+<section id="transfer-from-nodes-to-components-links-and-other-structures" class="level2">
+<h2 class="anchored" data-anchor-id="transfer-from-nodes-to-components-links-and-other-structures">Transfer from nodes to components (links and other structures)</h2>
+<p>This is one of the first processes happening while exporting graph. While graph operates with nodes (which can be linearly connected with each other in all paths), then exporting works with components. In almost all cases, components have at least some non-linear links with other components on both sides. The only exclusion is when a component is too large and split into several ones. In this case two components will be connected by 100% linear links. Also, graph operates with paths along with nodes, whereas exporting works with components and accession-specific links between them.</p>
+<p>These functions (with main orchestrating one is <code>nodeToComponentLinks</code>) are converting nodes and paths to components and links.</p>
+<hr>
+<section id="splitforwardinversednodecomp" class="level3">
+<h3 class="anchored" data-anchor-id="splitforwardinversednodecomp">splitforwardInversedNodeComp</h3>
+<blockquote class="blockquote">
+<pre><code> splitforwardInversedNodeComp (pathList, component, isInverse)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="filllinksbase" class="level3">
+<h3 class="anchored" data-anchor-id="filllinksbase">fillLinksBase</h3>
+<blockquote class="blockquote">
+<pre><code> fillLinksBase (nodeInComp, nodeToComponent, fromLinks, toLinks,
+                fromComponentLinks, toComponentLinks, compNum, components,
+                doLeft=True, doRight=True)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="convertlink" class="level3">
+<h3 class="anchored" data-anchor-id="convertlink">convertLink</h3>
+<blockquote class="blockquote">
+<pre><code> convertLink (linkFrom, linkTo, translateDict, forwardLinks, isZoom)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="recordupdatedpairedlink" class="level3">
+<h3 class="anchored" data-anchor-id="recordupdatedpairedlink">recordUpdatedPairedLink</h3>
+<blockquote class="blockquote">
+<pre><code> recordUpdatedPairedLink (firstLinkSet, secondLinkSet, firstLink,
+                          secondLink, substituteLink, pairedLinksConv)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="convertremovablecomponents" class="level3">
+<h3 class="anchored" data-anchor-id="convertremovablecomponents">convertRemovableComponents</h3>
+<blockquote class="blockquote">
+<pre><code> convertRemovableComponents (translateDict, linkLengths, pairedLinks,
+                             interconnectedLinks, blockEdges,
+                             forwardLinks, isZoom=True)</code></pre>
+</blockquote>
+<p>translateDict should be a dict in format {&lt;old node/component id 0-based&gt;:&lt;new component id 1-based&gt;} pathNodeInv should be a dict of dicts of the following structure: {<pathid>:{&lt;nodeId 1-based&gt;:<bool inv="" or="" not="">}}</bool></pathid></p>
+<p>This is done through fromLinks and toLinks and throught associated directions of available accessions. For this we need to loop through strands and do it separately for each strand.</p>
+<p>For paired links there is a possibility that a single node link will give several component links. In this case, the cross product of all first and second links will be added to converted paired links.</p>
+<p>❗The substitute links should be added only to the paths that contained both first and second links in the first place. This should be controlled in link removal routine.</p>
+<hr>
+</section>
+<section id="nodetocomponentlinks" class="level3">
+<h3 class="anchored" data-anchor-id="nodetocomponentlinks">nodeToComponentLinks</h3>
+<blockquote class="blockquote">
+<pre><code> nodeToComponentLinks (components, componentToNode, nodeToComponent,
+                       fromLinks, toLinks, graph, fromComponentLinks,
+                       toComponentLinks, linkLengths=None,
+                       pairedLinks=None, interconnectedLinks=None,
+                       blockEdges=None, debug=False)</code></pre>
+</blockquote>
+</section>
+</section>
+<section id="identifying-collapsible-links-and-rearrangement-blocks-works-incorrectly-left-now-for-compatibility." class="level2">
+<h2 class="anchored" data-anchor-id="identifying-collapsible-links-and-rearrangement-blocks-works-incorrectly-left-now-for-compatibility.">Identifying collapsible links and rearrangement blocks (works incorrectly, left now for compatibility).</h2>
+<p>In order to be able to generate multiple zoom levels of the graph view, non-linear links describing small (too small to show at the given zoom level) rearrangements should disappear whereas links describing larger blocks should persist. This will allow to see larger rearrangements clearly on higher zoom levels.</p>
+<p>In order to do it, each link should be associated with some size (or rearrangement), so, that when each zoom level is generated, they can be removed when the rearrangement cannot be shown at the given zoom level.</p>
+<p>Some links are also associated with each other, and when they are removed new links (usually linear ones) should be reinstated to make larger rearrangements clearer.</p>
+<p>At the moment, the process of identifying these sizes is not working great as it leaves too much non-linear links to the very top level where suddenly all non-linear links disappear and the whole graph from over-complicated jumps to pretty much trivial without any rearrangements. If to use digital map analogy, most of country roads persist while you zoom out on the map until almost the whole Earth is in view and then at some point the view becomes just a blue/green ball with very rough boundary of continents and oceans.</p>
+<p>At the moment, all associated links get into a pool of so called interconnected links and if one link gets associated with specific size, then all links get the same association, and then maximum size is selected. But that means that if one link describes one small and also on the edge of large rearrangement, and another link is only associated with large rearrangement, then the latter link will also be associated with the size of large rearrangement and will stay until the zoom level where the large rearrangement is too small to show. That is incorrect.</p>
+<p>I think, each link should get its own associations with sizes (and maximum should be taken) and clearing of the link should happen individually. Yet, if one link with smaller size and one with larger size are paired, the reinstated link should appear after smaller link removed.</p>
+<p>Another alternative is just to get contiguous blocks in each path and associate each link pair (describing start and end of each block) as a pair of links that needs to be cleared in association with the size of this block. Need control of repeats in these blocks. If it happens, then a single link can describe a whole rearrangement. In addition, an extra control for inversion is also needed. In particular, if outside the block the numbers do not create a range to fin the inverted node (e.g.&nbsp;1+,4-,3+, or 3+,2-,5+), then it should be ignorred for this step. It means there is a smaller rearrangement within larger one.</p>
+<p>Another alternative (described in TODO) is to convert paths of nodes to paths of edges and operate with them. I guess, it is not far away from the previous paragraph.</p>
+<section id="identifying-path-breaks" class="level3">
+<h3 class="anchored" data-anchor-id="identifying-path-breaks">Identifying path breaks</h3>
+<hr>
+</section>
+<section id="findbreaksinpath" class="level3">
+<h3 class="anchored" data-anchor-id="findbreaksinpath">findBreaksInPath</h3>
+<blockquote class="blockquote">
+<pre><code> findBreaksInPath (combinedArray, nextNodeDict)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="identifypathbreaks" class="level3">
+<h3 class="anchored" data-anchor-id="identifypathbreaks">identifyPathBreaks</h3>
+<blockquote class="blockquote">
+<pre><code> identifyPathBreaks (combinedNodeDirArray, pathLengths, pathNextNode)</code></pre>
+</blockquote>
+</section>
+<section id="block-processing" class="level3">
+<h3 class="anchored" data-anchor-id="block-processing">Block processing</h3>
+<hr>
+</section>
+<section id="interweavearrays" class="level3">
+<h3 class="anchored" data-anchor-id="interweavearrays">interweaveArrays</h3>
+<blockquote class="blockquote">
+<pre><code> interweaveArrays (a, b)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="extractgapsblocks" class="level3">
+<h3 class="anchored" data-anchor-id="extractgapsblocks">extractGapsBlocks</h3>
+<blockquote class="blockquote">
+<pre><code> extractGapsBlocks (block, path, nodeLengths, getComplex=False)</code></pre>
+</blockquote>
+<p>This function either split block by gaps (e.g.&nbsp;block [1,2,4,5,6,8] will yield [1,2],[4,5,6],[8])</p>
+<p>If <code>getComplex</code> is set to True, then first gaps are filtered for nodes that are not passed by the path. After that, edges are identified and then for them nodes not passed by the path are filtered out. Then we find the longest block out of edges, and then the longest edge combine with all gaps and find the shortest one. That shortest one is going to be the one returned.</p>
+<p>E.g. block [1,2,4,5,8] will give edges [1,2],[4,5],[8] and gaps [3],[6,7].</p>
+<p>If path does not contain 6, then edges will be the same, but gaps will be [3],[6]</p>
+<p>If path does not contain 3, then edges will be [1,2,4,5],[8] and gaps [6,7]</p>
+<p>The exact block which will be returned depends on sizes of each node.</p>
+<hr>
+</section>
+<section id="checksplitblock" class="level3">
+<h3 class="anchored" data-anchor-id="checksplitblock">checkSplitBlock</h3>
+<blockquote class="blockquote">
+<pre><code> checkSplitBlock (block, gapList=None)</code></pre>
+</blockquote>
+<p>Not used at the moment</p>
+<p>Function checks if the block has any gaps and split into a list of blocks between gaps (alternatively fill gaps or leave things as they are). At the moment the gapped block will be converted to list of blocks between gaps</p>
+<hr>
+</section>
+<section id="blocklisttolengths" class="level3">
+<h3 class="anchored" data-anchor-id="blocklisttolengths">blockListToLengths</h3>
+<blockquote class="blockquote">
+<pre><code> blockListToLengths (blockList, nodeLengths)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="convertblockstolengths" class="level3">
+<h3 class="anchored" data-anchor-id="convertblockstolengths">convertBlocksToLengths</h3>
+<blockquote class="blockquote">
+<pre><code> convertBlocksToLengths (linksBlocks, nodeLengths)</code></pre>
+</blockquote>
+<p>Converting blocks associated with each link to lengths and then selecting the longest one (?)</p>
+</section>
+<section id="link-processing" class="level3">
+<h3 class="anchored" data-anchor-id="link-processing">Link processing</h3>
+<hr>
+</section>
+<section id="addtolinkpool" class="level3">
+<h3 class="anchored" data-anchor-id="addtolinkpool">addToLinkPool</h3>
+<blockquote class="blockquote">
+<pre><code> addToLinkPool (link1, link2, interconnectedLinks)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="blockfromsinglelink" class="level3">
+<h3 class="anchored" data-anchor-id="blockfromsinglelink">blockFromSingleLink</h3>
+<blockquote class="blockquote">
+<pre><code> blockFromSingleLink (pathID, link, pathNodeInversionRate, pathNextNode)</code></pre>
+</blockquote>
+<p>Identify block from a single link It is the block that the link bounds, i.e.: If link if forward then it is inside the link + any side that is inverted If link is backward, then it is inside + any side that is normal direction.</p>
+<hr>
+</section>
+<section id="checkindividuallink" class="level3">
+<h3 class="anchored" data-anchor-id="checkindividuallink">checkIndividualLink</h3>
+<blockquote class="blockquote">
+<pre><code> checkIndividualLink (link, pathID, usedSecondInPairLink)</code></pre>
+</blockquote>
+<p>Function checks if this link is already second in pair. If it is, then it is not considered separately (return True?). Otherwise, it should be considered and block generated (using <code>blockFromSingleLink</code>) and associated with this link.</p>
+<hr>
+</section>
+<section id="processdoublepairedlinks" class="level3">
+<h3 class="anchored" data-anchor-id="processdoublepairedlinks">processDoublePairedLinks</h3>
+<blockquote class="blockquote">
+<pre><code> processDoublePairedLinks (leftLink, rightLink, pathID, doublePairedLinks,
+                           pairedLinks, interconnectedLinks, linksBlocks,
+                           pathNextNode)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="processindividuallink" class="level3">
+<h3 class="anchored" data-anchor-id="processindividuallink">processIndividualLink</h3>
+<blockquote class="blockquote">
+<pre><code> processIndividualLink (link, pathID, pathNodeInversionRate, pathNextNode,
+                        usedSecondInPairLink)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="recordlinkblockassociation" class="level3">
+<h3 class="anchored" data-anchor-id="recordlinkblockassociation">recordLinkBlockAssociation</h3>
+<blockquote class="blockquote">
+<pre><code> recordLinkBlockAssociation (link, blockList, linksBlocks)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="findnextnode" class="level3">
+<h3 class="anchored" data-anchor-id="findnextnode">findNextNode</h3>
+<blockquote class="blockquote">
+<pre><code> findNextNode (node, combinedArray)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="processpseudopair" class="level3">
+<h3 class="anchored" data-anchor-id="processpseudopair">processPseudoPair</h3>
+<blockquote class="blockquote">
+<pre><code> processPseudoPair (breakPos, returnPos, pathID, pathNodeArray,
+                    combinedNodeDirArray, pathNextNode, nodeLengths,
+                    usedSecondInPairPath, pairedLinks, linksBlocks)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="processstartsends" class="level3">
+<h3 class="anchored" data-anchor-id="processstartsends">processStartsEnds</h3>
+<blockquote class="blockquote">
+<pre><code> processStartsEnds (mainLink, linkStarts, linkEnds, interconnectedLinks,
+                    forwardLinks)</code></pre>
+</blockquote>
+<p>Currently not in use.</p>
+<p>TODO!!! Need to add checks for whether one link is intersecting the other or one is fully inside.</p>
+<hr>
+</section>
+<section id="postprocesslinksblocks" class="level3">
+<h3 class="anchored" data-anchor-id="postprocesslinksblocks">postprocessLinksBlocks</h3>
+<blockquote class="blockquote">
+<pre><code> postprocessLinksBlocks (linksBlocks, interconnectedLinks)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="processpathbreaks" class="level3">
+<h3 class="anchored" data-anchor-id="processpathbreaks">processPathBreaks</h3>
+<blockquote class="blockquote">
+<pre><code> processPathBreaks (pathBreakCoordPairs, pathNodeArray, pathNextNode,
+                    combinedNodeDirArray, pathNodeInversionRate,
+                    pathLengths, nodeLengths, forwardLinks)</code></pre>
+</blockquote>
+</section>
+<section id="rearrangement-blocks" class="level3">
+<h3 class="anchored" data-anchor-id="rearrangement-blocks">Rearrangement blocks</h3>
+<hr>
+</section>
+<section id="addblockedge" class="level3">
+<h3 class="anchored" data-anchor-id="addblockedge">addBlockEdge</h3>
+<blockquote class="blockquote">
+<pre><code> addBlockEdge (edge, size, blockEdges)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="identifyrearrangementblocks" class="level3">
+<h3 class="anchored" data-anchor-id="identifyrearrangementblocks">identifyRearrangementBlocks</h3>
+<blockquote class="blockquote">
+<pre><code> identifyRearrangementBlocks (nodesStructure, nodeLengths)</code></pre>
+</blockquote>
+<p>block Edges is a dict with a structure: <edge of="" block="">:<size of="" block=""> <edge of="" block=""> pointing to the node before (!) the break. In other words, if it is the start of the block, it will point to the node just before the block, and if it is the end of the block, it will point to the last node of the block.</edge></size></edge></p>
+</section>
+<section id="wrapper-1" class="level3">
+<h3 class="anchored" data-anchor-id="wrapper-1">Wrapper</h3>
+<hr>
+</section>
+<section id="getremovablestructures" class="level3">
+<h3 class="anchored" data-anchor-id="getremovablestructures">getRemovableStructures</h3>
+<blockquote class="blockquote">
+<pre><code> getRemovableStructures (graph=None, nodeLengths=None, pathLengths=None,
+                         pathNodeArray=None, pathDirArray=None,
+                         pathNextNode=None, forwardLinks=None,
+                         inversionThreshold=0.5)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="getblockedges" class="level3">
+<h3 class="anchored" data-anchor-id="getblockedges">getBlockEdges</h3>
+<blockquote class="blockquote">
+<pre><code> getBlockEdges (graph=None, nodeLengths=None, pathLengths=None,
+                pathNodeArray=None, pathDirArray=None, pathNextNode=None,
+                forwardLinks=None, inversionThreshold=0.5)</code></pre>
+</blockquote>
+</section>
+</section>
+<section id="generating-zoom-layer" class="level2">
+<h2 class="anchored" data-anchor-id="generating-zoom-layer">Generating zoom layer</h2>
+<p>This set of functions (with <code>nextLayerZoom</code> being main orchestration function) doing the job of generating next zoom level by collapsing columns and then components together after smaller non-linear links are removed (by different set of functions).</p>
+<section id="finalising-bin-and-component" class="level3">
+<h3 class="anchored" data-anchor-id="finalising-bin-and-component">Finalising bin and component</h3>
+<hr>
+</section>
+<section id="addlink" class="level3">
+<h3 class="anchored" data-anchor-id="addlink">addLink</h3>
+<blockquote class="blockquote">
+<pre><code> addLink (fromComp, fromStrand, toComp, toStrand, pathList,
+          fromComponentLinks, toComponentLinks)</code></pre>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> getOccInvChange(binColLengths,binBlockLength,binOcc,binInv,prevOcc,prevInv,inversionThreshold<span class="op">=</span><span class="fl">0.5</span>):</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    occChanged <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    invChanged <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    occ <span class="op">=</span> {}</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    inv <span class="op">=</span> {}</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> pathID <span class="kw">in</span> binOcc:</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Averaging occupancy</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>        occ[pathID] <span class="op">=</span> <span class="bu">sum</span>([bl<span class="op">*</span>bo <span class="cf">for</span> bl,bo <span class="kw">in</span> <span class="bu">zip</span>(binColLengths,binOcc[pathID])])<span class="op">/</span>binBlockLength</span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Do comparison through floor and then abs difference &gt; 0</span></span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> np.<span class="bu">abs</span>(np.floor(occ[pathID]<span class="op">+</span><span class="fl">0.5</span>)<span class="op">-</span>np.floor(prevOcc.get(pathID,occ[pathID])<span class="op">+</span><span class="fl">0.5</span>))<span class="op">&gt;</span><span class="dv">0</span> <span class="op">\</span></span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>            <span class="kw">and</span> occ[pathID]<span class="op">&gt;</span><span class="fl">0.5</span> <span class="kw">and</span> prevOcc.get(pathID,occ[pathID])<span class="op">&gt;</span><span class="fl">0.5</span>:</span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>            occChanged <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>        prevOcc[pathID] <span class="op">=</span> occ[pathID]</span>
+<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Averaging invertion</span></span>
+<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a>        inv[pathID] <span class="op">=</span> <span class="bu">sum</span>([bl<span class="op">*</span>bo<span class="op">*</span>bi <span class="cf">for</span> bl,bo,bi <span class="kw">in</span> <span class="bu">zip</span>(binColLengths,binOcc[pathID],binInv[pathID])])<span class="op">/</span>(binBlockLength<span class="op">*</span>occ[pathID])</span>
+<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (inv[pathID]<span class="op">-</span>inversionThreshold)<span class="op">*</span>(prevInv.get(pathID,inv[pathID])<span class="op">-</span>inversionThreshold)<span class="op">&lt;</span><span class="dv">0</span> <span class="kw">or</span> <span class="op">\</span></span>
+<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a>        (inv[pathID]<span class="op">-</span>inversionThreshold)<span class="op">*</span>(prevInv.get(pathID,inv[pathID])<span class="op">-</span>inversionThreshold)<span class="op">==</span><span class="dv">0</span> <span class="kw">and</span> \ </span>
+<span id="cb41-21"><a href="#cb41-21" aria-hidden="true" tabindex="-1"></a>        inv[pathID]<span class="op">*</span>prevInv.get(pathID,inv[pathID])<span class="op">&gt;</span>inversionThreshold<span class="op">*</span>inversionThreshold:</span>
+<span id="cb41-22"><a href="#cb41-22" aria-hidden="true" tabindex="-1"></a>            <span class="co"># The second comdition after `or` is taking the case where one is equal to inversionThreshold</span></span>
+<span id="cb41-23"><a href="#cb41-23" aria-hidden="true" tabindex="-1"></a>            <span class="co"># and another is more than inversionThreshold.</span></span>
+<span id="cb41-24"><a href="#cb41-24" aria-hidden="true" tabindex="-1"></a>            invChanged <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb41-25"><a href="#cb41-25" aria-hidden="true" tabindex="-1"></a>        prevInv[pathID] <span class="op">=</span> inv[pathID]</span>
+<span id="cb41-26"><a href="#cb41-26" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb41-27"><a href="#cb41-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> occChanged,invChanged,occ,inv,prevOcc,prevInv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+<section id="getoccinv" class="level3">
+<h3 class="anchored" data-anchor-id="getoccinv">getOccInv</h3>
+<blockquote class="blockquote">
+<pre><code> getOccInv (binColLengths, binBlockLength, binOcc, binInv,
+            inversionThreshold=0.5)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="combineintervals" class="level3">
+<h3 class="anchored" data-anchor-id="combineintervals">combineIntervals</h3>
+<blockquote class="blockquote">
+<pre><code> combineIntervals (posPath)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="recordbinzoom" class="level3">
+<h3 class="anchored" data-anchor-id="recordbinzoom">recordBinZoom</h3>
+<blockquote class="blockquote">
+<pre><code> recordBinZoom (occ, inv, binPosArray, nBins, nCols, binBlockLength,
+                binBlockLengths, binColLengths, binColStart, binColStarts,
+                binColEnd, binColEnds, matrix, inversionThreshold=0.5)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="getaverageinv" class="level3">
+<h3 class="anchored" data-anchor-id="getaverageinv">getAverageInv</h3>
+<blockquote class="blockquote">
+<pre><code> getAverageInv (binBlockLengths, matrixPathArray)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="finalisecomponentzoom" class="level3">
+<h3 class="anchored" data-anchor-id="finalisecomponentzoom">finaliseComponentZoom</h3>
+<blockquote class="blockquote">
+<pre><code> finaliseComponentZoom (component, components, componentLengths, nBins,
+                        nCols, occupants, binBlockLengths, binColStarts,
+                        binColEnds, matrix, starts, ends, forwardPaths,
+                        invertedPaths, compInvNum, compInvDen,
+                        inversionThreshold=0.5)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>component</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>components</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>componentLengths</td>
+<td></td>
+<td></td>
+<td>componentNucleotides,</td>
+</tr>
+<tr class="even">
+<td>nBins</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>nCols</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>occupants</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>binBlockLengths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>binColStarts</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>binColEnds</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>matrix</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>starts</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>ends</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>forwardPaths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>invertedPaths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>compInvNum</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>compInvDen</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>inversionThreshold</td>
+<td>float</td>
+<td>0.5</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="finalisebinzoom" class="level3">
+<h3 class="anchored" data-anchor-id="finalisebinzoom">finaliseBinZoom</h3>
+<blockquote class="blockquote">
+<pre><code> finaliseBinZoom (compNum, binOcc, binInv, binPosArray, nBins, nCols,
+                  binBlockLength, binBlockLengths, binColLengths,
+                  binColStart, binColStarts, binColEnd, binColEnds,
+                  matrix, newComponent, newComponents,
+                  newComponentLengths, newFromComponentLinks,
+                  newToComponentLinks, occupants, linkLengths, starts,
+                  ends, forwardPaths, invertedPaths, pathsToInversion,
+                  newToOldInd, oldToNewInd, inversionThreshold=0.5)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>compNum</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>binOcc</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>binInv</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>binPosArray</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>nBins</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>nCols</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>binBlockLength</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>binBlockLengths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>binColLengths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>binColStart</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>binColStarts</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>binColEnd</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>binColEnds</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>matrix</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>newComponent</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>newComponents</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>newComponentLengths</td>
+<td></td>
+<td></td>
+<td>compAccDir,#newComponentNucleotides,</td>
+</tr>
+<tr class="even">
+<td>newFromComponentLinks</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>newToComponentLinks</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>occupants</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>linkLengths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>starts</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>ends</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>forwardPaths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>invertedPaths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>pathsToInversion</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>newToOldInd</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>oldToNewInd</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>inversionThreshold</td>
+<td>float</td>
+<td>0.5</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="break-component" class="level3">
+<h3 class="anchored" data-anchor-id="break-component">Break component?</h3>
+<hr>
+</section>
+<section id="getmatrixpathelement" class="level3">
+<h3 class="anchored" data-anchor-id="getmatrixpathelement">getMatrixPathElement</h3>
+<blockquote class="blockquote">
+<pre><code> getMatrixPathElement (matrix, pathID)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="checkchange" class="level3">
+<h3 class="anchored" data-anchor-id="checkchange">checkChange</h3>
+<blockquote class="blockquote">
+<pre><code> checkChange (compNum, components, zoomLevel, blockEdges)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="joincomponents" class="level3">
+<h3 class="anchored" data-anchor-id="joincomponents">joinComponents</h3>
+<blockquote class="blockquote">
+<pre><code> joinComponents (leftComp, rightComp, maxLengthComponent,
+                 inversionThreshold=0.5)</code></pre>
+</blockquote>
+<p>!!! ⚠️ Currently not used</p>
+<p>If the joining was successful, the function will return a joined component.</p>
+<p>If the joining was not successful and was aborted for one of the following reasons, it will return a list of original components. The reasons for aborting the joining can be the following: - In one of the paths the invertion is lower than threshold in one component and higher in the other. - Left component contains at least one end - Right component contains at least one start</p>
+<p>The function will not check links for coming or going on the right of the left component and left of the right component. It will just get left links from left component and right links from right component and assign them to the new component.</p>
+<hr>
+</section>
+<section id="checklinkszoom" class="level3">
+<h3 class="anchored" data-anchor-id="checklinkszoom">checkLinksZoom</h3>
+<blockquote class="blockquote">
+<pre><code> checkLinksZoom (compNum, fromComponentLinks, toComponentLinks)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="checkforbreakszoom" class="level3">
+<h3 class="anchored" data-anchor-id="checkforbreakszoom">checkForBreaksZoom</h3>
+<blockquote class="blockquote">
+<pre><code> checkForBreaksZoom (zoomLevel, compNum, components, fromComponentLinks,
+                     toComponentLinks, blockEdges)</code></pre>
+</blockquote>
+</section>
+<section id="update-links" class="level3">
+<h3 class="anchored" data-anchor-id="update-links">Update links</h3>
+<hr>
+</section>
+<section id="splitpositivenegative" class="level3">
+<h3 class="anchored" data-anchor-id="splitpositivenegative">splitPositiveNegative</h3>
+<blockquote class="blockquote">
+<pre><code> splitPositiveNegative (compID, accs, components)</code></pre>
+</blockquote>
+<p>This function simply pulls all accession presented in the component and split them into forward and inversed.</p>
+<table class="table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 38%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>compID</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>accs</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>components</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong><code>posAcc</code>: list[int]. IDs of accession which has forward direction in given component.</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="intersectacclists" class="level3">
+<h3 class="anchored" data-anchor-id="intersectacclists">intersectAccLists</h3>
+<blockquote class="blockquote">
+<pre><code> intersectAccLists (accList, dirDict)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="updatelinks" class="level3">
+<h3 class="anchored" data-anchor-id="updatelinks">updateLinks</h3>
+<blockquote class="blockquote">
+<pre><code> updateLinks (newToOldInd, oldToNewInd, fromComponentLinks,
+              toComponentLinks, linkLengths, pairedLinks,
+              interconnectedLinks, blockEdges, accStarts, accEnds,
+              components, compAccDir, newFromComponentLinks={},
+              newToComponentLinks={})</code></pre>
+</blockquote>
+<p>newToOldInd and oldToNewInd: both index and values are 0-based numbers of components in previous and current zoomlayer.</p>
+</section>
+<section id="main-layer-generation-function-assistant-function" class="level3">
+<h3 class="anchored" data-anchor-id="main-layer-generation-function-assistant-function">Main layer generation function + assistant function</h3>
+<hr>
+</section>
+<section id="isstartend" class="level3">
+<h3 class="anchored" data-anchor-id="isstartend">isStartEnd</h3>
+<blockquote class="blockquote">
+<pre><code> isStartEnd (compNum, components)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="nextlayerzoom" class="level3">
+<h3 class="anchored" data-anchor-id="nextlayerzoom">nextLayerZoom</h3>
+<blockquote class="blockquote">
+<pre><code> nextLayerZoom (zoomLevel, components, componentLengths,
+                fromComponentLinks, toComponentLinks, graph, accStarts,
+                accEnds, maxLengthComponent, linkLengths, pairedLinks,
+                interconnectedLinks, blockEdges, inversionThreshold=0.5,
+                debug=False, debugTime=False)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>zoomLevel</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>components</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>componentLengths</td>
+<td></td>
+<td></td>
+<td>componentNucleotides,</td>
+</tr>
+<tr class="even">
+<td>fromComponentLinks</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>toComponentLinks</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>graph</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>accStarts</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>accEnds</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>maxLengthComponent</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>linkLengths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>pairedLinks</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>interconnectedLinks</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>blockEdges</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>inversionThreshold</td>
+<td>float</td>
+<td>0.5</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>debug</td>
+<td>bool</td>
+<td>False</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>debugTime</td>
+<td>bool</td>
+<td>False</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="clear-elements-too-small-to-show" class="level2">
+<h2 class="anchored" data-anchor-id="clear-elements-too-small-to-show">Clear elements too small to show</h2>
+<p>This set of functions (with the orchestrating function being <code>clearInvisible</code>) look at earlier identified non-linear link to size (or number of nucleotides) associations and if the next zoom level is larger than some sizes, then these links are removed (with reinstating of some of linear links instead).</p>
+<p>After that Isolation blocks are identified and removed. Isolation block is a contiguous block of components (columns) that are connected only to each other but not to any of components outside the block.</p>
+<section id="removing-links-and-rearrangement-blocks-associated-to-too-small-blocks" class="level3">
+<h3 class="anchored" data-anchor-id="removing-links-and-rearrangement-blocks-associated-to-too-small-blocks">Removing links and rearrangement blocks associated to too small blocks</h3>
+<hr>
+</section>
+<section id="removelink" class="level3">
+<h3 class="anchored" data-anchor-id="removelink">removeLink</h3>
+<blockquote class="blockquote">
+<pre><code> removeLink (fromComponentLinks, toComponentLinks, linkList, remLinks,
+             link, pairedLink=None, subLink=None, subLinks=None,
+             remLinkAccessions=None)</code></pre>
+</blockquote>
+<p>This function remove the main link.</p>
+<p>If paired and substitute links are provided, the paired link will be checked (if it is not removed or in the queue to be removed), it will be added to the queue</p>
+<p>After that common accessions for the same strand (for each separately) for start of main link and and end of paired link are found and substitute link is established for all such accessions.</p>
+<p>If the substitute link is not (k,k+1), but (k,k+p), then in componentLinks all links (k,k+1),(k+1,k+1),…,(k+p-1,k+p) are established.</p>
+<hr>
+</section>
+<section id="processcollapsibleblocks" class="level3">
+<h3 class="anchored" data-anchor-id="processcollapsibleblocks">processCollapsibleBlocks</h3>
+<blockquote class="blockquote">
+<pre><code> processCollapsibleBlocks (zoomLevel, linkLengths, pairedLinks,
+                           interconnectedLinks, fromComponentLinks,
+                           toComponentLinks)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="clearrearrangementblocks" class="level3">
+<h3 class="anchored" data-anchor-id="clearrearrangementblocks">clearRearrangementBlocks</h3>
+<blockquote class="blockquote">
+<pre><code> clearRearrangementBlocks (zoomLevel, blockEdges)</code></pre>
+</blockquote>
+</section>
+<section id="find-isolated-blocks" class="level3">
+<h3 class="anchored" data-anchor-id="find-isolated-blocks">Find isolated blocks</h3>
+<section id="identify-empty-edges" class="level4">
+<h4 class="anchored" data-anchor-id="identify-empty-edges">Identify empty edges</h4>
+<hr>
+</section>
+</section>
+<section id="teststartend" class="level3">
+<h3 class="anchored" data-anchor-id="teststartend">testStartEnd</h3>
+<blockquote class="blockquote">
+<pre><code> testStartEnd (compNum, isLeft, components, accStarts, accEnds)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="findemptyedges" class="level3">
+<h3 class="anchored" data-anchor-id="findemptyedges">findEmptyEdges</h3>
+<blockquote class="blockquote">
+<pre><code> findEmptyEdges (fromComponentLinks, toComponentLinks, accStarts, accEnds,
+                 components)</code></pre>
+</blockquote>
+<p>Identify all empty edges by simply finding components that do not appear either in toComponentLinks (left empty) or fromComponentLinks (right empty)</p>
+<section id="identify-isolated-blocks" class="level4">
+<h4 class="anchored" data-anchor-id="identify-isolated-blocks">Identify isolated blocks</h4>
+<hr>
+</section>
+</section>
+<section id="checkexternallinks" class="level3">
+<h3 class="anchored" data-anchor-id="checkexternallinks">checkExternalLinks</h3>
+<blockquote class="blockquote">
+<pre><code> checkExternalLinks (blockStart, blockEnd, fromComponentLinks,
+                     toComponentLinks, components)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="createnewboundaries" class="level3">
+<h3 class="anchored" data-anchor-id="createnewboundaries">createNewBoundaries</h3>
+<blockquote class="blockquote">
+<pre><code> createNewBoundaries (blockStart, blockEnd, externalLinksComps,
+                      leftEmptyList, rightEmptyList)</code></pre>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Test for `createNewBoundaries`</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>st <span class="op">=</span> [<span class="dv">2</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">8</span>]</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>end <span class="op">=</span> [<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">6</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>,<span class="dv">11</span>]</span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>blocks <span class="op">=</span> [[<span class="dv">2</span>,<span class="dv">11</span>],[<span class="dv">2</span>,<span class="dv">3</span>],[<span class="dv">5</span>,<span class="dv">11</span>],[<span class="dv">8</span>,<span class="dv">11</span>],[<span class="dv">8</span>,<span class="dv">9</span>],[<span class="dv">8</span>,<span class="dv">11</span>]]</span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>blockSplits <span class="op">=</span> [[[<span class="dv">2</span>,<span class="dv">3</span>],[<span class="dv">5</span>,<span class="dv">11</span>]],[[<span class="dv">2</span>,<span class="dv">2</span>]],[[<span class="dv">6</span>,<span class="dv">6</span>],[<span class="dv">8</span>,<span class="dv">11</span>]],[[<span class="dv">8</span>,<span class="dv">9</span>]],[[<span class="dv">8</span>,<span class="dv">8</span>]],[]]</span>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>externals <span class="op">=</span> [[<span class="dv">4</span>],[<span class="dv">3</span>],[<span class="dv">5</span>,<span class="dv">7</span>],[<span class="dv">10</span>],[<span class="dv">9</span>],[<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>,<span class="dv">11</span>]]</span>
+<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> bl,blSpl,ext <span class="kw">in</span> <span class="bu">zip</span>(blocks,blockSplits,externals):</span>
+<span id="cb65-12"><a href="#cb65-12" aria-hidden="true" tabindex="-1"></a>    blSplTT <span class="op">=</span> createNewBoundaries(<span class="op">*</span>bl,ext,st,end)</span>
+<span id="cb65-13"><a href="#cb65-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> blSpl <span class="op">==</span> blSplTT,<span class="ss">f'Expected </span><span class="sc">{</span>blSpl<span class="sc">}</span><span class="ss">, but got </span><span class="sc">{</span>blSplTT<span class="sc">}</span><span class="ss">'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Another test for `createNewBoundaries`</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>leftEmptyList <span class="op">=</span> [<span class="dv">2056</span>, <span class="dv">3080</span>, <span class="dv">3081</span>, <span class="dv">2092</span>, <span class="dv">2099</span>, <span class="dv">1593</span>, <span class="dv">3643</span>, <span class="dv">2627</span>, <span class="dv">1116</span>, <span class="dv">2653</span>, <span class="dv">2655</span>, <span class="dv">3168</span>, <span class="dv">2658</span>, <span class="dv">613</span>, <span class="dv">1637</span>, <span class="dv">1638</span>, <span class="dv">106</span>, <span class="dv">1654</span>, <span class="dv">2695</span>, <span class="dv">2192</span>, <span class="dv">1169</span>, <span class="dv">1686</span>, <span class="dv">2714</span>, <span class="dv">3757</span>, <span class="dv">2233</span>, <span class="dv">3781</span>, <span class="dv">723</span>, <span class="dv">1240</span>, <span class="dv">224</span>, <span class="dv">1761</span>, <span class="dv">1762</span>, <span class="dv">1766</span>, <span class="dv">3323</span>, <span class="dv">1804</span>, <span class="dv">786</span>, <span class="dv">2331</span>, <span class="dv">802</span>, <span class="dv">2850</span>, <span class="dv">807</span>, <span class="dv">811</span>, <span class="dv">1839</span>, <span class="dv">1841</span>, <span class="dv">3396</span>, <span class="dv">3397</span>, <span class="dv">1863</span>, <span class="dv">3400</span>, <span class="dv">843</span>, <span class="dv">3423</span>, <span class="dv">1898</span>, <span class="dv">1899</span>, <span class="dv">882</span>, <span class="dv">884</span>, <span class="dv">3463</span>, <span class="dv">402</span>, <span class="dv">2451</span>, <span class="dv">3478</span>, <span class="dv">408</span>, <span class="dv">3482</span>, <span class="dv">934</span>, <span class="dv">426</span>, <span class="dv">1962</span>, <span class="dv">3504</span>, <span class="dv">3516</span>, <span class="dv">3519</span>, <span class="dv">3520</span>, <span class="dv">451</span>, <span class="dv">1994</span>, <span class="dv">1995</span>, <span class="dv">972</span>, <span class="dv">2506</span>, <span class="dv">463</span>, <span class="dv">3024</span>, <span class="dv">1493</span>, <span class="dv">1494</span>, <span class="dv">3542</span>, <span class="dv">1525</span>]</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>rightEmptyList <span class="op">=</span> [<span class="dv">402</span>, <span class="dv">2451</span>, <span class="dv">3478</span>, <span class="dv">407</span>, <span class="dv">280</span>, <span class="dv">3482</span>, <span class="dv">2848</span>, <span class="dv">802</span>, <span class="dv">934</span>, <span class="dv">807</span>, <span class="dv">426</span>, <span class="dv">811</span>, <span class="dv">2091</span>, <span class="dv">2092</span>, <span class="dv">3757</span>, <span class="dv">1839</span>, <span class="dv">3504</span>, <span class="dv">1841</span>, <span class="dv">3516</span>, <span class="dv">3519</span>, <span class="dv">3405</span>, <span class="dv">463</span>, <span class="dv">722</span>, <span class="dv">1240</span>, <span class="dv">1761</span>, <span class="dv">1762</span>, <span class="dv">1766</span>, <span class="dv">1899</span>]</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>blockStart <span class="op">=</span> <span class="dv">3396</span></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>blockEnd <span class="op">=</span> <span class="dv">3405</span></span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>externalLinksComps <span class="op">=</span> [<span class="dv">3396</span>, <span class="dv">3397</span>, <span class="dv">3398</span>, <span class="dv">3399</span>, <span class="dv">3400</span>, <span class="dv">3401</span>, <span class="dv">3402</span>, <span class="dv">3403</span>, <span class="dv">3404</span>, <span class="dv">3405</span>]</span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>createNewBoundaries(blockStart,blockEnd,externalLinksComps,leftEmptyList,rightEmptyList)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>[]</code></pre>
+</div>
+</div>
+<hr>
+</section>
+<section id="identifyisolatedblocks" class="level3">
+<h3 class="anchored" data-anchor-id="identifyisolatedblocks">identifyIsolatedBlocks</h3>
+<blockquote class="blockquote">
+<pre><code> identifyIsolatedBlocks (leftEmptyList, rightEmptyList,
+                         fromComponentLinks, toComponentLinks, components)</code></pre>
+</blockquote>
+</section>
+<section id="removing-isolated-blocks" class="level3">
+<h3 class="anchored" data-anchor-id="removing-isolated-blocks">Removing Isolated Blocks</h3>
+<hr>
+</section>
+<section id="updatelinksremovecomp" class="level3">
+<h3 class="anchored" data-anchor-id="updatelinksremovecomp">updateLinksRemoveComp</h3>
+<blockquote class="blockquote">
+<pre><code> updateLinksRemoveComp (oldToNewInd, fromComponentLinks, toComponentLinks,
+                        linkLengths, pairedLinks, interconnectedLinks,
+                        blockEdges, accStarts, accEnds)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="removeisolatedblocks" class="level3">
+<h3 class="anchored" data-anchor-id="removeisolatedblocks">removeIsolatedBlocks</h3>
+<blockquote class="blockquote">
+<pre><code> removeIsolatedBlocks (isolatedBlockList, components, componentLengths,
+                       fromComponentLinks, toComponentLinks, accStarts,
+                       accEnds, linkLengths, pairedLinks,
+                       interconnectedLinks, blockEdges)</code></pre>
+</blockquote>
+</section>
+<section id="clearing-small-element-wrapping-function" class="level3">
+<h3 class="anchored" data-anchor-id="clearing-small-element-wrapping-function">Clearing small element wrapping function</h3>
+<hr>
+</section>
+<section id="clearinvisible" class="level3">
+<h3 class="anchored" data-anchor-id="clearinvisible">clearInvisible</h3>
+<blockquote class="blockquote">
+<pre><code> clearInvisible (zoomLevel, linkLengths, pairedLinks, interconnectedLinks,
+                 blockEdges, fromComponentLinks, toComponentLinks,
+                 accStarts, accEnds, components, componentLengths)</code></pre>
+</blockquote>
+</section>
+</section>
+<section id="exporting-layer" class="level2">
+<h2 class="anchored" data-anchor-id="exporting-layer">Exporting layer</h2>
+<p>These functions, with the main one being <code>exportLayer</code>, are exporting prepared zoom level (cleaned and collapsed by other functions) into Pantograph Visualisation tool data structures (JSON chunk files).</p>
+<hr>
+<section id="createzoomleveldir" class="level3">
+<h3 class="anchored" data-anchor-id="createzoomleveldir">createZoomLevelDir</h3>
+<blockquote class="blockquote">
+<pre><code> createZoomLevelDir (outputPath, outputName, zoomLevel)</code></pre>
+</blockquote>
+<p>Creates a directory for zoom level chunks. The function will take care of correct directory level separator.</p>
+<hr>
+</section>
+<section id="finalisechunk" class="level3">
+<h3 class="anchored" data-anchor-id="finalisechunk">finaliseChunk</h3>
+<blockquote class="blockquote">
+<pre><code> finaliseChunk (rootStruct, zoomLevel, chunk, nucleotides, nBins,
+                chunkNum, curCompCols, prevTotalCols, outputPath,
+                outputName)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="addlinkstocomp" class="level3">
+<h3 class="anchored" data-anchor-id="addlinkstocomp">addLinksToComp</h3>
+<blockquote class="blockquote">
+<pre><code> addLinksToComp (compNum, components, fromComponentLinks,
+                 toComponentLinks)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="checklinks" class="level3">
+<h3 class="anchored" data-anchor-id="checklinks">checkLinks</h3>
+<blockquote class="blockquote">
+<pre><code> checkLinks (leftComp, rightComp)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="searchindicesposrecord" class="level3">
+<h3 class="anchored" data-anchor-id="searchindicesposrecord">searchIndicesPosRecord</h3>
+<blockquote class="blockquote">
+<pre><code> searchIndicesPosRecord (redisConn, redisCaseID, zoomLevel, accessions,
+                         posMapping)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="exportlayer" class="level3">
+<h3 class="anchored" data-anchor-id="exportlayer">exportLayer</h3>
+<blockquote class="blockquote">
+<pre><code> exportLayer (zoomLevel, components, componentNucleotides,
+              fromComponentLinks, toComponentLinks, rootStruct,
+              outputPath, outputName, maxLengthComponent, maxLengthChunk,
+              inversionThreshold=0.5, redisConn=None, redisCaseID=None,
+              accessions=None, debug=False)</code></pre>
+</blockquote>
+</section>
+</section>
+<section id="main-exporter-wrapper-with-its-helper-functions" class="level2">
+<h2 class="anchored" data-anchor-id="main-exporter-wrapper-with-its-helper-functions">Main exporter wrapper with its helper functions</h2>
+<p>This is the main orchestrating function that export a single graph to Pantograph Visualisation tool with a couple of auxiliary functions.</p>
+<hr>
+<section id="complinkstoacccomplinks" class="level3">
+<h3 class="anchored" data-anchor-id="complinkstoacccomplinks">compLinksToAccCompLinks</h3>
+<blockquote class="blockquote">
+<pre><code> compLinksToAccCompLinks (compLinks, doCompDir=False)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="recordzoomlevelfordebug" class="level3">
+<h3 class="anchored" data-anchor-id="recordzoomlevelfordebug">recordZoomLevelForDebug</h3>
+<blockquote class="blockquote">
+<pre><code> recordZoomLevelForDebug (zoomNodeToComponent, zoomComponentToNodes,
+                          zoomComponents, nodeToComponent,
+                          componentToNodes, components, zoomLevel)</code></pre>
+</blockquote>
+<p>A function which records result of segmentation to dictionaries, which holds results for all zoom levels. It is currently used only for debugging purposes and in normal operation all zoom level dictionaries are not created and used.</p>
+<table class="table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 38%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>zoomNodeToComponent</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>zoomComponentToNodes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>zoomComponents</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>nodeToComponent</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>componentToNodes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>components</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>zoomLevel</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>Returns modified dictionaries with <code>zoom</code> in the beginning of the names. Theoretically,</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="searchindicesgenerecord" class="level3">
+<h3 class="anchored" data-anchor-id="searchindicesgenerecord">searchIndicesGeneRecord</h3>
+<blockquote class="blockquote">
+<pre><code> searchIndicesGeneRecord (redisConn, redisCaseID, geneMapping,
+                          genPosMapping, altChrGenPosMapping,
+                          genPosSearchMapping, pangenPosSearchMapping)</code></pre>
+</blockquote>
+<p>Recording prepared metadata structures into Redis DB</p>
+<hr>
+</section>
+<section id="exporttopantograph" class="level3">
+<h3 class="anchored" data-anchor-id="exporttopantograph">exportToPantograph</h3>
+<blockquote class="blockquote">
+<pre><code> exportToPantograph (graph=None, inputPath=None, GenomeGraphParams={},
+                     outputPath=None, outputName=None, outputSuffix=None,
+                     isSeq=True, nodeLengths=None, redisConn=None,
+                     zoomLevels=[1], fillZoomLevels=True,
+                     maxLengthComponent=100, maxLengthChunk=20,
+                     inversionThreshold=0.5, debug=False,
+                     returnDebugData=False)</code></pre>
+</blockquote>
+<p>This function is used by <code>exportProject</code> function and should not normally be used independently now.</p>
+</section>
+</section>
+<section id="project-generation" class="level2">
+<h2 class="anchored" data-anchor-id="project-generation">Project generation</h2>
+<hr>
+<section id="exportproject" class="level3">
+<h3 class="anchored" data-anchor-id="exportproject">exportProject</h3>
+<blockquote class="blockquote">
+<pre><code> exportProject (projectID, projectName, caseDict, pathToIndex,
+                pathToGraphs, redisHost=None, redisPort=6379, redisDB=0,
+                suffix='', maxLengthComponent=100, maxLengthChunk=6,
+                inversionThreshold=0.5, isSeq=False, zoomLevels=[1],
+                fillZoomLevel=True)</code></pre>
+</blockquote>
+<p>This is the only function that should normally be used to export a set of graphs (e.g.&nbsp;a graph per chromosome) to Pantograph Visualisation tool as a project (or interconnected structure).</p>
+Exporting of each graph creates a case directory <projectid>_
+<case name="">
+<p><suffix> with <code>bin2file.json</code> file which describes the case overall and each zoom level. At the same time, each zoom level is contained in multiple chunk JSON files, each zoom level <code>n</code> is in the directory <code>n</code> inside the case directory. Each JSON chunk files contains all required information to visualise up to <code>maxLengthChunk</code> components at a given zoom level.</suffix></p>
+<p>ALl case directories are in project directory together with <code>&lt;projectID&gt;_project.json</code>, which is simply provides association between case names and and corresponding directory name.</p>
+<p>Finally, information about the project will be recorded to Pantograph Visualisation tool data index to make it discoverable by the tool.</p>
+<p>In addition, no metadata is recorded into these files as it inflates it very quickly. Instead, a very simple (optional) API works alongside main Pantograph Visualisation tool which provides a lot of various metadata on request if API available or do nothing if not. This API uses Redis DB with special DB schema.</p>
+<p>When graphs are exported some metadata (annotations, genome and pangenome positions) can be recorded to Redis DB. If Redis DB is not available or recording of metadata is not needed, then parameter <code>redisHost</code> should be omitted. Otherwise, if Redis DB is available and metadata should be recorded, then <code>redisHost</code> should be set to the hostname (or IP address) of the Redis DB server</p>
+
+
+</case></projectid></section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

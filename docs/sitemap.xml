@@ -1,24 +1,47 @@
----
-layout: none
-search: exclude
----
-
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  {% for post in site.posts %}
-  {% unless post.search == "exclude" %}
   <url>
-    <loc>{{site.url}}{{post.url}}</loc>
+    <loc>//pygengraph/tree.html</loc>
+    <lastmod>2023-03-22T14:57:53.687Z</lastmod>
   </url>
-  {% endunless %}
-  {% endfor %}
-
-
-  {% for page in site.pages %}
-  {% unless page.search == "exclude" %}
   <url>
-    <loc>{{site.url}}{{ page.url}}</loc>
+    <loc>//pygengraph/scripts.html</loc>
+    <lastmod>2023-03-22T14:57:54.135Z</lastmod>
   </url>
-  {% endunless %}
-  {% endfor %}
+  <url>
+    <loc>//pygengraph/CONTRIBUTING.html</loc>
+    <lastmod>2023-03-22T14:57:54.611Z</lastmod>
+  </url>
+  <url>
+    <loc>//pygengraph/dev.html</loc>
+    <lastmod>2023-03-22T14:57:55.403Z</lastmod>
+  </url>
+  <url>
+    <loc>//pygengraph/synteny.html</loc>
+    <lastmod>2023-03-22T14:57:55.867Z</lastmod>
+  </url>
+  <url>
+    <loc>//pygengraph/graph.html</loc>
+    <lastmod>2023-03-22T14:57:56.535Z</lastmod>
+  </url>
+  <url>
+    <loc>//pygengraph/init.html</loc>
+    <lastmod>2023-03-22T14:57:56.975Z</lastmod>
+  </url>
+  <url>
+    <loc>//pygengraph/export.html</loc>
+    <lastmod>2023-03-22T14:57:58.143Z</lastmod>
+  </url>
+  <url>
+    <loc>//pygengraph/index.html</loc>
+    <lastmod>2023-03-22T14:57:59.307Z</lastmod>
+  </url>
+  <url>
+    <loc>//pygengraph/utils.html</loc>
+    <lastmod>2023-03-22T14:57:59.895Z</lastmod>
+  </url>
+  <url>
+    <loc>//pygengraph/debruijngraphprocessing.html</loc>
+    <lastmod>2023-03-22T14:58:00.675Z</lastmod>
+  </url>
 </urlset>

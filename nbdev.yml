@@ -1,0 +1,9 @@
+project:
+  output-dir: docs
+
+website:
+  title: "pygengraph"
+  site-url: "//pygengraph"
+  description: "A package for genome graph constrcution and processing aimed at building highly non-linear graphs for analysis and visualisation of large structural variations (SVs) and synteny blocks."
+  repo-branch: master
+  repo-url: "https://gitlab.com/pigrenok/pygengraph/tree/master/"

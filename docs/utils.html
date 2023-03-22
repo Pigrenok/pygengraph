@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Provides utility functions and classes">
+
+<title>pygengraph - Utils module</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="pygengraph - Utils module">
+<meta property="og:description" content="Provides utility functions and classes">
+<meta property="og:site-name" content="pygengraph">
+<meta name="twitter:title" content="pygengraph - Utils module">
+<meta name="twitter:description" content="Provides utility functions and classes">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">pygengraph</span>
+    </a>
+  </div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">Utils module</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">pygengraph</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./init.html" class="sidebar-item-text sidebar-link">Synteny module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./graph.html" class="sidebar-item-text sidebar-link">Graph module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tree.html" class="sidebar-item-text sidebar-link">Tree module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./synteny.html" class="sidebar-item-text sidebar-link">Synteny module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./utils.html" class="sidebar-item-text sidebar-link active">Utils module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./export.html" class="sidebar-item-text sidebar-link">Export module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./scripts.html" class="sidebar-item-text sidebar-link">Script module</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">docs</a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  docs/index.html
+  </li>
+          <li class="sidebar-item">
+  docs/CONTRIBUTING.html
+  </li>
+          <li class="sidebar-item">
+  docs/debruijngraphprocessing.html
+  </li>
+          <li class="sidebar-item">
+  docs/dev.html
+  </li>
+          <li class="sidebar-item">
+  docs/export.html
+  </li>
+          <li class="sidebar-item">
+  docs/graph.html
+  </li>
+          <li class="sidebar-item">
+  docs/init.html
+  </li>
+          <li class="sidebar-item">
+  docs/scripts.html
+  </li>
+          <li class="sidebar-item">
+  docs/synteny.html
+  </li>
+          <li class="sidebar-item">
+  docs/tree.html
+  </li>
+          <li class="sidebar-item">
+  docs/utils.html
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sequence-operations" id="toc-sequence-operations" class="nav-link active" data-scroll-target="#sequence-operations">Sequence operations</a>
+  <ul class="collapse">
+  <li><a href="#sequence-inversion" id="toc-sequence-inversion" class="nav-link" data-scroll-target="#sequence-inversion">Sequence inversion</a></li>
+  <li><a href="#generatecomplementdict" id="toc-generatecomplementdict" class="nav-link" data-scroll-target="#generatecomplementdict">generateComplementDict</a></li>
+  <li><a href="#complementsequence" id="toc-complementsequence" class="nav-link" data-scroll-target="#complementsequence">complementSequence</a></li>
+  <li><a href="#reversesequence" id="toc-reversesequence" class="nav-link" data-scroll-target="#reversesequence">reverseSequence</a></li>
+  <li><a href="#inversesequence" id="toc-inversesequence" class="nav-link" data-scroll-target="#inversesequence">inverseSequence</a></li>
+  </ul></li>
+  <li><a href="#other-file-operations" id="toc-other-file-operations" class="nav-link" data-scroll-target="#other-file-operations">Other file operations</a>
+  <ul class="collapse">
+  <li><a href="#checknodelengthsfile" id="toc-checknodelengthsfile" class="nav-link" data-scroll-target="#checknodelengthsfile">checkNodeLengthsFile</a></li>
+  </ul></li>
+  <li><a href="#path-files-operations" id="toc-path-files-operations" class="nav-link" data-scroll-target="#path-files-operations">Path files operations</a>
+  <ul class="collapse">
+  <li><a href="#sortaccessions" id="toc-sortaccessions" class="nav-link" data-scroll-target="#sortaccessions">sortAccessions</a></li>
+  <li><a href="#pathfiletopathdict" id="toc-pathfiletopathdict" class="nav-link" data-scroll-target="#pathfiletopathdict">pathFileToPathDict</a></li>
+  </ul></li>
+  <li><a href="#export-parameters-processing-and-validating" id="toc-export-parameters-processing-and-validating" class="nav-link" data-scroll-target="#export-parameters-processing-and-validating">Export parameters processing and validating</a>
+  <ul class="collapse">
+  <li><a href="#pathconvert" id="toc-pathconvert" class="nav-link" data-scroll-target="#pathconvert">pathConvert</a></li>
+  <li><a href="#checkzoomlevels" id="toc-checkzoomlevels" class="nav-link" data-scroll-target="#checkzoomlevels">checkZoomLevels</a></li>
+  <li><a href="#adjustzoomlevels" id="toc-adjustzoomlevels" class="nav-link" data-scroll-target="#adjustzoomlevels">adjustZoomLevels</a></li>
+  </ul></li>
+  <li><a href="#utility-classes" id="toc-utility-classes" class="nav-link" data-scroll-target="#utility-classes">Utility classes</a>
+  <ul class="collapse">
+  <li><a href="#numpy-to-json-encoder" id="toc-numpy-to-json-encoder" class="nav-link" data-scroll-target="#numpy-to-json-encoder">Numpy to JSON encoder</a></li>
+  <li><a href="#npencoder" id="toc-npencoder" class="nav-link" data-scroll-target="#npencoder">NpEncoder</a></li>
+  <li><a href="#bidirectional-dict-structure" id="toc-bidirectional-dict-structure" class="nav-link" data-scroll-target="#bidirectional-dict-structure">Bidirectional dict structure</a></li>
+  <li><a href="#bidict" id="toc-bidict" class="nav-link" data-scroll-target="#bidict">bidict</a></li>
+  </ul></li>
+  <li><a href="#redis-utility" id="toc-redis-utility" class="nav-link" data-scroll-target="#redis-utility">Redis utility</a>
+  <ul class="collapse">
+  <li><a href="#db-cleaning-and-maintenance" id="toc-db-cleaning-and-maintenance" class="nav-link" data-scroll-target="#db-cleaning-and-maintenance">DB cleaning and maintenance</a></li>
+  <li><a href="#resetdb" id="toc-resetdb" class="nav-link" data-scroll-target="#resetdb">resetDB</a></li>
+  <li><a href="#functions-implementing-secondary-interval-set-in-redis-database" id="toc-functions-implementing-secondary-interval-set-in-redis-database" class="nav-link" data-scroll-target="#functions-implementing-secondary-interval-set-in-redis-database">Functions implementing secondary interval set in Redis database</a></li>
+  <li><a href="#iset_add" id="toc-iset_add" class="nav-link" data-scroll-target="#iset_add">iset_add</a></li>
+  <li><a href="#iset_get" id="toc-iset_get" class="nav-link" data-scroll-target="#iset_get">iset_get</a></li>
+  <li><a href="#iset_score" id="toc-iset_score" class="nav-link" data-scroll-target="#iset_score">iset_score</a></li>
+  <li><a href="#iset_not_score" id="toc-iset_not_score" class="nav-link" data-scroll-target="#iset_not_score">iset_not_score</a></li>
+  <li><a href="#iset_del" id="toc-iset_del" class="nav-link" data-scroll-target="#iset_del">iset_del</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-git"></i></div><div class="action-links"><p><a href="https://gitlab.com/pigrenok/pygengraph/tree/master/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">Utils module</h1>
+</div>
+
+<div>
+  <div class="description">
+    Provides utility functions and classes
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<section id="sequence-operations" class="level2">
+<h2 class="anchored" data-anchor-id="sequence-operations">Sequence operations</h2>
+<section id="sequence-inversion" class="level3">
+<h3 class="anchored" data-anchor-id="sequence-inversion">Sequence inversion</h3>
+<hr>
+</section>
+<section id="generatecomplementdict" class="level3">
+<h3 class="anchored" data-anchor-id="generatecomplementdict">generateComplementDict</h3>
+<blockquote class="blockquote">
+<pre><code> generateComplementDict (seqType='DNA', isDict=True)</code></pre>
+</blockquote>
+<p>The function <code>generateComplementDict</code> generates a dictionary for complementing the DNA sequence. It can be applied to RNA to identify inverted sequences.</p>
+<p><code>seqType</code>: str, Can be either ‘DNA’ or ‘RNA’ at the moment. If ‘DNA’, then the complement to four known nucleotide (A, C, G, T) will be provided. All other letters (B, D, H, U, N and all others) will be translated to N.</p>
+<hr>
+</section>
+<section id="complementsequence" class="level3">
+<h3 class="anchored" data-anchor-id="complementsequence">complementSequence</h3>
+<blockquote class="blockquote">
+<pre><code> complementSequence (seq, complementDict='DNA')</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="reversesequence" class="level3">
+<h3 class="anchored" data-anchor-id="reversesequence">reverseSequence</h3>
+<blockquote class="blockquote">
+<pre><code> reverseSequence (seq)</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="inversesequence" class="level3">
+<h3 class="anchored" data-anchor-id="inversesequence">inverseSequence</h3>
+<blockquote class="blockquote">
+<pre><code> inverseSequence (seq, complementDict='DNA')</code></pre>
+</blockquote>
+</section>
+</section>
+<section id="other-file-operations" class="level2">
+<h2 class="anchored" data-anchor-id="other-file-operations">Other file operations</h2>
+<hr>
+<section id="checknodelengthsfile" class="level3">
+<h3 class="anchored" data-anchor-id="checknodelengthsfile">checkNodeLengthsFile</h3>
+<blockquote class="blockquote">
+<pre><code> checkNodeLengthsFile (GFAPath)</code></pre>
+</blockquote>
+</section>
+</section>
+<section id="path-files-operations" class="level2">
+<h2 class="anchored" data-anchor-id="path-files-operations">Path files operations</h2>
+<hr>
+<section id="sortaccessions" class="level3">
+<h3 class="anchored" data-anchor-id="sortaccessions">sortAccessions</h3>
+<blockquote class="blockquote">
+<pre><code> sortAccessions (sort, _paths)</code></pre>
+</blockquote>
+<pre><code>/home/pigrenok/.pyenv/versions/3.10.9/lib/python3.10/site-packages/fastcore/docscrape.py:225: UserWarning: Unknown section Return
+  else: warn(msg)</code></pre>
+<hr>
+</section>
+<section id="pathfiletopathdict" class="level3">
+<h3 class="anchored" data-anchor-id="pathfiletopathdict">pathFileToPathDict</h3>
+<blockquote class="blockquote">
+<pre><code> pathFileToPathDict (filePath, directional=True, sort=True, v2=True)</code></pre>
+</blockquote>
+<p>Reads path file (ASCII file) and translates it to path dictionary for <code>GenGraph</code> class constructor.</p>
+<p>Path file has a path on each line in the following format: <path name="">: &lt;nodeID[+|-]&gt;[,&lt;nodeID[+,-]&gt;]</path></p>
+</section>
+</section>
+<section id="export-parameters-processing-and-validating" class="level2">
+<h2 class="anchored" data-anchor-id="export-parameters-processing-and-validating">Export parameters processing and validating</h2>
+<hr>
+<section id="pathconvert" class="level3">
+<h3 class="anchored" data-anchor-id="pathconvert">pathConvert</h3>
+<blockquote class="blockquote">
+<pre><code> pathConvert (inputPath, suffix='')</code></pre>
+</blockquote>
+<hr>
+</section>
+<section id="checkzoomlevels" class="level3">
+<h3 class="anchored" data-anchor-id="checkzoomlevels">checkZoomLevels</h3>
+<blockquote class="blockquote">
+<pre><code> checkZoomLevels (zoomLevels)</code></pre>
+</blockquote>
+<p>Check that each previous zoom level is factor of next one</p>
+<hr>
+</section>
+<section id="adjustzoomlevels" class="level3">
+<h3 class="anchored" data-anchor-id="adjustzoomlevels">adjustZoomLevels</h3>
+<blockquote class="blockquote">
+<pre><code> adjustZoomLevels (zoomLevels)</code></pre>
+</blockquote>
+<p>If there is no zoom level 1, adds it to the list.</p>
+</section>
+</section>
+<section id="utility-classes" class="level2">
+<h2 class="anchored" data-anchor-id="utility-classes">Utility classes</h2>
+<section id="numpy-to-json-encoder" class="level3">
+<h3 class="anchored" data-anchor-id="numpy-to-json-encoder">Numpy to JSON encoder</h3>
+<hr>
+</section>
+<section id="npencoder" class="level3">
+<h3 class="anchored" data-anchor-id="npencoder">NpEncoder</h3>
+<blockquote class="blockquote">
+<pre><code> NpEncoder (skipkeys=False, ensure_ascii=True, check_circular=True,
+            allow_nan=True, sort_keys=False, indent=None, separators=None,
+            default=None)</code></pre>
+</blockquote>
+<p>Extensible JSON <a href="https://json.org" class="uri">https://json.org</a> encoder for Python data structures.</p>
+<p>Supports the following objects and types by default:</p>
+<table class="table">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Python</th>
+<th>JSON</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>dict</td>
+<td>object</td>
+</tr>
+<tr class="even">
+<td>list, tuple</td>
+<td>array</td>
+</tr>
+<tr class="odd">
+<td>str</td>
+<td>string</td>
+</tr>
+<tr class="even">
+<td>int, float</td>
+<td>number</td>
+</tr>
+<tr class="odd">
+<td>True</td>
+<td>true</td>
+</tr>
+<tr class="even">
+<td>False</td>
+<td>false</td>
+</tr>
+<tr class="odd">
+<td>None</td>
+<td>null</td>
+</tr>
+</tbody>
+</table>
+<p>To extend this to recognize other objects, subclass and implement a <code>.default()</code> method with another method that returns a serializable object for <code>o</code> if possible, otherwise it should call the superclass implementation (to raise <code>TypeError</code>).</p>
+</section>
+<section id="bidirectional-dict-structure" class="level3">
+<h3 class="anchored" data-anchor-id="bidirectional-dict-structure">Bidirectional dict structure</h3>
+<hr>
+</section>
+<section id="bidict" class="level3">
+<h3 class="anchored" data-anchor-id="bidict">bidict</h3>
+<blockquote class="blockquote">
+<pre><code> bidict (*args, **kwargs)</code></pre>
+</blockquote>
+<p>Here is a class for a bidirectional dict, inspired by Finding key from value in Python dictionary and modified to allow the following 2) and 3).</p>
+<p>Note that :</p>
+<ol type="1">
+<li>The inverse directory bd.inverse auto-updates itself when the standard dict bd is modified.</li>
+<li>The inverse directory bd.inverse[value] is always a list of keys such that value in bd[key] for each key.</li>
+<li>Unlike the bidict module from https://pypi.python.org/pypi/bidict, here we can have 2 keys having same value, this is very important.</li>
+<li>After modification, values in the “forward” (not inversed) dict can be lists (or any iterables theoretically, but only list was tested).</li>
+</ol>
+<p>For implementing 4), new method <code>add</code> was introduced. If d[key].append(value) attempted, the link between main and inversed dict will be broken. Method <code>add</code> can accept both</p>
+<p>Credit: Implemented as an answer to https://stackoverflow.com/questions/3318625/how-to-implement-an-efficient-bidirectional-hash-table by Basj (https://stackoverflow.com/users/1422096/basj).</p>
+</section>
+</section>
+<section id="redis-utility" class="level2">
+<h2 class="anchored" data-anchor-id="redis-utility">Redis utility</h2>
+<section id="db-cleaning-and-maintenance" class="level3">
+<h3 class="anchored" data-anchor-id="db-cleaning-and-maintenance">DB cleaning and maintenance</h3>
+<hr>
+</section>
+<section id="resetdb" class="level3">
+<h3 class="anchored" data-anchor-id="resetdb">resetDB</h3>
+<blockquote class="blockquote">
+<pre><code> resetDB (redisServer='redis', port=6379)</code></pre>
+</blockquote>
+<p>Reset the whole database. Be careful, it is impossible re restore DB once it was flushed.</p>
+</section>
+<section id="functions-implementing-secondary-interval-set-in-redis-database" class="level3">
+<h3 class="anchored" data-anchor-id="functions-implementing-secondary-interval-set-in-redis-database">Functions implementing secondary interval set in Redis database</h3>
+<hr>
+</section>
+<section id="iset_add" class="level3">
+<h3 class="anchored" data-anchor-id="iset_add">iset_add</h3>
+<blockquote class="blockquote">
+<pre><code> iset_add (r, name, intervalMapping)</code></pre>
+</blockquote>
+<p>Add members with intervals to interval set. If interval set does not exist, it will be created. In reality, it will create two Redis Sorted Sets for starts and ends of the intervals. The rest of the functions <code>iset_</code> will know what to do with them.</p>
+<p><code>r</code>: Redis object. Redis client. <code>name</code>: string. Name of the interval set. <code>intervalMapping</code>: dict. Dictionary with names of intervals as keys and tuples with start and end of intervals.</p>
+<p>Return number of added intervals. In reality, it adds equal number of elements to two sorted sets, if number of added elements are not equal, DataError is raised.</p>
+<hr>
+</section>
+<section id="iset_get" class="level3">
+<h3 class="anchored" data-anchor-id="iset_get">iset_get</h3>
+<blockquote class="blockquote">
+<pre><code> iset_get (r, name, member=None)</code></pre>
+</blockquote>
+<p>Return either the whole interval set or specific name(s) with its interval.</p>
+<p><code>r</code>: Redis object. Redis client. <code>name</code>: string. Name of the interval set. <code>member</code>: string, list, tuple or None. If None, function return all members with their respective intervals. If string, returns a single member with its interval, if list or tuple, returns all requested members with their respecitve intervals.</p>
+<p>Return a dictionary with member names as keys and tuples with interval starts and ends as values. For member names not found in interval set, the value for the given key will be a tuple (None,None).</p>
+<hr>
+</section>
+<section id="iset_score" class="level3">
+<h3 class="anchored" data-anchor-id="iset_score">iset_score</h3>
+<blockquote class="blockquote">
+<pre><code> iset_score (r, name, start, end=None)</code></pre>
+</blockquote>
+<p>Returns all member names whose interval contains a given value or intersects with the given interval</p>
+<p><code>r</code>: Redis object. Redis client. <code>name</code>: string. Name of the interval set <code>start</code>: int. Query value or the start of query interval. <code>end</code>: int or None. If None, <code>start</code> is treated as a single query value. If int, then <code>start</code> is the start of the query interval, <code>end</code> is the end of the query interval.</p>
+<p>Returns a list of members whose intervals either contain query value or intersects with query interval.</p>
+<hr>
+</section>
+<section id="iset_not_score" class="level3">
+<h3 class="anchored" data-anchor-id="iset_not_score">iset_not_score</h3>
+<blockquote class="blockquote">
+<pre><code> iset_not_score (r, name, start, end=None)</code></pre>
+</blockquote>
+<p>Returns all intervals (member names only) where query value is not contained or query interval is not intersecting. Inverison of <code>iset_score()</code> function</p>
+<p><code>r</code>: Redis object. Redis client. <code>name</code>: string. Name of the interval set <code>start</code>: int. Query value or the start of query interval. <code>end</code>: int or None. If None, <code>start</code> is treated as a single query value. If int, then <code>start</code> is the start of the query interval, <code>end</code> is the end of the query interval.</p>
+<p>Returns a list of members whose intervals either does not contain query value or does not intersect with query interval.</p>
+<hr>
+</section>
+<section id="iset_del" class="level3">
+<h3 class="anchored" data-anchor-id="iset_del">iset_del</h3>
+<blockquote class="blockquote">
+<pre><code> iset_del (r, name, member=None)</code></pre>
+</blockquote>
+<p>Return either the whole interval set or specific name(s) with its interval.</p>
+<p><code>r</code>: Redis object. Redis client. <code>name</code>: string. Name of the interval set. <code>member</code>: string, list, tuple or None. If None, function return all members with their respective intervals. If string, returns a single member with its interval, if list or tuple, returns all requested members with their respecitve intervals.</p>
+<p>Return number of removed intervals. In reality, it removes equal number of elements from two sorted sets, if number of added elements are not equal, DataError is raised.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
