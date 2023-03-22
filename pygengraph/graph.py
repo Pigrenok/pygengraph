@@ -1137,7 +1137,7 @@ def treeSort(self,byPath=True,bubblePriorityThreshold=0.5):
 
         startNode,endNode = queue.pop()
 
-        if not quiet:
+        if not self.quiet:
             print(f'\rNodes in order: {len(self.order)}/{len(self.nodes)}',end='')
         else:
             if len(self.order) % p1num == 0:
