@@ -14,6 +14,15 @@
       order of the graph). There are a few options possible in edge paths and seems nicely identify hierarchy, but more thought is needed there.
     - SEE NOTE in export.ipynb notebook about identification of link-size associations.
 
+- At the moment graph generation from annotation allows to get a single path for an accession for multiple chromosomes. It adds <SEP> between end of one chromosome and start of the other. But more work needs to be done to allow this to work properly:
+    - Because most ncleotide graph construction methods can generate a graph for a single chromosome (or continuous sequences), there should be a method which takes 
+      multiple graphs (for multiple chromosomes) and return a single graph combining all of them.
+    - Graph sorting should be able to accomodate graphs with breaks in paths. In particular, ideally, it should not treat all nodes as equal, but sorting should be
+      happening in the given (or alphabetical) order of chromosomes. I.e. first, nodes for chromosome 1 should be sorted, then for chromosome 2, etc. If there are 
+      nodes that appear in multiple chromosomes, it should be sorted with the chromosome, where it has maximum number of copies (either maximum over
+      all accessions or as sum over all accessions).
+    - Exporting should also be adequatly fitted for this new type of graph. But that should happen along with the visualisation side of things.
+
 - Command line tool `pantograph` should get more functionality. Some examples are:
     - Adding gene/smaller blocks data to graphs, e.g. if a graph is made of large blocks (e.g. conserved blocks of genes), one would like to see the size of these
       blocks. To do it, instead of a single column node per this block, there should be a node with number of columnts corresponding to the number of elements making 
@@ -33,7 +42,7 @@
   (due to generation by k-mers). It worked on very simple example, but did not work on a bit more complex example. Possibly, it was overthought and need to be a bit
   simplified. I believe, it can become relatively robust way of graph construction from a set of assembles (or even not assembled) sequences.
   
-
+- Global question: Is it possible to get a graph for a pangenome with far away organisms, which has different number of chromosomes? How will it work?
 
 ## issues
 
