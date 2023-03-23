@@ -559,7 +559,7 @@ def baseLayerZoom(graph,
     component = deepcopy(componentTemplate)
     
     numNodes = len(graph.nodes)
-    numNodesDigits = np.int(np.ceil(np.log10(numNodes)))
+    numNodesDigits = int(np.ceil(np.log10(numNodes)))
     
     fromLinks = {}
     toLinks = {}
@@ -1103,7 +1103,7 @@ def nodeToComponentLinks(components,componentToNode,nodeToComponent,
                          linkLengths=None,pairedLinks=None,interconnectedLinks=None,blockEdges=None,
                          debug=False):
     numComps = len(components)
-    numCompsDigits = np.int(np.ceil(np.log10(numComps)))
+    numCompsDigits = int(np.ceil(np.log10(numComps)))
     
     for compNum in range(numComps):
         if debug:    
@@ -2344,7 +2344,7 @@ def nextLayerZoom(zoomLevel,components,componentLengths,#componentNucleotides,
     print('===========================')
     
     numComponents = len(components)
-    numComponentsDigits = np.int(np.ceil(np.log10(numComponents)))
+    numComponentsDigits = int(np.ceil(np.log10(numComponents)))
     
     newComponent = deepcopy(componentTemplate)
     newComponents = []
@@ -3372,7 +3372,7 @@ def exportLayer(zoomLevel,components,componentNucleotides,
     nucleotides = ''
     nBins = 0
     numComps = len(components)
-    numCompsDigits = np.int(np.ceil(np.log10(numComps)))
+    numCompsDigits = int(np.ceil(np.log10(numComps)))
     
     if redisConn:
         accessions = rootStruct["pathNames"]

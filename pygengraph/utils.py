@@ -191,7 +191,7 @@ def checkZoomLevels(zoomLevels):
     '''
     _zoomLevels = np.array(zoomLevels)
     div = _zoomLevels[1:]/_zoomLevels[:-1]
-    return not np.any(div - div.astype(np.int))
+    return not np.any(div - div.astype(int))
 
 # %% ../04_utils.ipynb 19
 def adjustZoomLevels(zoomLevels):

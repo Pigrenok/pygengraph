@@ -37,7 +37,7 @@ def calcNodeLengths(graph):
     print('Calculating nodes length...')
     
     numNodes = len(graph.nodes)
-    numNodesDigits = np.int(np.ceil(np.log10(numNodes)))
+    numNodesDigits = int(np.ceil(np.log10(numNodes)))
     nodeLengths = [0]*numNodes
     
     for nodeIdx in range(numNodes):
@@ -116,14 +116,14 @@ def initialPathAnalysis(graph,nodeLengths):
     print('Preprocessing paths...')
     
     numPaths = len(graph.paths)
-    numPathsZeros = np.int(np.ceil(np.log10(numPaths)))
+    numPathsZeros = int(np.ceil(np.log10(numPaths)))
     
     maxLengthPath = len(max(graph.paths,key=lambda arr: len(arr)))
 
     pathLengths = []
-    pathNodeArray = np.zeros((len(graph.paths),maxLengthPath),dtype = np.int)
-    pathNodeLengths = np.zeros((len(graph.paths),maxLengthPath),dtype = np.int)
-    pathDirArray = np.zeros((len(graph.paths),maxLengthPath),dtype = np.bool) # True - "+", False - "-" or padding for shorter paths.
+    pathNodeArray = np.zeros((len(graph.paths),maxLengthPath),dtype = int)
+    pathNodeLengths = np.zeros((len(graph.paths),maxLengthPath),dtype = int)
+    pathDirArray = np.zeros((len(graph.paths),maxLengthPath),dtype = bool) # True - "+", False - "-" or padding for shorter paths.
 
     for i,path in enumerate(graph.paths):
         print(f'\rProcessing path {i+1:0{numPathsZeros}}/{numPaths:0{numPathsZeros}}',end='')
