@@ -156,7 +156,7 @@ outputBasename: 'path_graph'
     
     outputbase = f'{outputpath}{os.path.sep}{params["outputBasename"]}'
     
-    if pathFiles in params:
+    if 'pathFiles' in params:
     
         # For v1
         for seqName,pathfile in params['pathFiles'].items(): 
