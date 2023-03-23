@@ -11,6 +11,7 @@ import time
 
 from pygengraph.graph import GenomeGraph
 from pygengraph.export import exportProject
+from pygengraph.utils import pathFileToPathDict
 
 # %% ../06_scripts.ipynb 5
 def pantograph_script():
