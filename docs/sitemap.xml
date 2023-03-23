@@ -2,30 +2,34 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>//pygengraph/tree.html</loc>
-    <lastmod>2023-03-22T23:11:13.410Z</lastmod>
-  </url>
-  <url>
-    <loc>//pygengraph/scripts.html</loc>
-    <lastmod>2023-03-22T23:11:13.842Z</lastmod>
+    <lastmod>2023-03-23T11:23:07.368Z</lastmod>
   </url>
   <url>
     <loc>//pygengraph/CONTRIBUTING.html</loc>
-    <lastmod>2023-03-22T23:11:14.290Z</lastmod>
+    <lastmod>2023-03-23T11:23:08.252Z</lastmod>
   </url>
   <url>
     <loc>//pygengraph/synteny.html</loc>
-    <lastmod>2023-03-22T23:11:14.762Z</lastmod>
+    <lastmod>2023-03-23T11:23:08.728Z</lastmod>
   </url>
   <url>
     <loc>//pygengraph/graph.html</loc>
-    <lastmod>2023-03-22T23:11:15.410Z</lastmod>
+    <lastmod>2023-03-23T11:23:09.400Z</lastmod>
+  </url>
+  <url>
+    <loc>//pygengraph/user_manual.html</loc>
+    <lastmod>2023-03-23T11:23:09.792Z</lastmod>
   </url>
   <url>
     <loc>//pygengraph/export.html</loc>
-    <lastmod>2023-03-22T23:11:16.282Z</lastmod>
+    <lastmod>2023-03-23T11:23:10.880Z</lastmod>
+  </url>
+  <url>
+    <loc>//pygengraph/index.html</loc>
+    <lastmod>2023-03-23T11:23:11.520Z</lastmod>
   </url>
   <url>
     <loc>//pygengraph/utils.html</loc>
-    <lastmod>2023-03-22T23:11:16.726Z</lastmod>
+    <lastmod>2023-03-23T11:23:12.092Z</lastmod>
   </url>
 </urlset>

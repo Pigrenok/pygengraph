@@ -14,6 +14,12 @@ website:
   navbar:
     background: primary
     search: true
+    left:
+        - href: index.html
+          text: Home
+        - href: user_manual.html
+          text: Pantograph user Manual
+        
   sidebar:
     style: floating
 

@@ -15,6 +15,127 @@ and for development use
 
 ## How to use
 
+### Use command line interface `pantograph`
+
+After this package is installed, a command line tool `pantograph`
+becomes available.
+
+It has several functions as following
+
+#### Converting annotations to gene graph (see user manual on what is gene graph).
+
+This is done by a command
+
+``` bash
+$ pantograph annotation2graph [-h] [-g] setting_file.yaml
+```
+
+It requires a path to a yaml file with all settings for the process. If
+used with `-g` option, then a sample file will be generated for you to
+edit and then run it. Sample file has extensive comments explaining
+every parameter.
+
+So, it is best to do the following:
+
+``` bash
+$ pantograph annotation2graph -g setting.yaml
+```
+
+then, using your favourite text editor, edit the generated file and then
+run
+
+``` bash
+$ pantograph annotation2graph setting.yaml
+```
+
+#### Converting a file(s) with paths into gene/block graph
+
+This is done by a command
+
+``` bash
+$ pantograph paths2graph [-h] [-g] setting_file.yaml
+```
+
+It requires a path to a yaml file with all settings for the process. If
+used with `-g` option, then a sample file will be generated for you to
+edit and then run it. Sample file has extensive comments explaining
+every parameter.
+
+So, it is best to do the following:
+
+``` bash
+$ pantograph paths2graph -g setting.yaml
+```
+
+then, using your favourite text editor, edit the generated file and then
+run
+
+``` bash
+$ pantograph paths2graph setting.yaml
+```
+
+#### Sorting a graph
+
+In order to sort a graph, it should be in GFA v1 format file. To run the
+sorting, you need to use the following command:
+
+``` bash
+$ pantograph sort-graph [-h] [--quiet] [--isseq] [--output OUTPUT] input
+```
+
+with the following parameters
+
+positional arguments:
+
+`input` Relative (to current directory) or absolute path to the GFA file
+with the graph to be sorted.
+
+optional arguments:
+
+`-h`, `--help` show this help message and exit
+
+`--quiet`, `-q` Suppress most of output. False (i.e. verbose) is not
+set.
+
+`--isseq`, `-s` Does this graph contains nucleotide sequences. False is
+not set.
+
+`--output OUTPUT`, `-o OUTPUT` File path where to save sorted graph. If
+not set, the input will be overwritten.
+
+#### Exporting graph into visualisation data structure, which can be used by Pantograph visualisation tool.
+
+This is done by a command
+
+``` bash
+$ pantograph export-vis [-h] [-g] setting_file.yaml
+```
+
+It requires a path to a yaml file with all settings for the process. If
+used with `-g` option, then a sample file will be generated for you to
+edit and then run it. Sample file has extensive comments explaining
+every parameter.
+
+So, it is best to do the following:
+
+``` bash
+$ pantograph export-vis -g setting.yaml
+```
+
+then, using your favourite text editor, edit the generated file and then
+run
+
+``` bash
+$ pantograph export-vis setting.yaml
+```
+
+### Use python package
+
+The rest of the file describes some of the uses of the pyGenGraph
+package. There are more ways to use it, but more detailed documentation
+is needed to describe all use cases. Also, more things required for this
+package to become really universal.
+
 ``` python
 from nbdev import nbdev_export
 nbdev_export()

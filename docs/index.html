@@ -1,8 +1,710 @@
-<html xmlns="http://www.w3.org/1999/xhtml">    
-  <head>      
-    <title>Redirect to tree.html</title>      
-    <meta http-equiv="refresh" content="0;URL='tree.html'" />    
-  </head>    
-  <body> 
-  </body>  
-</html>     
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="This package provides all functionality from graph construction (currently, from annotation, in the future, from raw assembled sequences) to graph processing (sorting, grouping, adjusting).">
+
+<title>pygengraph</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="pygengraph">
+<meta property="og:description" content="This package provides all functionality from graph construction (currently, from annotation, in the future, from raw assembled sequences) to graph processing (sorting, grouping, adjusting).">
+<meta property="og:site-name" content="pygengraph">
+<meta name="twitter:title" content="pygengraph">
+<meta name="twitter:description" content="This package provides all functionality from graph construction (currently, from annotation, in the future, from raw assembled sequences) to graph processing (sorting, grouping, adjusting).">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">pygengraph</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./user_manual.html">
+ <span class="menu-text">Pantograph user Manual</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">pygengraph</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link active">pygengraph</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./graph.html" class="sidebar-item-text sidebar-link">Graph module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tree.html" class="sidebar-item-text sidebar-link">Tree module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./synteny.html" class="sidebar-item-text sidebar-link">Synteny module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./utils.html" class="sidebar-item-text sidebar-link">Utils module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./export.html" class="sidebar-item-text sidebar-link">Export module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./scripts.html" class="sidebar-item-text sidebar-link">Script module</a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#install" id="toc-install" class="nav-link active" data-scroll-target="#install">Install</a></li>
+  <li><a href="#how-to-use" id="toc-how-to-use" class="nav-link" data-scroll-target="#how-to-use">How to use</a>
+  <ul class="collapse">
+  <li><a href="#use-command-line-interface-pantograph" id="toc-use-command-line-interface-pantograph" class="nav-link" data-scroll-target="#use-command-line-interface-pantograph">Use command line interface <code>pantograph</code></a></li>
+  <li><a href="#use-python-package" id="toc-use-python-package" class="nav-link" data-scroll-target="#use-python-package">Use python package</a></li>
+  </ul></li>
+  <li><a href="#if-redis-database-needs-to-be-cleaned." id="toc-if-redis-database-needs-to-be-cleaned." class="nav-link" data-scroll-target="#if-redis-database-needs-to-be-cleaned.">If redis database needs to be cleaned.</a></li>
+  <li><a href="#generating-graphs" id="toc-generating-graphs" class="nav-link" data-scroll-target="#generating-graphs">Generating graphs</a>
+  <ul class="collapse">
+  <li><a href="#generating-from-annotation" id="toc-generating-from-annotation" class="nav-link" data-scroll-target="#generating-from-annotation">Generating from annotation</a>
+  <ul class="collapse">
+  <li><a href="#preparing-list-of-files" id="toc-preparing-list-of-files" class="nav-link" data-scroll-target="#preparing-list-of-files">Preparing list of files</a></li>
+  <li><a href="#generaton-of-gene-graph" id="toc-generaton-of-gene-graph" class="nav-link" data-scroll-target="#generaton-of-gene-graph">Generaton of gene graph</a></li>
+  </ul></li>
+  <li><a href="#loading-pathfile-to-graph" id="toc-loading-pathfile-to-graph" class="nav-link" data-scroll-target="#loading-pathfile-to-graph">Loading Pathfile to graph</a></li>
+  </ul></li>
+  <li><a href="#loading-graph-from-gfa-and-sorting-it" id="toc-loading-graph-from-gfa-and-sorting-it" class="nav-link" data-scroll-target="#loading-graph-from-gfa-and-sorting-it">Loading graph from GFA and sorting it</a></li>
+  <li><a href="#exporting-to-pantograph-visualisation" id="toc-exporting-to-pantograph-visualisation" class="nav-link" data-scroll-target="#exporting-to-pantograph-visualisation">Exporting to Pantograph visualisation</a></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/pigrenok/pygengraph/tree/master/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">pygengraph</h1>
+</div>
+
+<div>
+  <div class="description">
+    This package provides all functionality from graph construction (currently, from annotation, in the future, from raw assembled sequences) to graph processing (sorting, grouping, adjusting).
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<section id="install" class="level2">
+<h2 class="anchored" data-anchor-id="install">Install</h2>
+<p>Enter the directory of the library and enter:</p>
+<p><code>pip install .</code></p>
+<p>and for development use</p>
+<p><code>pip install -e .</code></p>
+</section>
+<section id="how-to-use" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-use">How to use</h2>
+<section id="use-command-line-interface-pantograph" class="level3">
+<h3 class="anchored" data-anchor-id="use-command-line-interface-pantograph">Use command line interface <code>pantograph</code></h3>
+<p>After this package is installed, a command line tool <code>pantograph</code> becomes available.</p>
+<p>It has several functions as following</p>
+<section id="converting-annotations-to-gene-graph-see-user-manual-on-what-is-gene-graph." class="level4">
+<h4 class="anchored" data-anchor-id="converting-annotations-to-gene-graph-see-user-manual-on-what-is-gene-graph.">Converting annotations to gene graph (see user manual on what is gene graph).</h4>
+<p>This is done by a command</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pantograph annotation2graph [-h] [-g] setting_file.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>It requires a path to a yaml file with all settings for the process. If used with <code>-g</code> option, then a sample file will be generated for you to edit and then run it. Sample file has extensive comments explaining every parameter.</p>
+<p>So, it is best to do the following:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pantograph annotation2graph <span class="at">-g</span> setting.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>then, using your favourite text editor, edit the generated file and then run</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pantograph annotation2graph setting.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="converting-a-files-with-paths-into-geneblock-graph" class="level4">
+<h4 class="anchored" data-anchor-id="converting-a-files-with-paths-into-geneblock-graph">Converting a file(s) with paths into gene/block graph</h4>
+<p>This is done by a command</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pantograph paths2graph [-h] [-g] setting_file.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>It requires a path to a yaml file with all settings for the process. If used with <code>-g</code> option, then a sample file will be generated for you to edit and then run it. Sample file has extensive comments explaining every parameter.</p>
+<p>So, it is best to do the following:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pantograph paths2graph <span class="at">-g</span> setting.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>then, using your favourite text editor, edit the generated file and then run</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pantograph paths2graph setting.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="sorting-a-graph" class="level4">
+<h4 class="anchored" data-anchor-id="sorting-a-graph">Sorting a graph</h4>
+<p>In order to sort a graph, it should be in GFA v1 format file. To run the sorting, you need to use the following command:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pantograph sort-graph [-h] [--quiet] [--isseq] [--output OUTPUT] input</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>with the following parameters</p>
+<p>positional arguments:</p>
+<p><code>input</code> Relative (to current directory) or absolute path to the GFA file with the graph to be sorted.</p>
+<p>optional arguments:</p>
+<p><code>-h</code>, <code>--help</code> show this help message and exit</p>
+<p><code>--quiet</code>, <code>-q</code> Suppress most of output. False (i.e.&nbsp;verbose) is not set.</p>
+<p><code>--isseq</code>, <code>-s</code> Does this graph contains nucleotide sequences. False is not set.</p>
+<p><code>--output OUTPUT</code>, <code>-o OUTPUT</code> File path where to save sorted graph. If not set, the input will be overwritten.</p>
+</section>
+<section id="exporting-graph-into-visualisation-data-structure-which-can-be-used-by-pantograph-visualisation-tool." class="level4">
+<h4 class="anchored" data-anchor-id="exporting-graph-into-visualisation-data-structure-which-can-be-used-by-pantograph-visualisation-tool.">Exporting graph into visualisation data structure, which can be used by Pantograph visualisation tool.</h4>
+<p>This is done by a command</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pantograph export-vis [-h] [-g] setting_file.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>It requires a path to a yaml file with all settings for the process. If used with <code>-g</code> option, then a sample file will be generated for you to edit and then run it. Sample file has extensive comments explaining every parameter.</p>
+<p>So, it is best to do the following:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pantograph export-vis <span class="at">-g</span> setting.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>then, using your favourite text editor, edit the generated file and then run</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pantograph export-vis setting.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="use-python-package" class="level3">
+<h3 class="anchored" data-anchor-id="use-python-package">Use python package</h3>
+<p>The rest of the file describes some of the uses of the pyGenGraph package. There are more ways to use it, but more detailed documentation is needed to describe all use cases. Also, more things required for this package to become really universal.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> nbdev <span class="im">import</span> nbdev_export</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>nbdev_export()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> glob</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> re</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pygengraph.graph <span class="im">import</span> GenomeGraph</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pygengraph.utils <span class="im">import</span> pathFileToPathDict</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pygengraph.export <span class="im">import</span> exportProject</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="if-redis-database-needs-to-be-cleaned." class="level1">
+<h1>If redis database needs to be cleaned.</h1>
+<p>from redis import Redis</p>
+<p>redisConn = Redis(host=‘redis’,port=6379)</p>
+<p>redisConn.flushall()</p>
+<p>redisConn.close()</p>
+<p>del redisConn</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> warnings</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>warnings.simplefilter(<span class="st">'ignore'</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>warnings.filterwarnings(<span class="st">'always'</span>,category<span class="op">=</span><span class="pp">RuntimeWarning</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="generating-graphs" class="level1">
+<h1>Generating graphs</h1>
+<section id="generating-from-annotation" class="level2">
+<h2 class="anchored" data-anchor-id="generating-from-annotation">Generating from annotation</h2>
+<section id="preparing-list-of-files" class="level3">
+<h3 class="anchored" data-anchor-id="preparing-list-of-files">Preparing list of files</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>refdir <span class="op">=</span> <span class="st">'/path/to/reference/'</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>annotationdir <span class="op">=</span> <span class="st">'/path/to/annotation'</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>gfadir <span class="op">=</span> <span class="st">'/path/to/graphs'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>annotationFiles <span class="op">=</span> <span class="bu">sorted</span>(glob.glob(<span class="ss">f'</span><span class="sc">{</span>annotationdir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}</span><span class="ss">*.gff'</span>))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>pangenomeFiles <span class="op">=</span> <span class="bu">sorted</span>(glob.glob(<span class="ss">f'</span><span class="sc">{</span>annotationdir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}</span><span class="ss">*pangen.gff'</span>))</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># If you want to include sequences instead of simple notion of genes.</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># It should also be converted to sequenceFileDict, see details in documentation for GenomeGraph Class constructor.</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># sequenceFiles = sorted(glob.glob(f'{annotationdir}{os.path.sep}sequences{os.path.sep}*.fasta'))</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>refAnnotationFile <span class="op">=</span> <span class="ss">f'</span><span class="sc">{</span>refdir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}</span><span class="ss">reference.gff'</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># If you want to include sequences instead of simple notion of genes</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># refSequenceFile = f'{refdir}{os.path.sep}reference.fasta'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>refdir <span class="op">=</span> <span class="st">'../../1001G/annotations/freeze2.1/outgroups'</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>annotationdir <span class="op">=</span> <span class="st">'../../1001G/annotations/freeze2.1'</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>gfadir <span class="op">=</span> <span class="st">'../../1001G/annotations/graphs'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>annotationFiles <span class="op">=</span> <span class="bu">sorted</span>(glob.glob(<span class="ss">f'</span><span class="sc">{</span>annotationdir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}</span><span class="ss">*.gff'</span>))</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># pangenomeFiles = sorted(glob.glob(f'{annotationdir}{os.path.sep}*pangen.gff'))</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># If you want to include sequences instead of simple notion of genes.</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># It should also be converted to sequenceFileDict, see details in documentation for GenomeGraph Class constructor.</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># sequenceFiles = sorted(glob.glob(f'{annotationdir}{os.path.sep}sequences{os.path.sep}*.fasta'))</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>refAnnotationFile <span class="op">=</span> <span class="ss">f'</span><span class="sc">{</span>refdir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}</span><span class="ss">araport.gff'</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># If you want to include sequences instead of simple notion of genes</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co"># refSequenceFile = f'{refdir}{os.path.sep}reference.fasta'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="generaton-of-gene-graph" class="level3">
+<h3 class="anchored" data-anchor-id="generaton-of-gene-graph">Generaton of gene graph</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>doUS <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> chrnum <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>,n<span class="op">+</span><span class="dv">1</span>): <span class="co"># here n is number of chromosomes.</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    chromosome <span class="op">=</span> <span class="ss">f'Chr</span><span class="sc">{</span>chrnum<span class="sc">}</span><span class="ss">'</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'</span><span class="ch">\n</span><span class="ss">Processing </span><span class="sc">{</span>chromosome<span class="sc">}</span><span class="ch">\n</span><span class="ss">============'</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    curtst <span class="op">=</span> time.time()</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    graph <span class="op">=</span> GenomeGraph(annotationFiles <span class="op">=</span> annotationFiles,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>                        pangenomeFiles <span class="op">=</span> <span class="va">None</span>,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>                        sequenceFilesDict <span class="op">=</span> <span class="va">None</span>,</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>                        doUS <span class="op">=</span> doUS,</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>                        chromosome <span class="op">=</span> chromosome,</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>                        refAnnotationFile<span class="op">=</span>refAnnotationFile,</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>                        refAccession<span class="op">=</span><span class="st">'TAIR10'</span>)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'Generating graph for </span><span class="sc">{</span>chromosome<span class="sc">}</span><span class="ss"> took </span><span class="sc">{</span>time<span class="sc">.</span>time() <span class="op">-</span> curtst<span class="sc">}</span><span class="ss"> seconds'</span>)</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    curtst <span class="op">=</span> time.time()</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    graph.treeSort()</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'Sorting graph for </span><span class="sc">{</span>chromosome<span class="sc">}</span><span class="ss"> took </span><span class="sc">{</span>time<span class="sc">.</span>time() <span class="op">-</span> curtst<span class="sc">}</span><span class="ss"> seconds'</span>)</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(graph.nodes)<span class="op">!=</span><span class="bu">len</span>(graph.order):</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">'Sorting failed and not all nodes were sorted. Saving unsorted graph'</span>)</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>            gfaFilename <span class="op">=</span> <span class="ss">f'Gene_</span><span class="sc">{</span>chromosome<span class="sc">}</span><span class="ss">_simOnly_unordered.gfa'</span></span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>            graph.order <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="dv">1</span>,<span class="bu">len</span>(graph.nodes)<span class="op">+</span><span class="dv">1</span>))</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>        gfaFilename <span class="op">=</span> <span class="ss">f'Gene_</span><span class="sc">{</span>chromosome<span class="sc">}</span><span class="ss">_simOnly.gfa'</span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>    graph.toGFA(<span class="ss">f'</span><span class="sc">{</span>gfadir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}{</span>gfaFilename<span class="sc">}</span><span class="ss">'</span>,doSeq<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="loading-pathfile-to-graph" class="level2">
+<h2 class="anchored" data-anchor-id="loading-pathfile-to-graph">Loading Pathfile to graph</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For path file v1</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>pathfileDir <span class="op">=</span> <span class="st">'examples/gene_graph'</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>pathsfile <span class="op">=</span> <span class="st">'paths_genegraph.txt'</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> pathFileToPathDict(<span class="ss">f'</span><span class="sc">{</span>pathfileDir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}{</span>pathsfile<span class="sc">}</span><span class="ss">'</span>, <span class="va">True</span>, <span class="va">True</span>, <span class="va">False</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>graph <span class="op">=</span> GenomeGraph(pathsDict<span class="op">=</span>paths)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>graph.treeSort()</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span>(graph.nodes)<span class="op">!=</span><span class="bu">len</span>(graph.order):</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'Sorting failed and not all nodes were sorted. Saving unsorted graph'</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    output <span class="op">=</span> <span class="st">'paths_genegraph_unordered.gfa'</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    graph.order <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="dv">1</span>,<span class="bu">len</span>(graph.nodes)<span class="op">+</span><span class="dv">1</span>))</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    graph.toGFA(output,doSeq<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    coreGFApath <span class="op">=</span> <span class="ss">f'</span><span class="sc">{</span>pathfileDir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}</span><span class="ss">paths_genegraph.gfa'</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    graph.toGFA(coreGFApath,doSeq<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For v2</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># This is example, no v2 file currently available for demonstration.</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>pathfileDir <span class="op">=</span> <span class="st">'/path/to/file'</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>pathsfile <span class="op">=</span> <span class="ss">f'paths.txt'</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> pathFileToPathDict(<span class="ss">f'</span><span class="sc">{</span>pathfileDir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}{</span>pathsfile<span class="sc">}</span><span class="ss">'</span>,<span class="va">True</span>,<span class="st">'reference'</span>,<span class="va">True</span>)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> seqNum <span class="kw">in</span> paths.keys():</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    graph <span class="op">=</span> GenomeGraph(pathsDict<span class="op">=</span>paths[seqNum])</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># On undirected coregraph sorting is not optimal! Check sorting!!!</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    graph.treeSort()</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(graph.nodes)<span class="op">!=</span><span class="bu">len</span>(graph.order):</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">'Sorting failed and not all nodes were sorted. Saving unsorted graph'</span>)</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>        output <span class="op">=</span> <span class="ss">f'</span><span class="sc">{</span>pathfileDir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}</span><span class="ss">graph_Chr</span><span class="sc">{</span>seqNum<span class="sc">}</span><span class="ss">_unordered.gfa'</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>        graph.order <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="dv">1</span>,<span class="bu">len</span>(graph.nodes)<span class="op">+</span><span class="dv">1</span>))</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>        graph.toGFA(output,doSeq<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>        coreGFApath <span class="op">=</span> <span class="ss">f'</span><span class="sc">{</span>pathfileDir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}</span><span class="ss">graph_Chr</span><span class="sc">{</span>seqNum<span class="sc">}</span><span class="ss">.gfa'</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>        graph.toGFA(coreGFApath,doSeq<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="loading-graph-from-gfa-and-sorting-it" class="level1">
+<h1>Loading graph from GFA and sorting it</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>gfadir <span class="op">=</span> <span class="st">'examples/nucleotide_graph'</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># It is nucleotide graph. If it is not nucleotide graph, then `isSeq` variable should be changed to False.</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>gfafilename <span class="op">=</span> <span class="st">'paths_presentation.gfa'</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>isSeq <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>graph <span class="op">=</span> GenomeGraph(gfaPath<span class="op">=</span><span class="ss">f'</span><span class="sc">{</span>gfadir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}{</span>gfafilename<span class="sc">}</span><span class="ss">'</span>,isGFASeq<span class="op">=</span>isSeq)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>graph.treeSort()</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">len</span>(graph.nodes)<span class="op">==</span><span class="bu">len</span>(graph.order)</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>basename,ext <span class="op">=</span> os.path.splitext(gfafilename)</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>graph.toGFA(<span class="ss">f'</span><span class="sc">{</span>gfadir<span class="sc">}{</span>os<span class="sc">.</span>path<span class="sc">.</span>sep<span class="sc">}{</span>basename<span class="sc">}</span><span class="ss">_ordered</span><span class="sc">{</span>ext<span class="sc">}</span><span class="ss">'</span>,doSeq<span class="op">=</span>isSeq)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exporting-to-pantograph-visualisation" class="level1">
+<h1>Exporting to Pantograph visualisation</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>projectID <span class="op">=</span> <span class="st">'paths_genegraph'</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>projectName <span class="op">=</span> <span class="st">'Example gene graph'</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>pathToGraphs <span class="op">=</span> <span class="st">'examples/gene_graph'</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>caseDict <span class="op">=</span> {<span class="st">'Main'</span>: <span class="st">'paths_genegraph.gfa'</span>}</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>pathToIndex <span class="op">=</span> <span class="st">'examples/Visdata'</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co"># This is if you run it in Docker compose together with active Redis image, which is named "redis".</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="co"># If you have separate redis server, enter full address here.</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co"># If you do not want to add any annotation, `redisHost` should be None.</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>redisHost <span class="op">=</span> <span class="st">'redis'</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>redisPort <span class="op">=</span> <span class="dv">6379</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>redisDB <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>suffix <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>maxLengthComponent <span class="op">=</span> <span class="dv">100</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>maxLengthChunk <span class="op">=</span> <span class="dv">6</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>inversionThreshold <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>isSeq <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>zoomLevels <span class="op">=</span> [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">4</span>]</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>fillZoomLevel <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>exportProject(projectID, projectName, caseDict, pathToIndex, pathToGraphs,</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>              redisHost <span class="op">=</span> redisHost, redisPort <span class="op">=</span> redisPort, redisDB <span class="op">=</span> redisDB,</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>              suffix <span class="op">=</span> suffix,</span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>              maxLengthComponent <span class="op">=</span> maxLengthComponent, maxLengthChunk <span class="op">=</span> maxLengthChunk,</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>              inversionThreshold <span class="op">=</span> inversionThreshold,</span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>              isSeq <span class="op">=</span> isSeq,</span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>              zoomLevels <span class="op">=</span> zoomLevels, fillZoomLevel <span class="op">=</span> fillZoomLevel)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>projectID <span class="op">=</span> <span class="st">'tutorial_graph'</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>projectName <span class="op">=</span> <span class="st">'Example nucleotide graph'</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>pathToGraphs <span class="op">=</span> <span class="st">'examples/nucleotide_graph'</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>caseDict <span class="op">=</span> {<span class="st">'Main'</span>: <span class="st">'paths_presentation_ordered.gfa'</span>}</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>pathToIndex <span class="op">=</span> <span class="st">'examples/Visdata'</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co"># This is if you run it in Docker compose together with active Redis image, which is named "redis".</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co"># If you have separate redis server, enter full address here.</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="co"># If you do not want to add any annotation, `redisHost` should be None.</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>redisHost <span class="op">=</span> <span class="st">'redis'</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>redisPort <span class="op">=</span> <span class="dv">6379</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>redisDB <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>suffix <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>maxLengthComponent <span class="op">=</span> <span class="dv">100</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>maxLengthChunk <span class="op">=</span> <span class="dv">6</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>inversionThreshold <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>isSeq <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>zoomLevels <span class="op">=</span> [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">4</span>]</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>fillZoomLevel <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>exportProject(projectID, projectName, caseDict, pathToIndex, pathToGraphs,</span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>              redisHost <span class="op">=</span> redisHost, redisPort <span class="op">=</span> redisPort, redisDB <span class="op">=</span> redisDB,</span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>              suffix <span class="op">=</span> suffix,</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>              maxLengthComponent <span class="op">=</span> maxLengthComponent, maxLengthChunk <span class="op">=</span> maxLengthChunk,</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>              inversionThreshold <span class="op">=</span> inversionThreshold,</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>              isSeq <span class="op">=</span> isSeq,</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>              zoomLevels <span class="op">=</span> zoomLevels, fillZoomLevel <span class="op">=</span> fillZoomLevel)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

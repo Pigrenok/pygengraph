@@ -1,19 +1,10 @@
 website:
   sidebar:
     contents:
+      - index.ipynb
       - 01_graph.ipynb
       - 02_tree.ipynb
       - 03_synteny.ipynb
       - 04_utils.ipynb
       - 05_export.ipynb
       - 06_scripts.ipynb
-      - section: docs
-        contents:
-          - docs/index.html
-          - docs/CONTRIBUTING.html
-          - docs/export.html
-          - docs/graph.html
-          - docs/scripts.html
-          - docs/synteny.html
-          - docs/tree.html
-          - docs/utils.html
