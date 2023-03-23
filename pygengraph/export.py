@@ -3763,7 +3763,7 @@ def exportProject(projectID, projectName, caseDict, pathToIndex, pathToGraphs,
                   suffix = '',
                   maxLengthComponent = 100, maxLengthChunk = 6,
                   inversionThreshold = 0.5,
-                  isSeq = False,
+                  isSeq = True,
                   zoomLevels = [1], fillZoomLevel = True):
     '''
     This is the only function that should normally be used to export a set of graphs (e.g. a graph per chromosome)
