@@ -45,9 +45,9 @@ def pantograph_script():
     
     sortgraph_parser = subparsers.add_parser('sort-graph',help='Perform graph sorting to get preferred order of nodes for linearised visualisation.')
     
-    sortgraph_parser.add_argument('--quiet','-q',action='store_true', help='Suppress most of output. False (i.e. verbose) is not set.')
+    sortgraph_parser.add_argument('--quiet','-q',action='store_true', help='Suppress most of output. False (i.e. verbose) if not set.')
     
-    sortgraph_parser.add_argument('--isseq','-s',action='store_true', help='Does this graph contains nucleotide sequences. False is not set.')
+    sortgraph_parser.add_argument('--isseq','-s',action='store_true', help='Does this graph contains nucleotide sequences. False if not set.')
     
     sortgraph_parser.add_argument('--output','-o', action='store', help='File path where to save sorted graph. If not set, the input will be overwritten.')
     
@@ -381,7 +381,7 @@ def sort_graph_script(args):
     inputfile = args.input
     
     vargs = vars(args)
-    isseq = args.get('isseq',False)
+    isseq = vargs.get('isseq',False)
     
     outputfile = vargs.get('output', inputfile)
     
