@@ -3866,7 +3866,10 @@ def exportProject(projectID, projectName, caseDict, pathToIndex, pathToGraphs,
         print()
         print(f'Processing case {outputName}')
         if redisHost is not None:
-            redisConn = Redis(host = redisHost, port = redisPort, db=0)
+            print(f'Using Redis DB server at {redisHost}:{redisPort} with db number {redisDB}.')
+            redisConn = Redis(host = redisHost, port = redisPort, db=redisDB)
+        else:
+            redisConn = None
 
         startTime = time.time()
         exportToPantograph(inputPath=coreGFApath, GenomeGraphParams={}, 

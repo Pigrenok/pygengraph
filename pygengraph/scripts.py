@@ -400,8 +400,6 @@ def export_project_script(args):
     if 'file' not in vars(args):
         raise AttributeError('Positional argument with path to setting YAML file has to be provided.')
     
-    print(args)
-    
     if args.generate:
         defaultYAML = """\
 ###############################################################################
@@ -457,16 +455,16 @@ pathToGraphs: /path/to/all/graph/files/
 # maxLengthChunk defined how many components will be recorded into a single file in the visualisation data structure. Smaller chunk files allows to
 # load data into memory more precisely, but if a lot of small components should be loaded, larger chunks make it quicker.
 # If not set, default of 6 will be used.
-# maxLengthChunk: 6,
+# maxLengthChunk: 6
 
 # Each cell has calculated inversion ratio (see user manual for details). It will be shown as inverted (shades of red) if its inversion ratio
 # is more than `inversionThreshold` set
 # If not set, default is 0.5
-# inversionThreshold: 0.5,
+# inversionThreshold: 0.5
 
 # If the graph is not nucleotide graph (e.g. gene graph generated from paths or annotations), `isSeq` should be set to False.
 # Default is True
-# isSeq: False,
+# isSeq: False
 
 # Which zoom levels should be generated. The number indicate how many maximum nucleotides (or genes in case of gene graph) can be displayed as
 # single column in the visualised matrix. Zoom level of 1 is added automatically if it is not in the list. Each previous zoom level should be 
@@ -488,5 +486,8 @@ pathToGraphs: /path/to/all/graph/files/
     
     with open(args.file,'r') as f:
         params = yaml.load(f,Loader=yaml.Loader)
+        
+    print('DEBUG!')
+    print(params)
     exportProject(**params)
     
