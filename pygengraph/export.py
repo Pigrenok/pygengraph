@@ -3883,7 +3883,12 @@ def exportProject(projectID, projectName, caseDict, pathToIndex, pathToGraphs,
                                         inversionThreshold=inversionThreshold)
         runTime = time.time() - startTime
 
-        print(f'Exporting gene graph for {seqID} took {runTime} seconds')
+        if isSeq:
+            gtype = 'nucleotide'
+        else:
+            gtype = 'gene'
+            
+        print(f'Exporting {gtype} graph for {seqID} took {runTime} seconds')
     
     redisConn.close()
     
