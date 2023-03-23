@@ -162,7 +162,7 @@ outputBasename: 'path_graph'
         # For v1
         for seqName,pathfile in params['pathFiles'].items(): 
 
-            paths = pathFileToPathDict(f'{pathfileDir}{os.path.sep}{pathfile}',directional,sort_acc)
+            paths = pathFileToPathDict(f'{pathfileDir}{os.path.sep}{pathfile}',directional,sort_acc, False)
 
             # paths = {}
             # for accession in sorted(list(_paths.keys())):
@@ -191,7 +191,7 @@ outputBasename: 'path_graph'
 
         pathsfile = f'paths.txt'
 
-        paths = pathFileToPathDict(f'{pathfileDir}{os.path.sep}{params["pathFile"]}',directional,sort_acc,True)
+        paths = pathFileToPathDict(f'{pathfileDir}{os.path.sep}{params["pathFile"]}', directional,sort_acc, True)
 
         for seqNum in paths.keys():#range(1,6): 
             # paths = {}
