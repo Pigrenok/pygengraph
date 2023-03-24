@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.475">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>pygengraph – user_manual</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">pygengraph</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./user_manual.html">
+ <span class="menu-text">Pantograph user Manual</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title"></h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">pygengraph</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./graph.html" class="sidebar-item-text sidebar-link">Graph module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tree.html" class="sidebar-item-text sidebar-link">Tree module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./synteny.html" class="sidebar-item-text sidebar-link">Synteny module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./utils.html" class="sidebar-item-text sidebar-link">Utils module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./export.html" class="sidebar-item-text sidebar-link">Export module</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./scripts.html" class="sidebar-item-text sidebar-link">Script module</a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#user-manual-for-pantograph-visualisation-tool" id="toc-user-manual-for-pantograph-visualisation-tool" class="nav-link active" data-scroll-target="#user-manual-for-pantograph-visualisation-tool">User manual for Pantograph Visualisation tool</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#how-to-read-matrix-view" id="toc-how-to-read-matrix-view" class="nav-link" data-scroll-target="#how-to-read-matrix-view">How to read matrix view</a>
+  <ul class="collapse">
+  <li><a href="#how-nucleotide-graph-is-formed" id="toc-how-nucleotide-graph-is-formed" class="nav-link" data-scroll-target="#how-nucleotide-graph-is-formed">How nucleotide graph is formed</a></li>
+  <li><a href="#how-gene-graph-is-formed" id="toc-how-gene-graph-is-formed" class="nav-link" data-scroll-target="#how-gene-graph-is-formed">How gene graph is formed</a></li>
+  <li><a href="#reading-the-visualisation" id="toc-reading-the-visualisation" class="nav-link" data-scroll-target="#reading-the-visualisation">Reading the visualisation</a></li>
+  <li><a href="#cell-details" id="toc-cell-details" class="nav-link" data-scroll-target="#cell-details">Cell details</a></li>
+  </ul></li>
+  <li><a href="#user-controls" id="toc-user-controls" class="nav-link" data-scroll-target="#user-controls">User controls</a>
+  <ul class="collapse">
+  <li><a href="#choosing-project-and-case" id="toc-choosing-project-and-case" class="nav-link" data-scroll-target="#choosing-project-and-case">Choosing project and case</a></li>
+  <li><a href="#zoom-control" id="toc-zoom-control" class="nav-link" data-scroll-target="#zoom-control">Zoom control</a></li>
+  <li><a href="#position-control" id="toc-position-control" class="nav-link" data-scroll-target="#position-control">Position control</a></li>
+  <li><a href="#component-selection" id="toc-component-selection" class="nav-link" data-scroll-target="#component-selection">Component selection</a></li>
+  <li><a href="#searching-genespositions" id="toc-searching-genespositions" class="nav-link" data-scroll-target="#searching-genespositions">Searching genes/positions</a></li>
+  <li><a href="#filtering-accessions" id="toc-filtering-accessions" class="nav-link" data-scroll-target="#filtering-accessions">Filtering accessions</a></li>
+  <li><a href="#various-view-control" id="toc-various-view-control" class="nav-link" data-scroll-target="#various-view-control">Various view control</a></li>
+  <li><a href="#cellmatrix-size-control" id="toc-cellmatrix-size-control" class="nav-link" data-scroll-target="#cellmatrix-size-control">Cell/matrix size control</a></li>
+  <li><a href="#clearing-cache" id="toc-clearing-cache" class="nav-link" data-scroll-target="#clearing-cache">Clearing cache</a></li>
+  <li><a href="#information-fields" id="toc-information-fields" class="nav-link" data-scroll-target="#information-fields">Information fields</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/pigrenok/pygengraph/tree/master/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+
+<section id="user-manual-for-pantograph-visualisation-tool" class="level1">
+<h1>User manual for Pantograph Visualisation tool</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>This manual describe how to use all the controls and how to read the matrix view of the graph visualisation. It will cover two types of graphs: nucleotide and gene graphs.</p>
+<p>Nucleotide graph is a graph, where each node contains certain sequence. Gene graph does not have any sequences. In it each node represent certain type of object, e.g.&nbsp;gene, block of genes, exon, or anything else. Normally, paths in such genes are build based on in what sequence genes are going on actual genome (by genomic positions). More details below.</p>
+</section>
+<section id="how-to-read-matrix-view" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-read-matrix-view">How to read matrix view</h2>
+<section id="how-nucleotide-graph-is-formed" class="level3">
+<h3 class="anchored" data-anchor-id="how-nucleotide-graph-is-formed">How nucleotide graph is formed</h3>
+<p>Initially, we have several sequences/genomes, which (we assume) have some similarity. Then we identify identical subsequences repeated over accessions and within one accession. Private sequences are just sequences repeated only once. Of course, there is a compromise between going to a single nucleotide (only 4 possible letters) or to the whole sequence (each sequence is a private sequence). There should be some balance between the two extremes. Usually, it is done via using k-mers with reasonably large k. You can see these identified subsequences split in the image:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/nucl_sequences.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">nucleotide sequences</figcaption><p></p>
+</figure>
+</div>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>-</th>
+<th>-</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Each unique subsequence becomes a graph node.</td>
+<td><img src="images/nucl_nodes.png" class="img-fluid" alt="nucleotide nodes"></td>
+</tr>
+<tr class="even">
+<td>Sequence of these subsequences in each genome define graph paths</td>
+<td><img src="images/nucl_paths.png" class="img-fluid" alt="nucleotide paths"></td>
+</tr>
+</tbody>
+</table>
+<p>Graph edges/links are determined from graph paths.</p>
+<p>The symbols ‘+’ and ‘-‘ in paths are used to indicate whether a node/gene instance is found in the orientation that the node/gene is most commonly found in this chromosome (not whether it is on the +ve or -ve strand). ‘+’ nodes/genes are normal, ‘-’ nodes/genes are inverted.</p>
+<p>This graph will look like the following in Pantograph visualisation tool:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/nucleotide_graph.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Nucleotide graph visualisation</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="how-gene-graph-is-formed" class="level3">
+<h3 class="anchored" data-anchor-id="how-gene-graph-is-formed">How gene graph is formed</h3>
+<p>Annotated genes for specific accession (and specific chromosome/sequence) are placed in the order of their 5’ position (in accession specific coordinate system). That way, a sequence of genes for each accession is obtained.</p>
+<p>Genes are defined by some universal concept, that can be identified in multiple accessions and in several locations in a single accession, e.g., orthogroups, or some other metric that identifies similarity between genes instances (or wider, annotated intervals).</p>
+<p>As an example, I created an artificial short sequence of genes for 5 accessions/genomes to show a lot of different types of rearrangements yet to be able to follow each sequence from start to end. The sequence of genes are as follows.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/01_gene_seqs.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Sequences of genes</figcaption><p></p>
+</figure>
+</div>
+<p>As we can see, we have 25 gene instances grouped under 7 conceptual labels.</p>
+<p>Each unique similarity ID becomes a node in a graph. And to define paths in Genome Graph node numbers (1-based) are used instead of similarity IDs in the same sequence.</p>
+<p>The symbols ‘+’ and ‘-‘ are used to indicate whether a node/gene instance is found in the orientation that the node/gene is most commonly found in this chromosome (not whether it is on the +ve or -ve strand). ‘+’ nodes/genes are normal, ‘-’ nodes/genes are inverted.</p>
+<p>Please note, that node numbers are not random IDs, but define unified linearised graph coordinate system calculated to maximise the conservation of linear node/gene order across all accessions.</p>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>-</th>
+<th>-</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><img src="images/02_gene_nodes.png" class="img-fluid" alt="Gene nodes"></td>
+<td><img src="images/03_gene_paths.png" class="img-fluid" alt="Gene paths"></td>
+</tr>
+</tbody>
+</table>
+<p>Using given nodes order and given paths, we can visualise this graph.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/04_genome_graph.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Genome graph visualisation</figcaption><p></p>
+</figure>
+</div>
+<p>You can try to follow each of the accession (each row) and see how the original sequence of genes (previous page) is recovered. If it is still not clear, the following section will present the Legend, possibly, not exhastive, but enough to understand the main principles.</p>
+</section>
+<section id="reading-the-visualisation" class="level3">
+<h3 class="anchored" data-anchor-id="reading-the-visualisation">Reading the visualisation</h3>
+<p>All explanation is using gene graph as examples, but the same applies to nucleotide graphs.</p>
+<section id="start-and-end-of-pathssequences" class="level4">
+<h4 class="anchored" data-anchor-id="start-and-end-of-pathssequences">Start and end of paths/sequences</h4>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>-</th>
+<th>-</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><img src="images/05_start_path.png" class="img-fluid" alt="Start of sequence"></td>
+<td>Cell with green border: In this case, green border means that the given accession starts from one of the OG0000003 genes represented by this cell.<br><br>On higher zoom levels (not available), single cell can represent multiple genes. In this case, green border means that the given accession starts from one of the genes represented by this cell.</td>
+</tr>
+<tr class="even">
+<td><img src="images/06_end_path.png" class="img-fluid" alt="End of sequence"></td>
+<td>Cell with red border: Genome 2 and 4 sequences ends with gene OG0000006.<br><br>On higher zoom levels (not available), single cell can represent multiple genes. In this case, red border means that the given accession ends by one of the genes represented by this cell.<br><br>Please note, that if an accession ends by inverted gene/node, the border will be Yellow, not red (because the inverted nodes are presented by red cells).</td>
+</tr>
+<tr class="odd">
+<td><img src="images/07_start_end_path.png" class="img-fluid" alt="Start and end of sequence"></td>
+<td>In rare cases, an accession can start and end at the same gene (node). In this case, half of the cell will be enclosed in green border, and another half in red border. Obviously, it can happen only if the gene is repeated at least twice, which is clearly visible as darker grey colour in comparison to surrounding cells. <br><br>It can happen much more often on higher zoom levels, because this notation Will mean that given sequence starts and end by genes/nodes represented by this cell.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="continuity-arrows" class="level4">
+<h4 class="anchored" data-anchor-id="continuity-arrows">Continuity arrows</h4>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>-</th>
+<th>-</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><img src="images/08_continuity_simple.png" class="img-fluid" alt="Basic continuity arrows"></td>
+<td>Continuity arrows: This notation means that in accession Genome 2 gene OG0000002 is preceding (upstream) gene OG0000004, which precedes gene OG0000005. At the same time these genes are in the same sequence in linearised graph order (which tries to preserve consensus. <br><br>Continuity arrow between two consecutive genes appear only If in some accessions there is non-continuous (coloured) arrow.</td>
+</tr>
+<tr class="even">
+<td><img src="images/09_continuity_no_arrow.png" class="img-fluid" alt="Continuity without arrows"></td>
+<td>Continuity without arrow: If in no accessions there is any arrows (indicating non-linear rearrangement) appear at the right end of left gene (OG0000003) or left end of the right gene (OG0000006) then continuity arrow will not appear and the cells will appear as a block.<br><br>Please note, that any cell (node) has a start (to where arrows will come) and an end (from where arrows will go). For normal cells they are left and right respectively. An inverted cell comprises all or part of an inverted segment; in the latter case, continuity arrows are shown right to left (e.g., where 1 2 3 4 5 has been rearranged by inversion to 1 4 3 2 5).</td>
+</tr>
+<tr class="odd">
+<td><img src="images/10_continuity_indels.png" class="img-fluid" alt="Continuity with indels"></td>
+<td>Deletions (cells absent from a particular individual) are indicated by white cells. Continuity should be followed through such delitions. This notation means that accession “Genome 2” does not have genes OG0000000, OG0000003 and OG0000006, and that OG00000001 is directly upstream (precedes) OG0000002.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="repeats" class="level4">
+<h4 class="anchored" data-anchor-id="repeats">Repeats</h4>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>-</th>
+<th>-</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><img src="images/11_copies.png" class="img-fluid" alt="Repeats"></td>
+<td>Number of copies of a given gene (node) in the visualised graph* is shown by the colour of each cell.<br><br>The colours for each number of copies are always available on the legend. Colour can be turned off and all cells will be light gray/red. <br><br>In this image <br><br>- in Genomes 1 and 3 all four shown genes have one copy, <br>- in Genome 2 only OG0000001 has two copies, and other three genes are not present,<br>- in Genome 4 all four genes present with one copy except OG0000000 which has 2 copies,<br>- in Genome 5 genes OG0000001, OG0000003 and OG0000006 are present (one copy) and OG0000000 is missing.</td>
+</tr>
+<tr class="even">
+<td><img src="images/12_copies_legend.png" class="img-fluid" alt="Repeats legend"></td>
+<td>Number of repeats is repflected by the colour of specific cell. You can see colour legend in the bottom left corner.</td>
+</tr>
+</tbody>
+</table>
+<p>* Note that if graph is created for a single chromosome, then all copy numbers, as well as any other metrics (e.g.&nbsp;fraction of inverted copies/nodes) and analyses are calculated ONLY over this chromosome. It works fine for alignment, but for SV calling and other types of analysis, it will skew the results. Further work is needed to create a graph for multiple chromosomes (molecules).</p>
+</section>
+<section id="inversions" class="level4">
+<h4 class="anchored" data-anchor-id="inversions">Inversions</h4>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>-</th>
+<th>-</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><img src="images/13_inversion.png" class="img-fluid" alt="Inversions"></td>
+<td>In this case, (pale) red cell indicate that gene OG0000002 in Genome 4 and gene OG0000005 in Genome 5 are inverted compared to their normal orientation.<br><br>To understand it a bit better, let’s look at the example again.<br><br>- Gene OG0000002 is shown as inverted in Genome 4 and in normal direction in Genome 2. That means that either the gene in Genome 2 on Forward and in Genome 4 on reverse, or vice versa.<br>- Gene OG0000005 is inverted in Genome 5 and in normal direction in Genomes 2 and 4. That means that the gene is on forward strand in Genomes 2 and 4 and on reverse in Genome 5, or vice versa.</td>
+</tr>
+</tbody>
+</table>
+<p>Please, note that continuity arrow between two inverted cells will be in other direction. That is because normal cell has arrows coming to the left and going out from the right edge. Inverted cell has arrows coming in from the right edge and going out from left edge.</p>
+<p>Please, also note that if a gene in particular accession has more than one copy, it will be shown as inverted only if more than 50% of its copies are inverted (on minority strand for this Gene in pangenome).</p>
+<p>At higher zoom levels, both copy numbers and inversion fractions are calculated as average for all genes represented by the given cell.</p>
+<p>That notation can be confused with continuity arrow between two inverted cells. Continuity Arrows will always be shown either on white background or coloured background beneith the start or end of an arrow. In this case it is on pale red background without arrow on top.</p>
+</section>
+<section id="arrows-and-links" class="level4">
+<h4 class="anchored" data-anchor-id="arrows-and-links">Arrows and links</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/14_arrow_simple.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Simple arrow</figcaption><p></p>
+</figure>
+</div>
+<p>This example shows basic arrow in a single accession. This particular arrow tells us that gene OG0000005 precedes (directly upstream) the second copy of gene OG0000001, which is also the last gene of the sequence. The first copy of OG0000001 is the first gene of the accession as well.</p>
+<p>Basic arrow showing some rearrangement by which we understand the difference of accession gene sequence from linearised graph nodes sequence/order. In most cases, it indicates genuine non-linear variation in pangenome, but in some cases it can be an artefact of visualisation due to graph linearisation cannot be perfect (due to the fact that non-linear structure is shown in linear manner).</p>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>-</th>
+<th>-</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><img src="images/15_arrow_structure.png" class="img-fluid" alt="Arrow columns"></td>
+<td>Basic arrow showing some rearrangement by which we understand the difference of accession gene sequence from linearised graph nodes sequence/order. In most cases, it indicates genuine non-linear variation in pangenome, but in some cases it can be an artefact of visualisation due to graph linearisation cannot be perfect (due to the fact that non-linear structure is shown in linear manner).<br><br>For example, the purple arrow indicate that in both Genomes 3 and 4, gene OG0000001 follows (directly downstream) OG0000000.</td>
+</tr>
+<tr class="even">
+<td><img src="images/16_arrow_continuity.png" class="img-fluid" alt="Arrow with continuity"></td>
+<td>In some cases, arrow indicator can also have a continuity arrow. This means that the cell to which both arrows relate, has more than 1 copy and one copy is following (in genome gene sequence) previous (in linearised graph node order) gene and another copy has predecessor defined by the arrow.<br><br>It is probably easier to understand using the example: Here gene OG0000000 has incoming red arrow with continuity arrow. Continuity arrow tells us that one copy of OG0000000 follows (directly downstream) OG0000006, another copy of OG0000000 follows (inverted) gene OG0000002.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="cell-details" class="level3">
+<h3 class="anchored" data-anchor-id="cell-details">Cell details</h3>
+<p>The user can get more information about each cell in the matrix (grey, or red if inverted squares). If a mouse is placed over the cell of interest, a tooltip appear like the following:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use01_tooltip.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Tooltip</figcaption><p></p>
+</figure>
+</div>
+<p>It provides basic info like name of the accession, marking whether it is start or end (or none) of the sequence/path. In addition it provides information about copy number (how many times this node appear in this accession) and inversion ratio.</p>
+<p>It is worth noting here that copy number is averaged over all nodes represented by the cell. On the lowest (most detailed zoom level) one cell represent either one nucleotide (nucleotide graph) or one gene (gene graph) and its copy number is actual (subject to the note in <a href="#Repeats">section above</a>). But on higher level zoom (less detailed), one cell can comtain multiple nucleotides, or genes, or even nodes. In this case, the average copy number will be taken over all nucleotides/genes represented by this cell.</p>
+<p>Inversion ratio is averaged over all copies of all nucleotides/genes represented by the given cell.</p>
+<p>In addition, column number tells which column of the matrix at the given zoom level this cell occupies. It is counted from the very first nucleotide/gene of the first node and numbered throughout the whole graph. It is the column number that the user set when chooses the central position (see <a href="#position-control">section Position Control</a>, the edges and last bin are also given in terms of columns (see <a href="#information-fields">section Information fields</a>).</p>
+<p>Finally, Path position is which position number this nucleotide occupies in the path. For nucleotide graphs it will be the same as genomic position, but for gene graph, it will just tell you the number of gene as it “appear” in the genome.</p>
+<p>If the user would like to get even more information (given it is available, of course), they can right click on the cell and get special floating block with the information available in tooltip (but with extra explanation what each value means) and also, if any metadata (like annotations, genomic or pangenomic (Multiple Sequence Alignment) position is available, it will be pulled from special Redis DB through API and shown here.</p>
+<p>As an example, here is one of the block</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use02_float_window.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Floating block</figcaption><p></p>
+</figure>
+</div>
+<p>The cell that was clicked is highlighted with green (see where red arrow points at).</p>
+<p>To close this floating block either left click outside it or press Esc button on the keyboard.</p>
+</section>
+</section>
+<section id="user-controls" class="level2">
+<h2 class="anchored" data-anchor-id="user-controls">User controls</h2>
+<p>Pantograph visualisation tool has a control panel that gives a lot of control to the user. THe panel looks like this:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use03_control_panel.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Control panel</figcaption><p></p>
+</figure>
+</div>
+<p>and allows to change project and case, control zoom and position, search via genes and positions, filter accessions and control what is shown and the size of the main matrix.</p>
+<section id="choosing-project-and-case" class="level3">
+<h3 class="anchored" data-anchor-id="choosing-project-and-case">Choosing project and case</h3>
+<p>Every time the user use pyGenGraph to export a visualisation project, it adds information about this project to data index file. Pantograph visualisation tool reads this data index and from it knows about all available projects. Then it looks at each project data index and knows what cases (e.g.&nbsp;different chromosomes) are available. So, the user can switch between projects (using drop down list (1) in the figure) and between cases for a given project (using drop down list (2) in the figure), see the screenshot:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use04_project_case.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Choose project and case</figcaption><p></p>
+</figure>
+</div>
+<p>Please note that if only one case is available then drop down list is inactive.</p>
+</section>
+<section id="zoom-control" class="level3">
+<h3 class="anchored" data-anchor-id="zoom-control">Zoom control</h3>
+<p>User can control which zoom level to show. Zoom levels have numbers, the higher the number the less detailed (and more nodes/nucleotides in the view). This number means what is the maximum number nucleotides (or genes in case of gene graph) can be represented by a single cell.</p>
+<p>Zoom can be controlled either by drop down list of all available zoom levels or by clicking on “+” (get to next , more detailed zoom level, zoom in) and “-” (get to next, less detailed zoom level, zoom out). See controls highlighted by red rectangle on the screenshot below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use05_zoom_control.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Zoom control</figcaption><p></p>
+</figure>
+</div>
+<p>And here is an example of gene graph shown above (at the beginning of the manual) on zoom level 8 (see image below). As you can see all arrows disappear and all nodes combined together to give an overview of the accessions.</p>
+<p>Please note, that zooming is not working as expected at the moment and it is still being developed.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use05_zoom_control_effect.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Zoom control effect</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="position-control" class="level3">
+<h3 class="anchored" data-anchor-id="position-control">Position control</h3>
+<p>The user can scroll the matrix left and right only using position controls available. Position in this case is represented as a number. This number is a consequtive matrix column number which should be placed at the central position (vertical red line in the centre of the main view).</p>
+<p>It can be done via either setting explicitly position (using text field in the highlighted block in the following image) or using buttons <code>&lt;</code> and <code>&gt;</code> to jump left or right half of the distance (or buttons <code>&lt;&lt;</code> and <code>&gt;&gt;</code> to jump left or right full distance) between the centre and left and right visible edge of the view respectively.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use06_position_control.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Position control</figcaption><p></p>
+</figure>
+</div>
+<p>The other option to control position is to use navigation bar at the bottom of the control panel (highlighted with red rectangle in the image below). The whole length of the navigation bar represent the whole length of the linearised graph at the selected zoom level (light blue actually goes from left edge to right edge).</p>
+<p>Yellow/orange block represent visible part of linearised graph. If the user place a mouse pointer anywhere on the navigation bar, tooltip will tell you the column (bin) number which this particular point corresponds to (see green rectangle highlighting it in the image below). If the user clicks on this point with left mouse button, then the tool will place this particular column in the centre of the view.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use07_position_control_navbar.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Navigarion bar</figcaption><p></p>
+</figure>
+</div>
+<p>Another way to change position is to click on arrows or coloured squares in arrow columns. It will jump to the other side of the arrow and place it in the centre of the view.</p>
+</section>
+<section id="component-selection" class="level3">
+<h3 class="anchored" data-anchor-id="component-selection">Component selection</h3>
+<p>The user can also select specific components by just clicking on it. It becomes highlighted with blue background and red boundaries. It is very useful because the selection is sustained through moving up and down zoom levels and scrolling horizontally.</p>
+<p>When there is a selected component and the user moves zoom out, a component that contains the nucleotide/genes of the selected components will be highlighted as well. If no deselection/selection happened, then if the user zoom down, the same original component will be highlighted/selected.</p>
+<p>On the other hand if the user goes zoom in, and the selected component contained several components in the more detailed zoom level, all of them will be highlighted. The user can deselect one of them, but if goes zoom out again, the same component will still be highlighted, but this selection on the lower (more detailed) zoom level will be sustained.</p>
+<p>In the figure below, a selected component (highlighted by red rectangle) is visible.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use16_component_selection.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Selected component</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="searching-genespositions" class="level3">
+<h3 class="anchored" data-anchor-id="searching-genespositions">Searching genes/positions</h3>
+<p>If Redis DB and special Pantograph API is available and necessary metadata was passed to this DB, the user can search specific annotations or positions. This is done using control highlighted by red rectangle on the following image.</p>
+<p>There are three options:</p>
+<ul>
+<li>Can be searched by annotation names (e.g.&nbsp;gene names). For this, annotations should be available in the graph and exported to the available redis DB. For this, option <code>Gene name</code> in the drop down list highlighted by green rectangle in the figure below.</li>
+<li>Can be searched by path positions (select <code>Path position</code> in the drop down list). See more details of what is path position in <a href="#cell-details">section Cell details</a>. It is effectively genomic position for nucleotide graphs and consequtive number of gene in the path for gene graph.</li>
+<li>Search by genomic position (select <code>Genomic position</code>). That requires that genomic positions for each cell/node is available in the graph metadata and passed to the Redis DB. It is not that relevant to nucleotide graphs, but very relevant to gene graphs.</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use08_search.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Search controls</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="filtering-accessions" class="level3">
+<h3 class="anchored" data-anchor-id="filtering-accessions">Filtering accessions</h3>
+<p>You can filter what rearrangements you would like to see and which not.</p>
+<p>To do this, you need to use Filter rearrangements block highlighted in red rectangle in the image below:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use09_filter_accessions.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Filter accessions</figcaption><p></p>
+</figure>
+</div>
+<p>This can be done in two ways:</p>
+<ul>
+<li>All-vs-all way: The user should use the first drop down list to select 2 or more accessions for this to work. This means that if any arrow representing rearrangement appears in all or none of the selected accessions, they get dimmed, all others will be shown as bright (active). Also, only selected accessions are highlighted, the rest are dimmed.</li>
+</ul>
+<p>If only two accessions is selected, then it is equivalent to one-vs-one comparison.</p>
+<p>In the figure below, a case of all-vs-all filtering is represented when accesions 1, 3 and 4 (the top most row is accession 1) is selected.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use09_filter_accessions_effect_134.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Filter accession effect all-vs-all (1,3,4)</figcaption><p></p>
+</figure>
+</div>
+<ul>
+<li>One-vs-all way: For this first the user need to select all accession involved in the first drop down list. After than one accession (main accession) should be selected to be “one” in one-vs-all. In this case any rearrangements will be dimmed if both main accession and at least one of the rest of the group either has or does not have this rearrangement. Otherwise if main accession has a rearrangement and all others do not or if any of the other ones have it and the main one does not have it, then it is highlighted and shown in bright colour.</li>
+</ul>
+<p>An example with three accession (1, 3, and 4) selected, and accession 3 is chosen as main, shown in the figure below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use09_filter_accessions_effect_134_3.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Filter accession effect one-vs-all (3 - 1,4)</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="various-view-control" class="level3">
+<h3 class="anchored" data-anchor-id="various-view-control">Various view control</h3>
+<section id="hiding-basic-inversion-links" class="level4">
+<h4 class="anchored" data-anchor-id="hiding-basic-inversion-links">Hiding basic inversion links</h4>
+<p>If there is an continuous inversion block of cells in a graph, it will be shown with two arrows, which does not bring a lot of information because inversion is already highlighted by the colour of the cell. This can be hidden and substituted with artificial continuity arrows by turning on the switch “Hide inversion links” highlighted in the screenshot below:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use10_hide_inversion.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Hiding inversion</figcaption><p></p>
+</figure>
+</div>
+<p>It will also hide pairs of arrow describing short normal sequence of cells inside longer inversion block.</p>
+<p>If the inversion is involved in more complex rearrangements, then no arrows will be hidden.</p>
+<p>This option is turned on by default.</p>
+</section>
+<section id="highlighting-accessions-using-mouse" class="level4">
+<h4 class="anchored" data-anchor-id="highlighting-accessions-using-mouse">Highlighting accessions using mouse</h4>
+<p>By default when the mouse pointer is over an accession, only tooltip is shown. If the switch “Highlight accessions” (highlighted with number 1 on the figure below) is switched on, then when the mouse if over cells or link columns of specific accession, then all other accessions are dimmed. Also all arrows not presented in the current accession also gets dimmed.</p>
+<p>The switch “Dimmed by default” (highlighted with number 2 in the screenshot below) controls whether all accessions should be bright (off) or dimmed (on) when mouse if off all accessions.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use11_highlighting_accessions.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Highlighting accession controls</figcaption><p></p>
+</figure>
+</div>
+<p>Here (image below) is an example of dimmed all accession except accession “genome 5” on which the mouse pointer is placed.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use11_highlighting_accessions_effect.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Highlighting accessions effects</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="copy-number-colouring-control" class="level4">
+<h4 class="anchored" data-anchor-id="copy-number-colouring-control">Copy number colouring control</h4>
+<p>In some cases, copy number colouring (darker colours for more copies of specific node/cell) is not needed and only adds to a clutter. In this case, it can be turned off by switching off “Show copies” switch (highlighted in the screenshot below).</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use12_copy_colour.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Copy colour controls</figcaption><p></p>
+</figure>
+</div>
+<p>It is strongly recommended to turn off copy number showing if you do any accession dimming (filtering or highlighting accession described above). At the moment, when cells with more than 1 copy is dimmed it looks like normal cell in not dimmed accession and it is confusing. It will be automated eventually, but at the moment, it is recommended to turn this option on.</p>
+<p>Here (in the screenshot below) is how the gene graph from the beginning of the manual looks like with this option turned on.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use12_copy_colour_effect.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Copy colour effect</figcaption><p></p>
+</figure>
+</div>
+</section>
+</section>
+<section id="cellmatrix-size-control" class="level3">
+<h3 class="anchored" data-anchor-id="cellmatrix-size-control">Cell/matrix size control</h3>
+<p>The size of the cells can be controled as well. The controls “Row Height” and “Column Width” (see highlighted controls in the figure below) control height and width of cells respectively. Please note, that changing the row (or cell) height does not change how many cells can be shown and does not change the visible columns (and thus does not require re-rendering). Change of the column/cell width width on the other hand requires rerendering because different number of cells can be fit on the screen.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use13_matrix_size_control.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Matrix size controls</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="clearing-cache" class="level3">
+<h3 class="anchored" data-anchor-id="clearing-cache">Clearing cache</h3>
+<p>If some data was changed, and the user reloaded the browser, but it does not show correctly, it can be due to stuck cache. Just try to press “Clear cache” button (highlighted in the screenshot below). It may help.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use14_clear_cache.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Clear cache button</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="information-fields" class="level3">
+<h3 class="anchored" data-anchor-id="information-fields">Information fields</h3>
+<p>Finally, there are a few read-only fields that give some extra information about the graph or specific position.</p>
+<p>First, there are two text fields “Left edge bin” (marhed with number 1 in the screenshot below) and “Right edge bin” (marhed with number 2 in the screenshot below). They shows the left most and right most (respectively) column numbers that are visible in the view.</p>
+<p>The label “Pangenome Last Bin” (marked with number 3) effectively provides total number of columns on the selected zoom level of the loaded graph.</p>
+<p>The label “Num. of individuals” (marked with number 4) provides a number of accessions/paths (number of rows) in the graph.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/use15_information_fields.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Information fields</figcaption><p></p>
+</figure>
+</div>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
