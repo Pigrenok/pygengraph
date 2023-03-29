@@ -3,9 +3,20 @@
 ## How to get started
 
 Before anything else, please install the git hooks that run automatic scripts during each commit and merge to strip the notebooks of superfluous metadata (and avoid merge conflicts). After cloning the repository, run the following command inside it:
-```
+
+```bash
 nbdev_install_git_hooks
 ```
+
+## Installing package for development
+
+In order to install the package for development, all you need to do is to enter the package directory and enter
+
+```bash
+pip install -e .[dev]
+```
+
+It should install all development dependencies as well as install the package as sym links, so, any changes will take direct effect.
 
 ## Did you find a bug?
 

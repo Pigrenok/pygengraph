@@ -11,7 +11,7 @@ Enter the directory of the library and enter:
 
 and for development use
 
-`pip install -e .`
+`pip install -e .[dev]`
 
 ## How to use
 
