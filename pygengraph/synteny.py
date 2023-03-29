@@ -6,6 +6,9 @@ __all__ = ['readTransMap', 'generateOrder', 'getIDs', 'readGFF', 'addPangenomePo
            'writeSegmentIDs', 'readSegmentIDs']
 
 # %% ../03_synteny.ipynb 4
+import os
+os.umask(0)
+
 import time
 
 import pandas as pd

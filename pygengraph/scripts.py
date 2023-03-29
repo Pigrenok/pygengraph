@@ -7,6 +7,8 @@ __all__ = ['pantograph_script', 'paths2graph_script', 'ann2graph_script', 'sort_
 import argparse
 import yaml
 import os
+os.umask(0)
+
 import time
 
 from pygengraph.graph import GenomeGraph

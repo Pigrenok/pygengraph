@@ -6,6 +6,8 @@ __all__ = ['calcNodeLengths', 'initialPathAnalysis', 'getNodesStructurePathNodeI
 
 # %% ../01_graph.ipynb 5
 import os
+os.umask(0)
+
 import json
 import itertools
 import warnings

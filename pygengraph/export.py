@@ -21,6 +21,8 @@ __all__ = ['componentTemplate', 'chunkTemplate', 'rootStructTemplate', 'outLeftR
 
 # %% ../05_export.ipynb 5
 import os
+os.umask(0)
+
 import json
 import time
 import itertools
