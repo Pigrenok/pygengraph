@@ -3,7 +3,7 @@
 d = { 'settings': { 'branch': 'master',
                 'doc_baseurl': '/pygengraph',
                 'doc_host': '/',
-                'git_url': 'https://github.com/pigrenok/pygengraph/tree/master/',
+                'git_url': 'https://github.com/pigrenok/pygengraph/',
                 'lib_path': 'pygengraph'},
   'syms': { 'pygengraph.export': { 'pygengraph.export._blockToLengthLink': ('export.html#_blocktolengthlink', 'pygengraph/export.py'),
                                    'pygengraph.export.addBlockEdge': ('export.html#addblockedge', 'pygengraph/export.py'),
